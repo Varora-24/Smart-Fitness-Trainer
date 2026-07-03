@@ -38,6 +38,7 @@ class WorkoutSession:
         self.bad_reps    : int   = 0
         self.total_calories: float = 0.0
         self._started    : bool  = False
+        self._all_feature_rows: list = []
 
     # ── Lifecycle ────────────────────────────────────────────
     def start(self) -> None:
@@ -72,6 +73,10 @@ class WorkoutSession:
         else:
             self.bad_reps   += 1
 
+    def add_feature_row(self, row: dict) -> None:
+        """Accumulate feature row for CSV/DB export later."""
+        self._all_feature_rows.append(row)
+
     # ── Analytics ────────────────────────────────────────────
     @property
     def reps_per_minute(self) -> float:
@@ -100,7 +105,7 @@ class WorkoutSession:
         }
 
     # ── CSV export for ML training ────────────────────────────
-    def export_csv(self, feature_rows: list) -> str:
+    def export_csv(self, feature_rows: list | None = None) -> str:
         """
         Append *feature_rows* (list of dicts from ExerciseTracker)
         to the dataset CSV file.  Creates the file with headers if
@@ -108,7 +113,8 @@ class WorkoutSession:
 
         Returns the path to the CSV file.
         """
-        if not feature_rows:
+        rows_to_export = feature_rows if feature_rows is not None else self._all_feature_rows
+        if not rows_to_export:
             return DATASET_CSV_PATH
 
         fieldnames = [
@@ -121,10 +127,10 @@ class WorkoutSession:
             writer = csv.DictWriter(fh, fieldnames=fieldnames)
             if not file_exists:
                 writer.writeheader()
-            for row in feature_rows:
+            for row in rows_to_export:
                 # Write only the columns we defined; ignore extras
                 filtered = {k: row.get(k, "") for k in fieldnames}
                 writer.writerow(filtered)
 
-        print(f"[Session] Exported {len(feature_rows)} reps → {DATASET_CSV_PATH}")
+        print(f"[Session] Exported {len(rows_to_export)} reps → {DATASET_CSV_PATH}")
         return DATASET_CSV_PATH
