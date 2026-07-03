@@ -9,13 +9,13 @@
 
 import time
 import cv2
-import numpy as np
+from collections import deque
 from config import (
     SETUP_LANDMARKS, SETUP_VISIBILITY_THRESHOLD,
     SETUP_HOLD_SECONDS, EXERCISE_CONFIG,
     FRAME_WIDTH, FRAME_HEIGHT,
     COLOR_GREEN, COLOR_RED, COLOR_WHITE,
-    COLOR_CYAN, COLOR_DARK_GRAY, COLOR_ORANGE,
+    COLOR_CYAN, COLOR_ORANGE,
 )
 
 
@@ -36,7 +36,8 @@ class CameraSetup:
     """
 
     def __init__(self):
-        self._hold_start : float = None   # when continuous visibility began
+        self._hold_start : float | None = None   # when continuous visibility began
+        self._history = deque(maxlen=5)
 
     # ── Main check ──────────────────────────────────────────
     def check(self, results) -> bool:
@@ -52,22 +53,31 @@ class CameraSetup:
         """
         visibility = self._check_landmarks(results)
         all_ok     = all(visibility.values())
+        self._history.append(all_ok)
 
-        if all_ok:
+        ok_count = sum(self._history)
+        total_count = len(self._history)
+
+        # Allow up to 1 bad frame in a rolling window of 5 frames
+        if total_count >= 5:
+            sufficient = (ok_count >= 4)
+        else:
+            sufficient = (ok_count == total_count)
+
+        if sufficient:
             if self._hold_start is None:
                 self._hold_start = time.time()
             elapsed = time.time() - self._hold_start
             if elapsed >= SETUP_HOLD_SECONDS:
                 return True          # ready to start!
         else:
-            self._hold_start = None  # reset timer on any miss
+            self._hold_start = None  # reset timer if too many bad frames
 
         return False
 
     def draw_overlay(self, img, results):
         """Render the setup checklist and guidance text."""
         visibility = self._check_landmarks(results)
-        all_ok     = all(visibility.values())
 
         # Dark background panel
         draw_rect_alpha(img, (0, 0), (FRAME_WIDTH, FRAME_HEIGHT),
@@ -99,7 +109,7 @@ class CameraSetup:
                         cv2.FONT_HERSHEY_PLAIN, 1.8, COLOR_ORANGE, 2)
 
         # Progress bar (time held)
-        if all_ok and self._hold_start is not None:
+        if self._hold_start is not None:
             elapsed = time.time() - self._hold_start
             pct     = min(elapsed / SETUP_HOLD_SECONDS, 1.0)
             bar_w   = 400
@@ -268,7 +278,7 @@ class AutoDetector:
 
         # Every _HISTORY frames: pick winner, reset
         if self._frame >= self._HISTORY:
-            self.exercise = max(self._scores, key=self._scores.get)
+            self.exercise = max(self._scores, key=lambda k: float(self._scores[k]))
             self._scores  = {k: 0.0 for k in EXERCISE_CONFIG}
             self._frame   = 0
 
