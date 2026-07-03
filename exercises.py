@@ -16,6 +16,7 @@
 # ================================================================
 
 import time
+from typing import Any
 import numpy as np
 from config import (
     EXERCISE_CONFIG,
@@ -51,7 +52,7 @@ class ExerciseTracker:
             )
 
         self.key = exercise_key
-        self.cfg = EXERCISE_CONFIG[exercise_key]
+        self.cfg: dict[str, Any] = EXERCISE_CONFIG[exercise_key]
 
         # ── Counters ─────────────────────────────────────────
         self.total_reps  : int   = 0
@@ -102,6 +103,14 @@ class ExerciseTracker:
         # Flash flag: set True for one frame after a rep completes
         self.rep_just_finished: bool = False
 
+        # ── Last rep stats ───────────────────────────────────
+        self.last_rep_min_angle      : float = 360.0
+        self.last_rep_velocity_samples: list  = []
+        self.last_rep_rom_score      : float = 0.0
+        self.last_rep_control_score  : float = 0.0
+        self.last_rep_was_clean      : bool  = False
+        self._posture_baseline       : float | None = None
+
     # ── Public properties ────────────────────────────────────
     @property
     def reps(self) -> int:
@@ -136,6 +145,7 @@ class ExerciseTracker:
         so it can validate both primary and posture joint chains.
         """
         self.rep_just_finished = False
+        self.bad_posture = False
         cfg = self.cfg
 
         # ── 1. Visibility gate ────────────────────────────────
@@ -170,10 +180,18 @@ class ExerciseTracker:
             pl = self._sm_post_l.update(pl_raw)
             pr = self._sm_post_r.update(pr_raw)
             self.posture_angle = (pl + pr) / 2.0
-            post_ok = (cfg["posture_min_angle"]
-                       <= self.posture_angle
-                       <= cfg["posture_max_angle"])
-        self.bad_posture = not post_ok
+            
+            if self.key == "curls":
+                if self._posture_baseline is None:
+                    self._posture_baseline = self.posture_angle
+                delta = abs(self.posture_angle - self._posture_baseline)
+                post_ok = delta <= cfg.get("posture_delta_threshold", 20.0)
+            else:
+                post_ok = (cfg["posture_min_angle"]
+                           <= self.posture_angle
+                           <= cfg["posture_max_angle"])
+        if not post_ok:
+            self.bad_posture = True
 
         # ── 5. Symmetry ───────────────────────────────────────
         diff = abs(self.left_angle - self.right_angle)
@@ -182,10 +200,16 @@ class ExerciseTracker:
 
         # ── 6. Depth percentage (0=start, 100=full depth) ─────
         a_min, a_max = cfg["angle_range"]
-        self.percentage = float(np.clip(
-            np.interp(self.avg_angle, (a_min, a_max), (100, 0)),
-            0, 100,
-        ))
+        if cfg.get("depth_direction", "down") == "down":
+            self.percentage = float(np.clip(
+                np.interp(self.avg_angle, (a_min, a_max), (100, 0)),
+                0, 100,
+            ))
+        else:
+            self.percentage = float(np.clip(
+                np.interp(self.avg_angle, (a_min, a_max), (0, 100)),
+                0, 100,
+            ))
         # Note: interp(a_min→100, a_max→0) so smaller angle = deeper
 
         # ── 7. Accumulate per-rep stats ───────────────────────
@@ -294,6 +318,12 @@ class ExerciseTracker:
         else:
             self.bad_reps += 1
 
+        self.last_rep_min_angle = self._rep_min_angle
+        self.last_rep_velocity_samples = self._velocity_samples.copy()
+        self.last_rep_rom_score = rep_rom
+        self.last_rep_control_score = rep_control
+        self.last_rep_was_clean = rep_score >= CLEAN_REP_SCORE_THRESHOLD
+
         self._all_rep_scores.append(rep_score)
         self._all_sym_scores.append(rep_sym)
         self._all_form_scores.append(rep_score)   # form = rep_score here
@@ -327,4 +357,4 @@ class ExerciseTracker:
 
     def reset(self) -> None:
         """Full reset – used when switching exercise."""
-        self.__init__(self.key)
+        self.__init__(self.key)  # type: ignore[misc]
