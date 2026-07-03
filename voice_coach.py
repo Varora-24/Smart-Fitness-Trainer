@@ -33,10 +33,18 @@ class VoiceCoach:
         self._last_spoken : float = 0.0
         self._lock        = threading.Lock()
         self._busy        : bool  = False
+        self._engine      = None
 
         if VOICE_ENABLED and not _ENGINE_AVAILABLE:
             print("[VoiceCoach] pyttsx3 not installed – voice disabled.")
             print("            Run:  pip install pyttsx3")
+
+        if self._enabled:
+            try:
+                self._engine = pyttsx3.init()
+                self._engine.setProperty("rate", 155)
+            except Exception:
+                self._enabled = False
 
     # ── Public API ────────────────────────────────────────────
     def say(self, phrase: str) -> None:
@@ -121,10 +129,9 @@ class VoiceCoach:
     # ── TTS engine ────────────────────────────────────────────
     def _speak(self, phrase: str) -> None:
         try:
-            engine = pyttsx3.init()
-            engine.setProperty("rate", 155)
-            engine.say(phrase)
-            engine.runAndWait()
+            if self._engine is not None:
+                self._engine.say(phrase)
+                self._engine.runAndWait()
         except Exception:
             pass
         finally:
