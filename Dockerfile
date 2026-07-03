@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     portaudio19-dev \
     libportaudio2 \
+    espeak \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

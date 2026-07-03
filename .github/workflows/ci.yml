@@ -33,7 +33,8 @@ jobs:
             libgomp1 \
             libasound2 \
             portaudio19-dev \
-            libportaudio2
+            libportaudio2 \
+            espeak
 
       - name: Install Python Dependencies
         run: |
