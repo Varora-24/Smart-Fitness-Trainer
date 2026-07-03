@@ -13,7 +13,7 @@ from config import VOICE_ENABLED, VOICE_COOLDOWN_SECS
 try:
     import pyttsx3
     _ENGINE_AVAILABLE = True
-except ImportError:
+except Exception:
     _ENGINE_AVAILABLE = False
 
 
