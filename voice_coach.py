@@ -14,6 +14,7 @@ try:
     import pyttsx3
     _ENGINE_AVAILABLE = True
 except Exception:
+    pyttsx3 = None  # type: ignore[assignment]
     _ENGINE_AVAILABLE = False
 
 
