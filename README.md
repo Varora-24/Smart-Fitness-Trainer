@@ -1,9 +1,11 @@
-# AI Smart Fitness Trainer v3 Pro
+# AI Smart Fitness Trainer v4 Pro
+
+[![CI Verification](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml/badge.svg)](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml)
 
 An advanced AI-powered fitness training application that uses computer vision and machine learning to provide real-time exercise tracking, form analysis, and personalized coaching feedback.
 
 ![AI Fitness Trainer](https://img.shields.io/badge/AI--Powered-Fitness-blue?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.8+-green?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.11+-green?style=for-the-badge)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red?style=for-the-badge)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10+-orange?style=for-the-badge)
 
@@ -284,6 +286,71 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 2. Enable debug overlay (`D` key) for technical information
 3. Verify all dependencies are installed correctly
 4. Test with different lighting conditions
+
+## 📊 Database Schema
+
+The application uses SQLite to persist training history across sessions. The schema layout is as follows:
+
+```mermaid
+erDiagram
+    sessions {
+        int id PK
+        text date
+        text exercise
+        int total_reps
+        int clean_reps
+        int bad_reps
+        real calories
+        real duration_secs
+        real avg_rep_score
+    }
+    reps {
+        int id PK
+        int session_id FK
+        text exercise
+        real symmetry
+        real range_of_motion
+        real posture
+        real control
+        real rep_score
+        text rep_label
+        text timestamp
+    }
+    sessions ||--o{ reps : "tracks"
+```
+
+## ⚡ Performance Profiling
+
+We profiled the computer vision pipeline over 500 frames using `benchmark.py`:
+
+| Pipeline Stage | Avg (ms/frame) | p95 (ms/frame) | p99 (ms/frame) |
+|---|---|---|---|
+| MediaPipe Pose Detection | 23.22 | 27.73 | 32.61 |
+| Angle + Tracker Logic | 0.01 | 0.01 | 0.01 |
+| OpenCV Drawing Overlay | 0.06 | 0.09 | 0.12 |
+| **Total Pipeline** | **23.29** | **27.80** | **32.67** |
+
+- **Average FPS**: ~42.9 frames/sec on CPU.
+
+## 🔴 Streamlit Dashboard
+
+To view your historical progress and live session statistics, launch the Streamlit dashboard:
+
+```bash
+streamlit run dashboard.py
+```
+
+## ⚠️ Known Limitations
+
+1. **Single-Person Tracking**: The current pipeline is optimized for tracking a single person in the frame.
+2. **Lighting Conditions**: MediaPipe performance degrades under low-light conditions or heavy motion blur.
+3. **Docker Device Mapping**: Webcam access inside Docker containers requires mapping `/dev/video0` which is only natively supported on Linux hosts.
+
+## 🗺️ Roadmap
+
+- [ ] **Multi-Person Mode**: Crop segmented persons to run independent pose instances.
+- [ ] **Custom Exercise Builder**: Web interface to record baseline poses and generate custom exercise configurations dynamically.
+- [ ] **Integration with Wearables**: Sync heart rate and metabolic data to improve calorie calculations.
 
 ---
 
