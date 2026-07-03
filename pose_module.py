@@ -7,6 +7,8 @@
 import cv2
 import mediapipe as mp
 import math
+import numpy as np
+from typing import Any
 from config import (
     DETECTION_CONFIDENCE,
     TRACKING_CONFIDENCE,
@@ -47,8 +49,8 @@ class PoseDetector:
         )
 
         # Will be populated by find_pose() on every frame
-        self.results  = None
-        self.lm_list  = []
+        self.results  : Any = None
+        self.lm_list  : list[list[int]] = []
 
     # ----------------------------------------------------------
     def find_pose(self, img: "np.ndarray", draw: bool = True) -> "np.ndarray":
@@ -67,7 +69,7 @@ class PoseDetector:
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.pose.process(img_rgb)
 
-        if self.results.pose_landmarks and draw:
+        if self.results is not None and self.results.pose_landmarks and draw:
             self._mp_draw.draw_landmarks(
                 img,
                 self.results.pose_landmarks,

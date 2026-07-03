@@ -14,3 +14,6 @@ pandas>=2.0.0
 
 # Voice coach (optional – install separately if TTS is needed)
 pyttsx3>=2.90
+
+# Analytics dashboard
+streamlit>=1.30.0

@@ -13,9 +13,8 @@ import cv2
 import numpy as np
 from collections import deque
 from config import (
-    COLOR_GREEN, COLOR_RED, COLOR_WHITE, COLOR_BLACK,
-    COLOR_ORANGE, COLOR_CYAN, COLOR_YELLOW, COLOR_DARK_GRAY,
-    COLOR_PURPLE, COLOR_BLUE,
+    COLOR_GREEN, COLOR_RED, COLOR_WHITE, COLOR_ORANGE, COLOR_CYAN, COLOR_YELLOW, COLOR_DARK_GRAY,
+    COLOR_BLUE,
     FRAME_WIDTH, FRAME_HEIGHT,
     ANGLE_SMOOTH_FRAMES,
 )
@@ -36,7 +35,7 @@ class AngleSmoother:
     """
 
     def __init__(self, window: int = ANGLE_SMOOTH_FRAMES):
-        self._buf = deque(maxlen=window)
+        self._buf: deque[float] = deque(maxlen=window)
 
     def update(self, value: float) -> float:
         """Push a new sample and return the smoothed value."""
@@ -161,7 +160,6 @@ def draw_exercise_badge(img, name: str, auto_mode: bool = False) -> None:
 def draw_stage_indicator(img, stage: str) -> None:
     """Show UP / DOWN stage in the top-right corner."""
     color = COLOR_GREEN if stage == "up" else COLOR_BLUE
-    badge_text = f"Stage: {stage.upper()}"
     draw_rect_alpha(img, (FRAME_WIDTH - 90, 58),
                     (FRAME_WIDTH, 100), COLOR_DARK_GRAY, alpha=0.7)
     cv2.putText(img, stage.upper(),
