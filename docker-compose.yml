@@ -1,0 +1,25 @@
+# ================================================================
+#  docker-compose.yml  –  Docker Compose configuration
+# ================================================================
+
+services:
+  trainer-dashboard:
+    build: .
+    container_name: fitness_trainer_dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  trainer-app:
+    build: .
+    container_name: fitness_trainer_app
+    devices:
+      - "/dev/video0:/dev/video0" # Maps the webcam device (Linux hosts only)
+    volumes:
+      - .:/app
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    command: ["python", "main.py", "--source", "webcam"]
