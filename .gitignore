@@ -1,0 +1,43 @@
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# ML / Session / DB artifacts
+rep_dataset.csv
+rep_quality_model.pkl
+workout_history.db
+fitness_trainer.log
+last_session.json
+benchmark_results.md
+antigravity_prompt.md
+
+# OS files
+.DS_Store
+Thumbs.db
