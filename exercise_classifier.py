@@ -19,8 +19,7 @@
 # ================================================================
 
 import numpy as np
-from collections import deque
-from config import EXERCISE_CONFIG
+from config import EXERCISE_CONFIG, FRAME_HEIGHT
 
 
 # Per-exercise signal weights  { exercise_key: { signal: weight } }
@@ -98,7 +97,7 @@ class ExerciseClassifier:
 
         # Every window: pick winner and reset
         if self._frame >= WINDOW_FRAMES:
-            self.exercise = max(self._scores, key=self._scores.get)
+            self.exercise = max(self._scores, key=lambda k: float(self._scores[k]))
             self._scores  = {k: 0.0 for k in EXERCISE_CONFIG}
             self._frame   = 0
 
@@ -139,7 +138,7 @@ class ExerciseClassifier:
         # ── Torso horizontal (pushup lying flat) ─────────────
         sh_y  = (lm_list[11][2] + lm_list[12][2]) / 2.0
         hip_y = (lm_list[23][2] + lm_list[24][2]) / 2.0
-        frame_h = max(lm_list[-1][2], 1)   # approx frame height
+        frame_h = FRAME_HEIGHT   # configured frame height
         vert_diff = abs(sh_y - hip_y) / frame_h  # 0=same height, 1=very different
         signals["torso_horizontal"] = float(np.clip(
             np.interp(vert_diff, (0.0, 0.15), (1.0, 0.0)), 0, 1))
