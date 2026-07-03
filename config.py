@@ -6,7 +6,6 @@
 #  in other modules.
 # ================================================================
 
-import os
 
 # ── Window ───────────────────────────────────────────────────────
 WINDOW_TITLE  = "AI Smart Fitness Trainer v3 Pro"
@@ -129,6 +128,7 @@ EXERCISE_CONFIG = {
         "symmetry_threshold"  : 25,
         "clean_depth"         : 70,
         "kcal_per_rep"        : 0.32,
+        "depth_direction"     : "down",
 
         "required_landmarks"  : [11, 12, 23, 24, 25, 26, 27, 28],
 
@@ -161,6 +161,7 @@ EXERCISE_CONFIG = {
         "symmetry_threshold"  : 20,
         "clean_depth"         : 70,
         "kcal_per_rep"        : 0.29,
+        "depth_direction"     : "down",
 
         "required_landmarks"  : [11, 12, 13, 14, 15, 16, 23, 24, 27, 28],
 
@@ -189,11 +190,13 @@ EXERCISE_CONFIG = {
         "posture_chain_left"  : (23, 11, 13),
         "posture_chain_right" : (24, 12, 14),
         "posture_min_angle"   : 0,
-        "posture_max_angle"   : 60,    # above 60° → shoulder swinging too much
+        "posture_max_angle"   : 175,    # corrected to allow relaxed posture
+        "posture_delta_threshold": 20, # for relative swing check
 
         "symmetry_threshold"  : 30,
         "clean_depth"         : 70,
         "kcal_per_rep"        : 0.18,
+        "depth_direction"     : "down",
 
         "required_landmarks"  : [11, 12, 13, 14, 15, 16],
 
@@ -226,6 +229,7 @@ EXERCISE_CONFIG = {
         "symmetry_threshold"  : 30,    # lunges are inherently asymmetric
         "clean_depth"         : 65,
         "kcal_per_rep"        : 0.28,
+        "depth_direction"     : "down",
 
         "required_landmarks"  : [11, 12, 23, 24, 25, 26, 27, 28],
 
@@ -252,12 +256,13 @@ EXERCISE_CONFIG = {
         # Posture: torso alignment – no leaning back (hip→shoulder→elbow)
         "posture_chain_left"  : (23, 11, 13),
         "posture_chain_right" : (24, 12, 14),
-        "posture_min_angle"   : 30,
-        "posture_max_angle"   : 120,   # above → arching back
+        "posture_min_angle"   : 60,
+        "posture_max_angle"   : 185,   # corrected for overhead extension range
 
         "symmetry_threshold"  : 20,
         "clean_depth"         : 65,
         "kcal_per_rep"        : 0.20,
+        "depth_direction"     : "up",
 
         "required_landmarks"  : [11, 12, 13, 14, 15, 16, 23, 24],
 
