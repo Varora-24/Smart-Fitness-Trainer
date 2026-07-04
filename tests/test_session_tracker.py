@@ -2,18 +2,14 @@
 #  tests/test_session_tracker.py  –  Session tracker unit tests
 # ================================================================
 
-import os
 from session_tracker import WorkoutSession
-from config import DATASET_CSV_PATH
 
 # ── Test 1.8 & 1.11: Retain multiple exercises in CSV export ──────
-def test_session_accumulates_and_exports_all_exercises():
-    # Remove existing dataset if present to avoid interference
-    if os.path.exists(DATASET_CSV_PATH):
-        try:
-            os.remove(DATASET_CSV_PATH)
-        except Exception:
-            pass
+def test_session_accumulates_and_exports_all_exercises(tmp_path, monkeypatch):
+    # Redirect DATASET_CSV_PATH to an isolated temp file for this test only,
+    # so the test never touches the real rep_dataset.csv at the repo root.
+    fake_csv = tmp_path / "rep_dataset_test.csv"
+    monkeypatch.setattr("session_tracker.DATASET_CSV_PATH", str(fake_csv))
 
     session = WorkoutSession()
     
@@ -35,9 +31,9 @@ def test_session_accumulates_and_exports_all_exercises():
     session.export_csv()
     
     # Verify CSV file is created and contains correct data
-    assert os.path.exists(DATASET_CSV_PATH)
+    assert fake_csv.exists()
     
-    with open(DATASET_CSV_PATH, "r") as fh:
+    with open(fake_csv, "r") as fh:
         lines = fh.readlines()
         
     # Header + 2 data rows
@@ -46,10 +42,3 @@ def test_session_accumulates_and_exports_all_exercises():
     content = "".join(lines)
     assert "squats" in content
     assert "curls" in content
-    
-    # Clean up
-    if os.path.exists(DATASET_CSV_PATH):
-        try:
-            os.remove(DATASET_CSV_PATH)
-        except Exception:
-            pass
