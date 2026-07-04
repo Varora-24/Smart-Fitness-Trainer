@@ -2,9 +2,11 @@
 #  tests/test_frame_pipeline.py  –  FramePipeline unit tests
 # ================================================================
 
+from unittest.mock import patch
 from frame_pipeline import FramePipeline
 
-def test_pipeline_set_exercise_resets_tracker():
+@patch("frame_pipeline.PoseDetector")
+def test_pipeline_set_exercise_resets_tracker(mock_detector_cls):
     pipeline = FramePipeline(exercise_key="squats", in_setup=False)
     assert pipeline.current_key == "squats"
     assert pipeline.tracker.key == "squats"
@@ -21,7 +23,8 @@ def test_pipeline_set_exercise_resets_tracker():
     assert pipeline.prev_rep_count == 0
     assert pipeline.flash_frames == 0
 
-def test_pipeline_get_summary_keys():
+@patch("frame_pipeline.PoseDetector")
+def test_pipeline_get_summary_keys(mock_detector_cls):
     pipeline = FramePipeline(exercise_key="squats", in_setup=False)
     summary = pipeline.get_summary()
     
