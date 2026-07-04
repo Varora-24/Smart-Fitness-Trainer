@@ -12,3 +12,4 @@ line-length = 100
 
 [tool.mypy]
 ignore_missing_imports = true
+exclude = ["pages/"]
