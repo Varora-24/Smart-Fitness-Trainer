@@ -1,0 +1,14 @@
+[tool.pytest.ini_options]
+# Without this, pytest collects test files from tests/ but has no way
+# to know the repo root (where exercises.py, voice_coach.py, etc. live)
+# should be on sys.path. Every test module fails at its top-level
+# `from exercises import ExerciseTracker`-style import before any test
+# runs, which pytest reports as a fatal collection error (exit code 2).
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+ignore_missing_imports = true
