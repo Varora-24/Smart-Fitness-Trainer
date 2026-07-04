@@ -332,22 +332,50 @@ We profiled the computer vision pipeline over 500 frames using `benchmark.py`:
 
 - **Average FPS**: ~42.9 frames/sec on CPU.
 
-## 🔴 Streamlit Dashboard
+## 🔴 Streamlit Dashboard & Web Application
 
-To view your historical progress and live session statistics, launch the Streamlit dashboard:
+We provide a multi-page Streamlit web application that runs both the **Live Trainer (WebRTC)** and the **History Dashboard**.
+
+To launch the application locally, run:
 
 ```bash
-streamlit run dashboard.py
+streamlit run Home.py
 ```
 
-## ⚠️ Known Limitations
+### Pages Structure:
+- **`Home.py`**: The landing page explaining features and navigation links.
+- **`1_🔴_Live_Trainer.py`**: Allows users to grant camera permission in their browser and runs the exact same computer vision and form assessment logic via WebRTC.
+- **`2_📊_History.py`**: Displays historical workout statistics and charts from your local `workout_history.db`.
 
-1. **Single-Person Tracking**: The current pipeline is optimized for tracking a single person in the frame.
-2. **Lighting Conditions**: MediaPipe performance degrades under low-light conditions or heavy motion blur.
-3. **Docker Device Mapping**: Webcam access inside Docker containers requires mapping `/dev/video0` which is only natively supported on Linux hosts.
+---
+
+## 🌐 Deployment & WebRTC Network Details
+
+You can deploy the app to **Streamlit Community Cloud** or **Hugging Face Spaces**:
+
+### 1. Streamlit Community Cloud
+- Push this repository to your GitHub profile.
+- Go to [share.streamlit.io](https://share.streamlit.io) and deploy a new app pointing at `Home.py` on your main branch.
+- **Ephemerality Note**: On the free tier, the SQLite file `workout_history.db` is ephemeral and resets on each redeploy.
+
+### 2. Hugging Face Spaces
+- Alternatively, deploy as a Streamlit Space on Hugging Face. Set the SDK to `streamlit` and the entrypoint to `Home.py`.
+
+### 🛡️ WebRTC NAT/TURN Server Troubleshooting
+The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to resolve peer connections. If the video fails to load or connect when accessed on certain mobile or restrictive corporate networks, you must add a metered TURN server (such as Twilio or metered.ca) to the `RTC_CONFIGURATION` `iceServers` list in `pages/1_🔴_Live_Trainer.py`.
+
+---
+
+## ⚠️ Browser Voice Coaching & Limitations
+
+- **Captions Over Sound**: Since server-side `pyttsx3` text-to-speech runs on the hosting server rather than in the browser, real audio synthesis does not carry over the network. In the WebRTC browser version, voice coaching is automatically converted to **real-time on-screen captions** that display at the bottom of the frame for 3 seconds.
+- **Single-Person Tracking**: The current pipeline is optimized for tracking a single person in the frame.
+- **Lighting Conditions**: MediaPipe performance degrades under low-light conditions or heavy motion blur.
+- **Docker Device Mapping**: Webcam access inside Docker containers requires mapping `/dev/video0` which is only natively supported on Linux hosts.
 
 ## 🗺️ Roadmap
 
+- [ ] **Web Speech API Browser TTS**: Implement browser-based speech synthesis using custom Streamlit HTML components accessing `window.speechSynthesis.speak(...)` in JavaScript.
 - [ ] **Multi-Person Mode**: Crop segmented persons to run independent pose instances.
 - [ ] **Custom Exercise Builder**: Web interface to record baseline poses and generate custom exercise configurations dynamically.
 - [ ] **Integration with Wearables**: Sync heart rate and metabolic data to improve calorie calculations.
