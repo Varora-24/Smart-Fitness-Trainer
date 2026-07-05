@@ -168,9 +168,7 @@ def link_reps_to_session(session_id: int, rep_ids: list) -> None:
     cursor = conn.cursor()
     placeholders = ",".join(["?"] * len(rep_ids))
     # rep_ids are internal generated integers, placeholders is built from len(rep_ids).
-    cursor.execute(f"""
-        UPDATE reps SET session_id = ? 
-        WHERE id IN ({placeholders});
-    """, [session_id] + rep_ids)  # nosec B608
+    query = f"UPDATE reps SET session_id = ? WHERE id IN ({placeholders});"  # nosec B608
+    cursor.execute(query, [session_id] + rep_ids)
     conn.commit()
     conn.close()
