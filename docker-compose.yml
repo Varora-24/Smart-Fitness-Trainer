@@ -3,9 +3,9 @@
 # ================================================================
 
 services:
-  trainer-dashboard:
+  trainer-web:
     build: .
-    container_name: fitness_trainer_dashboard
+    container_name: fitness_trainer_web
     ports:
       - "8501:8501"
     volumes:

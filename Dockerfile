@@ -2,7 +2,7 @@
 #  Dockerfile  –  Dockerization for the AI Smart Fitness Trainer
 # ================================================================
 
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,13 +11,13 @@ ENV PYTHONUNBUFFERED=1
 # Install OS system dependencies for OpenCV and MediaPipe
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libgomp1 \
-    libasound2 \
     portaudio19-dev \
     libportaudio2 \
     espeak \
+    && (apt-get install -y --no-install-recommends libasound2t64 || apt-get install -y --no-install-recommends libasound2) \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -36,4 +36,4 @@ COPY . .
 EXPOSE 8501
 
 # Default command runs the streamlit dashboard
-CMD ["streamlit", "run", "dashboard.py", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "Home.py", "--server.address=0.0.0.0"]
