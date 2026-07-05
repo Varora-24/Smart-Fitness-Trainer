@@ -4,7 +4,6 @@
 
 from unittest.mock import patch
 from frame_pipeline import FramePipeline
-from config import CLEAN_REP_SCORE_THRESHOLD
 
 @patch("frame_pipeline.PoseDetector")
 def test_pipeline_set_exercise_resets_tracker(mock_detector_cls):
