@@ -43,6 +43,7 @@ CLEAN_REP_SCORE_THRESHOLD = 60.0
 # ── ML model / dataset paths ─────────────────────────────────────
 DATASET_CSV_PATH  = "rep_dataset.csv"
 MODEL_PKL_PATH    = "rep_quality_model.pkl"
+MAX_CONSECUTIVE_FAILURES = 30
 
 # ── Voice coach ──────────────────────────────────────────────────
 VOICE_ENABLED       = True

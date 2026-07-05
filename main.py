@@ -24,7 +24,7 @@ from logger_setup import setup_logger
 import db
 
 from config import (
-    WINDOW_TITLE, FRAME_WIDTH, FRAME_HEIGHT, EXERCISE_CONFIG,
+    WINDOW_TITLE, FRAME_WIDTH, FRAME_HEIGHT, EXERCISE_CONFIG, MAX_CONSECUTIVE_FAILURES,
 )
 from frame_pipeline import FramePipeline
 from utils import show_summary
@@ -74,11 +74,17 @@ def main():
     logger.info("AI Smart Fitness Trainer running. Use keyboard keys to interact.")
 
     # ════════════════════════════════════════════════════════════
+    consecutive_failures = 0
     while True:
         success, img = cap.read()
         if not success:
-            logger.warning("Frame read failed – retrying…")
-            break
+            consecutive_failures += 1
+            if args.source != "webcam" or consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                logger.warning("Frame read failed – ending session.")
+                break
+            logger.warning(f"Frame read failed (attempt {consecutive_failures}) – retrying…")
+            continue
+        consecutive_failures = 0
 
         img = pipeline.process_frame(img)
         cv2.imshow(WINDOW_TITLE, img)
