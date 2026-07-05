@@ -12,7 +12,7 @@ from typing import cast
 
 from config import (
     COLOR_GREEN, COLOR_RED, COLOR_ORANGE, EXERCISE_CONFIG, MODEL_PKL_PATH,
-    FRAME_WIDTH, FRAME_HEIGHT,
+    FRAME_WIDTH, FRAME_HEIGHT, CLEAN_REP_SCORE_THRESHOLD,
 )
 from pose_module         import PoseDetector
 from exercises           import ExerciseTracker
@@ -199,7 +199,7 @@ class FramePipeline:
             if new_rows:
                 last_row = new_rows[-1]
                 last_row["rep_score"] = round(final, 2)
-                last_row["rep_label"] = "good_rep" if final >= cast(float, cfg.get("clean_depth", 70.0)) else "bad_rep"
+                last_row["rep_label"] = "good_rep" if final >= CLEAN_REP_SCORE_THRESHOLD else "bad_rep"
                 self.session.add_feature_row(last_row)
                 
                 # Save rep to database
