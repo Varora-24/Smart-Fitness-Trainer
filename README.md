@@ -385,5 +385,5 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 
 **Happy Training! 💪**
 
-*Built with ❤️ using Python, OpenCV, and MediaPipe*</content>
+*Built using Python, OpenCV, and MediaPipe*</content>
 <parameter name="filePath">D:\SmartTrainer\README.md
