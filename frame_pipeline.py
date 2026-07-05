@@ -5,13 +5,13 @@
 import os
 import cv2
 import time
-import pickle
+import skops.io as sio
 import numpy as np
 import logging
 from typing import cast
 
 from config import (
-    COLOR_GREEN, COLOR_RED, COLOR_ORANGE, EXERCISE_CONFIG, MODEL_PKL_PATH,
+    COLOR_GREEN, COLOR_RED, COLOR_ORANGE, EXERCISE_CONFIG, MODEL_SKOPS_PATH,
     FRAME_WIDTH, FRAME_HEIGHT, CLEAN_REP_SCORE_THRESHOLD,
 )
 from pose_module         import PoseDetector
@@ -34,11 +34,12 @@ logger = logging.getLogger("frame_pipeline")
 
 
 def _load_ml_model():
-    if os.path.isfile(MODEL_PKL_PATH):
+    if os.path.isfile(MODEL_SKOPS_PATH):
         try:
-            with open(MODEL_PKL_PATH, "rb") as fh:
-                model = pickle.load(fh)
-            logger.info(f"ML model loaded from {MODEL_PKL_PATH}")
+            untrusted = sio.get_untrusted_types(file=MODEL_SKOPS_PATH)
+            model = sio.load(MODEL_SKOPS_PATH, trusted=untrusted) if not untrusted else None
+            if model is not None:
+                logger.info(f"ML model loaded from {MODEL_SKOPS_PATH}")
             return model
         except Exception as e:
             logger.warning(f"Could not load ML model: {e}")

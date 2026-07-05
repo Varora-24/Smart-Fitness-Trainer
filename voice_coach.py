@@ -8,7 +8,10 @@
 
 import threading
 import time
+import logging
 from config import VOICE_ENABLED, VOICE_COOLDOWN_SECS
+
+logger = logging.getLogger("voice_coach")
 
 try:
     import pyttsx3
@@ -133,8 +136,8 @@ class VoiceCoach:
             if self._engine is not None:
                 self._engine.say(phrase)
                 self._engine.runAndWait()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Voice coach speech failed (non-fatal): {e}")
         finally:
             with self._lock:
                 self._busy = False

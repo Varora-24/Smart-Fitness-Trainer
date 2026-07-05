@@ -21,14 +21,14 @@ import sys
 
 import numpy as np
 import pandas as pd
-import pickle
+import skops.io as sio
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, accuracy_score
 
-from config import DATASET_CSV_PATH, MODEL_PKL_PATH
+from config import DATASET_CSV_PATH, MODEL_SKOPS_PATH
 
 # Feature columns used for training
 FEATURE_COLS = ["symmetry", "range_of_motion", "posture", "control"]
@@ -89,15 +89,14 @@ def train(X: np.ndarray, y: np.ndarray) -> GradientBoostingClassifier:
 
 
 def save_model(model: GradientBoostingClassifier, path: str) -> None:
-    with open(path, "wb") as fh:
-        pickle.dump(model, fh)
-    print(f"[train] Model saved → {path}")
+    sio.dump(model, path)
+    print(f"[train] Model saved -> {path}")
 
 
 def main() -> None:
     X, y = load_data(DATASET_CSV_PATH)
     model = train(X, y)
-    save_model(model, MODEL_PKL_PATH)
+    save_model(model, MODEL_SKOPS_PATH)
     print("\n[train] Done.  Run `python main.py` to use the model.")
 
 

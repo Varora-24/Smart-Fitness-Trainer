@@ -167,9 +167,10 @@ def link_reps_to_session(session_id: int, rep_ids: list) -> None:
     conn = get_connection()
     cursor = conn.cursor()
     placeholders = ",".join(["?"] * len(rep_ids))
+    # rep_ids are internal generated integers, placeholders is built from len(rep_ids).
     cursor.execute(f"""
         UPDATE reps SET session_id = ? 
         WHERE id IN ({placeholders});
-    """, [session_id] + rep_ids)
+    """, [session_id] + rep_ids)  # nosec B608
     conn.commit()
     conn.close()

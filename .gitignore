@@ -31,7 +31,7 @@ env/
 
 # ML / Session / DB artifacts
 rep_dataset.csv
-rep_quality_model.pkl
+rep_quality_model.skops
 workout_history.db
 fitness_trainer.log
 last_session.json

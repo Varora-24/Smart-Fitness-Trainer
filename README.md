@@ -372,6 +372,7 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 - **Single-Person Tracking**: The current pipeline is optimized for tracking a single person in the frame.
 - **Lighting Conditions**: MediaPipe performance degrades under low-light conditions or heavy motion blur.
 - **Docker Device Mapping**: Webcam access inside Docker containers requires mapping `/dev/video0` which is only natively supported on Linux hosts.
+- **Safe Model Loading**: We use `skops` instead of Python's standard `pickle` library to safely serialize and deserialize the trained scikit-learn models, avoiding arbitrary code execution vulnerabilities (Bandit B301/B403).
 
 ## 🗺️ Roadmap
 
