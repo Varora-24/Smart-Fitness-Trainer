@@ -392,13 +392,25 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 - [x] **Supplement Info (Educational)** — goal-based supplement reference, static data only
 
 ### 🔜 Planned
-- [ ] **Migrate to MediaPipe Tasks API** — Migrate `pose_module.py` from MediaPipe's deprecated Legacy Solutions API to the current Tasks API (`mediapipe.tasks.python.vision`) - currently pinned to `mediapipe==0.10.21` as a stopgap since Solutions was removed in later versions.
+- [ ] **Migrate to MediaPipe Tasks API** — Migrate `pose_module.py` from MediaPipe's deprecated Legacy Solutions
+  API to the current Tasks API (`mediapipe.tasks.python.vision`) - currently pinned
+  to `mediapipe==0.10.21` as a stopgap. This migration also resolves the accepted
+  protobuf CVE-2026-0994 risk (see Security Notes) by unblocking `protobuf>=5.29.6`.
 - [ ] **Public Deployment** — Streamlit Cloud / Hugging Face Spaces
 - [ ] **Multi-Person Tracking** — independent pose instances per detected person
 - [ ] **Mobile-Responsive Layout** — tuned for phones and tablets
 - [ ] **Web Speech API Browser TTS** — client-side speech synthesis
 - [ ] **Custom Exercise Builder** — record baseline poses to create new exercises
 - [ ] **Integration with Wearables** — sync heart rate and metabolic data
+
+## 🔒 Security Notes
+
+- **protobuf CVE-2026-0994 (PYSEC-2026-1805)**: `mediapipe==0.10.21` pins
+  `protobuf<5`, which excludes the patched `protobuf>=5.29.6`. This CVE is a
+  denial-of-service bug in `protobuf.json_format.ParseDict()` that requires
+  attacker-controlled JSON reaching that specific function — this codebase
+  never does so. Risk accepted and explicitly suppressed in the weekly
+  dependency scan pending the mediapipe Tasks API migration (see Roadmap).
 
 ## ⚠️ Known Limitations
 
