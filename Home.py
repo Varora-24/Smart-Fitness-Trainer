@@ -1,6 +1,16 @@
 import streamlit as st
+from auth import require_login
 
 st.set_page_config(page_title="AI Fitness Trainer — Home", page_icon="🏋️", layout="wide")
+
+require_login()
+
+st.info(
+    "🚧 **Active Development** — This project is being actively expanded. "
+    "Core features (live trainer, video analysis, nutrition, accounts) are functional; "
+    "see the README for what's in progress and what's planned.",
+    icon="🚧",
+)
 
 st.title("🏋️ AI Smart Fitness Trainer v4 Pro")
 st.markdown("---")

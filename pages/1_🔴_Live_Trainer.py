@@ -2,11 +2,14 @@ import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import av
 import db
+from auth import require_login
 
 from frame_pipeline import FramePipeline
 from config import EXERCISE_CONFIG
 
 st.set_page_config(page_title="AI Fitness Trainer — Live", page_icon="🏋️", layout="wide")
+
+require_login()
 
 # WebRTC configuration using public Google STUN server
 RTC_CONFIGURATION = RTCConfiguration({
@@ -67,7 +70,11 @@ if ctx.video_processor:
         # Init database and save session
         try:
             db.init_db()
-            session_id = db.save_session(s, EXERCISE_CONFIG[pipeline.current_key]["display_name"])
+            session_id = db.save_session(
+                s,
+                EXERCISE_CONFIG[pipeline.current_key]["display_name"],
+                user_id=st.session_state.get("user_id"),
+            )
             db.link_reps_to_session(session_id, pipeline.inserted_rep_ids)
             st.success(f"Workout session successfully saved to database with ID: {session_id}")
         except Exception as e:

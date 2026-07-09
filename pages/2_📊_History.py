@@ -7,6 +7,7 @@ import pandas as pd
 import sqlite3
 import json
 import os
+from auth import require_login
 
 # ── Page Configuration ──────────────────────────────────────────
 st.set_page_config(
@@ -15,6 +16,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+require_login()
 
 # Custom CSS for premium aesthetics
 st.markdown("""
@@ -45,14 +48,25 @@ st.markdown("""
 DB_PATH = "workout_history.db"
 
 # ── Data Loading Helpers ────────────────────────────────────────
-def load_db_data():
+def load_db_data(user_id: int):
+    """Load sessions and reps for the currently logged-in user."""
     if not os.path.exists(DB_PATH):
         return pd.DataFrame(), pd.DataFrame()
-    
+
     try:
         conn = sqlite3.connect(DB_PATH)
-        df_sessions = pd.read_sql_query("SELECT * FROM sessions", conn)
-        df_reps = pd.read_sql_query("SELECT * FROM reps", conn)
+        df_sessions = pd.read_sql_query(
+            "SELECT * FROM sessions WHERE user_id = ?",
+            conn,
+            params=(user_id,),
+        )
+        df_reps = pd.read_sql_query(
+            """SELECT r.* FROM reps r
+               JOIN sessions s ON r.session_id = s.id
+               WHERE s.user_id = ?""",
+            conn,
+            params=(user_id,),
+        )
         conn.close()
         return df_sessions, df_reps
     except Exception as e:
@@ -64,20 +78,21 @@ st.title("💪 AI Smart Fitness Trainer - Workout Dashboard")
 st.write("Track your exercise progress, form quality, and training history in real-time.")
 st.markdown("---")
 
-# ── Load Data ───────────────────────────────────────────────────
-df_sessions, df_reps = load_db_data()
+# ── Load Data (filtered by current user) ────────────────────────
+current_user_id = st.session_state["user_id"]
+df_sessions, df_reps = load_db_data(current_user_id)
 
 # ── Live Session View / Last Session tab ────────────────────────
 tab_live, tab_history = st.tabs(["🔴 Live Session Summary", "📊 Historical Trends"])
 
 with tab_live:
     st.subheader("Last Session Overview")
-    
+
     if os.path.exists("last_session.json"):
         try:
             with open("last_session.json", "r") as fh:
                 last_session = json.load(fh)
-                
+
             # Render Metrics Cards
             col1, col2, col3, col4 = st.columns(4)
             with col1:
@@ -108,7 +123,7 @@ with tab_live:
                         <div class="metric-label">Calories Burned</div>
                     </div>
                 """, unsafe_allow_html=True)
-                
+
             st.write("")
             col_l1, col_l2, col_l3 = st.columns(3)
             with col_l1:
@@ -124,49 +139,49 @@ with tab_live:
 
 with tab_history:
     st.subheader("Workout Performance History")
-    
+
     if df_sessions.empty:
         st.info("No historical sessions found. Run the trainer to start collecting data!")
     else:
         # Prepare data fields
         df_sessions['date'] = pd.to_datetime(df_sessions['date'])
         df_sessions['date_str'] = df_sessions['date'].dt.strftime('%m-%d %H:%M')
-        
+
         # Summary metrics
         total_sessions = len(df_sessions)
         total_reps_all = df_sessions['total_reps'].sum()
         total_calories_all = df_sessions['calories'].sum()
         avg_score_all = df_sessions['avg_rep_score'].mean()
-        
+
         col_h1, col_h2, col_h3, col_h4 = st.columns(4)
         col_h1.metric("Total Sessions", total_sessions)
         col_h2.metric("Accumulated Reps", total_reps_all)
         col_h3.metric("Total Calories", f"{total_calories_all:.1f} kcal")
         col_h4.metric("Lifetime Avg Form Score", f"{avg_score_all:.1f}%")
-        
+
         st.write("")
-        
+
         # Visual charts
         col_chart1, col_chart2 = st.columns(2)
-        
+
         with col_chart1:
             st.write("📊 **Reps Per Session Over Time**")
             chart_reps = df_sessions.set_index('date_str')[['total_reps', 'clean_reps']]
             st.bar_chart(chart_reps)
-            
+
         with col_chart2:
             st.write("🔥 **Calories Burned Per Session**")
             chart_calories = df_sessions.set_index('date_str')[['calories']]
             st.line_chart(chart_calories)
-            
+
         st.write("")
         col_chart3, col_chart4 = st.columns(2)
-        
+
         with col_chart3:
             st.write("🎯 **Form Quality Score by Session**")
             chart_scores = df_sessions.set_index('date_str')[['avg_rep_score']]
             st.line_chart(chart_scores)
-            
+
         with col_chart4:
             st.write("🏋️ **Activity Breakdown by Exercise Type**")
             ex_breakdown = df_sessions.groupby('exercise')['total_reps'].sum().reset_index()
@@ -175,4 +190,7 @@ with tab_history:
         # Show raw database tables
         st.write("")
         st.write("📋 **Recent Workout Logs**")
-        st.dataframe(df_sessions.drop(columns=['date_str']).sort_values('date', ascending=False), use_container_width=True)
+        st.dataframe(
+            df_sessions.drop(columns=['date_str']).sort_values('date', ascending=False),
+            use_container_width=True,
+        )
