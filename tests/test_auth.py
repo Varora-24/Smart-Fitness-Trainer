@@ -2,14 +2,16 @@
 #  tests/test_auth.py  –  Authentication unit tests
 # ================================================================
 
+import gc
 import os
 import sqlite3
 import tempfile
+import time
 import pytest
 
 # Patch DB_PATH before importing db/auth so tests use an isolated database
-_TEST_DB_FD, _TEST_DB_PATH = tempfile.mkstemp(suffix=".db")
-os.close(_TEST_DB_FD)
+_TEST_DB_DIR = tempfile.mkdtemp()
+_TEST_DB_PATH = os.path.join(_TEST_DB_DIR, "test_auth.db")
 
 import db
 db.DB_PATH = _TEST_DB_PATH
@@ -20,23 +22,31 @@ import auth
 @pytest.fixture(autouse=True)
 def fresh_db():
     """Reset the test database before each test."""
-    conn = sqlite3.connect(_TEST_DB_PATH)
-    conn.execute("DROP TABLE IF EXISTS reps;")
-    conn.execute("DROP TABLE IF EXISTS sessions;")
-    conn.execute("DROP TABLE IF EXISTS users;")
-    conn.commit()
-    conn.close()
+    # Remove the old DB file entirely to avoid locking issues on Windows
+    for path in (_TEST_DB_PATH, _TEST_DB_PATH + ".pre_migration_backup"):
+        if os.path.exists(path):
+            try:
+                os.unlink(path)
+            except PermissionError:
+                gc.collect()
+                time.sleep(0.1)
+                os.unlink(path)
+
+    db.DB_PATH = _TEST_DB_PATH
     db.init_db()
     yield
-    # cleanup after test module
-    if os.path.exists(_TEST_DB_PATH):
-        pass  # keep for next test; cleaned up at module teardown
+    gc.collect()  # Force-close any lingering sqlite3 connections
 
 
 def teardown_module():
+    gc.collect()
+    time.sleep(0.2)
     for path in (_TEST_DB_PATH, _TEST_DB_PATH + ".pre_migration_backup"):
         if os.path.exists(path):
-            os.unlink(path)
+            try:
+                os.unlink(path)
+            except PermissionError:
+                pass  # Best-effort cleanup
 
 
 class TestPasswordHashing:
