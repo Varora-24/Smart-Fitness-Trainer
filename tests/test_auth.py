@@ -13,10 +13,10 @@ import pytest
 _TEST_DB_DIR = tempfile.mkdtemp()
 _TEST_DB_PATH = os.path.join(_TEST_DB_DIR, "test_auth.db")
 
-import db
+import db  # noqa: E402 — must patch DB_PATH before import
 db.DB_PATH = _TEST_DB_PATH
 
-import auth
+import auth  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
