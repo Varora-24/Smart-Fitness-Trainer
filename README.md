@@ -392,6 +392,7 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 - [x] **Supplement Info (Educational)** — goal-based supplement reference, static data only
 
 ### 🔜 Planned
+- [ ] **Migrate to MediaPipe Tasks API** — Migrate `pose_module.py` from MediaPipe's deprecated Legacy Solutions API to the current Tasks API (`mediapipe.tasks.python.vision`) - currently pinned to `mediapipe==0.10.21` as a stopgap since Solutions was removed in later versions.
 - [ ] **Public Deployment** — Streamlit Cloud / Hugging Face Spaces
 - [ ] **Multi-Person Tracking** — independent pose instances per detected person
 - [ ] **Mobile-Responsive Layout** — tuned for phones and tablets
