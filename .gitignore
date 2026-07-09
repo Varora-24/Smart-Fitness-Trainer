@@ -37,6 +37,7 @@ fitness_trainer.log
 last_session.json
 benchmark_results.md
 antigravity_prompt.md
+antigravity_feature_expansion_prompt.md
 
 # OS files
 .DS_Store

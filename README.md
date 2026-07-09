@@ -2,6 +2,10 @@
 
 [![CI Verification](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml/badge.svg)](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml)
 
+> 🚧 **Active Development** — This project is being actively expanded. Core
+> features (live trainer, video analysis, nutrition, accounts) are functional;
+> see [Roadmap](#-roadmap) below for what's in progress and what's planned.
+
 An advanced AI-powered fitness training application that uses computer vision and machine learning to provide real-time exercise tracking, form analysis, and personalized coaching feedback.
 
 ![AI Fitness Trainer](https://img.shields.io/badge/AI--Powered-Fitness-blue?style=for-the-badge)
@@ -343,9 +347,12 @@ streamlit run Home.py
 ```
 
 ### Pages Structure:
-- **`Home.py`**: The landing page explaining features and navigation links.
+- **`Home.py`**: The landing page explaining features and navigation links. Requires login.
 - **`1_🔴_Live_Trainer.py`**: Allows users to grant camera permission in their browser and runs the exact same computer vision and form assessment logic via WebRTC.
-- **`2_📊_History.py`**: Displays historical workout statistics and charts from your local `workout_history.db`.
+- **`2_📊_History.py`**: Displays historical workout statistics and charts filtered by the logged-in user.
+- **`3_📹_Video_Analysis.py`**: Upload a video of your exercise for automated posture analysis and annotated output.
+- **`4_🥗_Nutrition.py`**: Personalised macro/calorie calculator using the Mifflin-St Jeor equation.
+- **`5_💊_Supplements.py`**: Goal-based educational supplement information (see [Known Limitations](#-known-limitations)).
 
 ---
 
@@ -376,14 +383,32 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 
 ## 🗺️ Roadmap
 
-- [ ] **Web Speech API Browser TTS**: Implement browser-based speech synthesis using custom Streamlit HTML components accessing `window.speechSynthesis.speak(...)` in JavaScript.
-- [ ] **Multi-Person Mode**: Crop segmented persons to run independent pose instances.
-- [ ] **Custom Exercise Builder**: Web interface to record baseline poses and generate custom exercise configurations dynamically.
-- [ ] **Integration with Wearables**: Sync heart rate and metabolic data to improve calorie calculations.
+### ✅ Completed
+- [x] **Live WebRTC Trainer** — real-time pose tracking in the browser
+- [x] **Workout History Dashboard** — session analytics with charts
+- [x] **User Accounts** — signup/login with bcrypt password hashing
+- [x] **Video-Upload Posture Analysis** — upload exercise videos for automated form scoring
+- [x] **Macro / Nutrition Calculator** — Mifflin-St Jeor BMR, TDEE, and macro targets
+- [x] **Supplement Info (Educational)** — goal-based supplement reference, static data only
+
+### 🔜 Planned
+- [ ] **Public Deployment** — Streamlit Cloud / Hugging Face Spaces
+- [ ] **Multi-Person Tracking** — independent pose instances per detected person
+- [ ] **Mobile-Responsive Layout** — tuned for phones and tablets
+- [ ] **Web Speech API Browser TTS** — client-side speech synthesis
+- [ ] **Custom Exercise Builder** — record baseline poses to create new exercises
+- [ ] **Integration with Wearables** — sync heart rate and metabolic data
+
+## ⚠️ Known Limitations
+
+- **Supplement information is general/educational** — it is not personalised medical or dietary advice. The in-app disclaimer matches this scope.
+- **Single-person tracking only** — the pipeline currently tracks one person per frame.
+- **Lighting sensitivity** — MediaPipe performance degrades under low-light or heavy motion blur.
+- **Docker webcam limitations** — device mapping (`/dev/video0`) is only natively supported on Linux hosts.
+- **SQLite on free hosting** — `workout_history.db` is ephemeral on Streamlit Community Cloud's free tier.
 
 ---
 
 **Happy Training! 💪**
 
-*Built using Python, OpenCV, and MediaPipe*</content>
-<parameter name="filePath">D:\SmartTrainer\README.md
+*Built with ❤️ using Python, OpenCV, and MediaPipe*
