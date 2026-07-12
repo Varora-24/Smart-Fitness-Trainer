@@ -20,7 +20,7 @@ from exercise_classifier import ExerciseClassifier
 from session_tracker     import WorkoutSession
 from setup_mode          import CameraSetup
 from voice_coach         import VoiceCoach
-import db
+
 
 from utils import (
     draw_progress_bar, draw_rep_panel, draw_stats_panel,
