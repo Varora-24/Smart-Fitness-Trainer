@@ -5,7 +5,8 @@
 
 # Core computer vision
 opencv-python==4.9.0.80
-mediapipe==0.10.21
+mediapipe==0.10.35
+protobuf==5.29.6
 numpy==1.26.4
 
 # ML training (train_model.py)
