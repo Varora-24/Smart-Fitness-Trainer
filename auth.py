@@ -42,10 +42,11 @@ def _render_auth_forms() -> None:
                 else:
                     try:
                         response = client.auth.sign_in_with_password({"email": email, "password": password})
-                        st.session_state["supabase_session"] = response.session
-                        st.session_state["user_id"] = response.user.id
-                        st.session_state["email"] = response.user.email
-                        st.rerun()
+                        if response.session and response.user:
+                            st.session_state["supabase_session"] = response.session
+                            st.session_state["user_id"] = response.user.id
+                            st.session_state["email"] = response.user.email
+                            st.rerun()
                     except Exception as e:
                         st.error(f"Invalid email or password. Details: {e}")
 
@@ -65,7 +66,7 @@ def _render_auth_forms() -> None:
                 else:
                     try:
                         response = client.auth.sign_up({"email": new_email, "password": new_password})
-                        if response.session:
+                        if response.session and response.user:
                             st.session_state["supabase_session"] = response.session
                             st.session_state["user_id"] = response.user.id
                             st.session_state["email"] = response.user.email
