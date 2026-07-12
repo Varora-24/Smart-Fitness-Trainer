@@ -70,6 +70,13 @@ def main():
 
     # ── Shared Processing Pipeline ──────────────────────────────
     pipeline = FramePipeline(exercise_key="squats", in_setup=in_setup)
+    
+    try:
+        session_id = db.save_session({}, EXERCISE_CONFIG[pipeline.current_key]["display_name"])
+        pipeline.session.session_id = session_id
+        logger.info(f"Started DB session ID: {session_id}")
+    except Exception as e:
+        logger.error(f"Failed to start DB session: {e}")
 
     logger.info("AI Smart Fitness Trainer running. Use keyboard keys to interact.")
 
@@ -96,6 +103,13 @@ def main():
             if key == ex_cfg["key"] and ex_key != pipeline.current_key:
                 logger.info(f"Switched → {ex_cfg['display_name']}")
                 pipeline.set_exercise(ex_key)
+                
+                # Create a new session in DB for the new exercise
+                try:
+                    session_id = db.save_session({}, ex_cfg["display_name"])
+                    pipeline.session.session_id = session_id
+                except Exception as e:
+                    logger.error(f"Failed to start new DB session: {e}")
                 break
 
         if key == ord('a'):
@@ -117,13 +131,13 @@ def main():
 
     s = pipeline.session.summary()
 
-    # Save session summary to database and link reps
+    # Save session summary to database
     try:
-        session_id = db.save_session(s, EXERCISE_CONFIG[pipeline.current_key]["display_name"])
-        db.save_all_reps(session_id, pipeline.session._all_feature_rows)
-        logger.info(f"Workout session successfully saved to database with ID: {session_id}")
+        if pipeline.session.session_id:
+            db.update_session(pipeline.session.session_id, s)
+            logger.info(f"Workout session successfully finalized in database with ID: {pipeline.session.session_id}")
     except Exception as e:
-        logger.error(f"Failed to save session to database: {e}")
+        logger.error(f"Failed to finalize session in database: {e}")
 
     # Persist last_session.json for Streamlit dashboard
     try:

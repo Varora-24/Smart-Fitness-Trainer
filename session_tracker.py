@@ -39,6 +39,7 @@ class WorkoutSession:
         self.total_calories: float = 0.0
         self._started    : bool  = False
         self._all_feature_rows: list = []
+        self.session_id  : int | None = None
 
     # ── Lifecycle ────────────────────────────────────────────
     def start(self) -> None:
@@ -74,8 +75,11 @@ class WorkoutSession:
             self.bad_reps   += 1
 
     def add_feature_row(self, row: dict) -> None:
-        """Accumulate feature row for CSV/DB export later."""
+        """Accumulate feature row for CSV/DB export later, and save to DB."""
         self._all_feature_rows.append(row)
+        if self.session_id:
+            import db
+            db.save_rep(self.session_id, row)
 
     # ── Analytics ────────────────────────────────────────────
     @property

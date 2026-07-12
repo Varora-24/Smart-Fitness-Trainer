@@ -22,6 +22,17 @@ class LiveVideoProcessor(VideoProcessorBase):
         self.pipeline = FramePipeline(exercise_key="squats", in_setup=False)
         # Suppress server-side pyttsx3 voice coaching on Streamlit Community Cloud / headless
         self.pipeline.voice_muted = True
+        
+        # Init DB session
+        try:
+            import db
+            import streamlit as st
+            db.init_db()
+            user_id = st.session_state.get("user_id")
+            session_id = db.save_session({}, "squats", user_id=user_id)
+            self.pipeline.session.session_id = session_id
+        except Exception:
+            pass
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
@@ -59,6 +70,14 @@ if ctx.video_processor:
     target_key = exercise_labels[chosen_label]
     if ctx.video_processor.pipeline.current_key != target_key:
         ctx.video_processor.pipeline.set_exercise(target_key)
+        
+        # Create a new session in DB for the new exercise
+        try:
+            user_id = st.session_state.get("user_id")
+            session_id = db.save_session({}, chosen_label, user_id=user_id)
+            ctx.video_processor.pipeline.session.session_id = session_id
+        except Exception:
+            pass
     ctx.video_processor.pipeline.auto_mode = auto_mode
     ctx.video_processor.pipeline.show_debug = show_debug
 
@@ -67,18 +86,13 @@ if ctx.video_processor:
         pipeline.session.export_csv()
         s = pipeline.get_summary()
 
-        # Init database and save session
+        # Init database and update session
         try:
-            db.init_db()
-            session_id = db.save_session(
-                s,
-                EXERCISE_CONFIG[pipeline.current_key]["display_name"],
-                user_id=st.session_state.get("user_id"),
-            )
-            db.save_all_reps(session_id, pipeline.session._all_feature_rows)
-            st.success(f"Workout session successfully saved to database with ID: {session_id}")
+            if pipeline.session.session_id:
+                db.update_session(pipeline.session.session_id, s)
+                st.success(f"Workout session successfully finalized in database with ID: {pipeline.session.session_id}")
         except Exception as e:
-            st.error(f"Failed to save session to database: {e}")
+            st.error(f"Failed to finalize session in database: {e}")
 
         # Persist last_session.json for dashboard
         try:

@@ -60,7 +60,7 @@ def update_user_profile(user_id: str, **fields: object) -> None:
 
 def save_session(summary_dict: dict, exercise: str, user_id: str | None = None) -> int:
     """
-    Save a workout session summary to the sessions table.
+    Create a workout session and return its ID.
     """
     client = _get_client()
     now_str = datetime.now().isoformat()
@@ -68,12 +68,12 @@ def save_session(summary_dict: dict, exercise: str, user_id: str | None = None) 
         res = client.table("sessions").insert({
             "user_id": user_id,
             "exercise": exercise,
-            "total_reps": summary_dict.get("total_reps", 0),
-            "clean_reps": summary_dict.get("clean_reps", 0),
-            "bad_reps": summary_dict.get("bad_reps", 0),
-            "calories": summary_dict.get("calories", 0.0),
-            "duration_secs": summary_dict.get("duration_secs", 0.0),
-            "avg_rep_score": summary_dict.get("avg_rep_score", 0.0),
+            "total_reps": 0,
+            "clean_reps": 0,
+            "bad_reps": 0,
+            "calories": 0.0,
+            "duration_secs": 0.0,
+            "avg_rep_score": 0.0,
             "started_at": now_str
         }).execute()
         if res.data:
@@ -84,19 +84,35 @@ def save_session(summary_dict: dict, exercise: str, user_id: str | None = None) 
     return 0
 
 
-def save_all_reps(session_id: int, feature_rows: list) -> None:
+def update_session(session_id: int, summary_dict: dict) -> None:
     """
-    Bulk save a list of reps for a given session.
+    Update a workout session with final metrics.
     """
-    if not feature_rows or not session_id:
+    if not session_id:
+        return
+    client = _get_client()
+    try:
+        client.table("sessions").update({
+            "total_reps": summary_dict.get("total_reps", 0),
+            "clean_reps": summary_dict.get("clean_reps", 0),
+            "bad_reps": summary_dict.get("bad_reps", 0),
+            "calories": summary_dict.get("calories", 0.0),
+            "duration_secs": summary_dict.get("duration_secs", 0.0),
+            "avg_rep_score": summary_dict.get("avg_rep_score", 0.0)
+        }).eq("id", session_id).execute()
+    except Exception as e:
+        logger.error(f"Supabase session update failed: {e}")
+
+def save_rep(session_id: int, row: dict) -> None:
+    """
+    Save a single rep incrementally.
+    """
+    if not session_id or not row:
         return
     
     client = _get_client()
     now_str = datetime.now().isoformat()
-    reps_data = []
-    
-    for row in feature_rows:
-        reps_data.append({
+    rep_data = {
             "session_id": session_id,
             "exercise": row.get("exercise", "unknown"),
             "symmetry": row.get("symmetry", 0.0),
@@ -106,12 +122,12 @@ def save_all_reps(session_id: int, feature_rows: list) -> None:
             "rep_score": row.get("rep_score", 0.0),
             "rep_label": row.get("rep_label", "bad_rep"),
             "created_at": now_str
-        })
+        }
         
     try:
-        client.table("reps").insert(reps_data).execute()
+        client.table("reps").insert(rep_data).execute()
     except Exception as e:
-        logger.error(f"Supabase rep bulk insert failed: {e}")
+        logger.error(f"Supabase rep insert failed: {e}")
 
 
 def get_history(exercise: str | None = None, limit: int = 50, user_id: str | None = None) -> list:
@@ -120,7 +136,7 @@ def get_history(exercise: str | None = None, limit: int = 50, user_id: str | Non
     RLS ensures users only see their own sessions.
     """
     client = _get_client()
-    query = client.table("sessions").select("*")
+    query = client.table("sessions").select("*").gt("total_reps", 0)
     if exercise:
         query = query.eq("exercise", exercise)
     query = query.order("started_at", desc=True).limit(limit)
