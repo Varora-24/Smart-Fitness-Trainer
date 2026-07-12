@@ -37,8 +37,7 @@ def test_pipeline_get_summary_keys(mock_detector_cls):
     assert expected_keys.issubset(summary.keys())
 
 @patch("frame_pipeline.PoseDetector")
-@patch("frame_pipeline.db.save_rep")
-def test_pipeline_rep_label_thresholding(mock_save_rep, mock_detector_cls):
+def test_pipeline_rep_label_thresholding(mock_detector_cls):
     pipeline = FramePipeline(exercise_key="squats", in_setup=False)
     pipeline.ml_model = None  # Force blended score to equal rule score
     

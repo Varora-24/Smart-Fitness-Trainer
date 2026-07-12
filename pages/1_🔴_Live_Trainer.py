@@ -75,7 +75,7 @@ if ctx.video_processor:
                 EXERCISE_CONFIG[pipeline.current_key]["display_name"],
                 user_id=st.session_state.get("user_id"),
             )
-            db.link_reps_to_session(session_id, pipeline.inserted_rep_ids)
+            db.save_all_reps(session_id, pipeline.session._all_feature_rows)
             st.success(f"Workout session successfully saved to database with ID: {session_id}")
         except Exception as e:
             st.error(f"Failed to save session to database: {e}")

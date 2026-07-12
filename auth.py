@@ -1,64 +1,60 @@
 # ================================================================
 #  auth.py  –  Streamlit session-based authentication
 # ================================================================
-#  Provides require_login() guard for all pages, plus signup/login
-#  forms backed by bcrypt password hashing and the SQLite users table.
-# ================================================================
 
-import bcrypt
+import os
 import streamlit as st
-import db
+from supabase import create_client, Client
 
-
-def _hash_password(password: str) -> str:
-    """Return a bcrypt hash of the given plaintext password."""
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
-
-def _verify_password(password: str, stored_hash: str) -> bool:
-    """Check a plaintext password against a stored bcrypt hash."""
+def get_secret(key: str) -> str:
     try:
-        return bcrypt.checkpw(password.encode(), stored_hash.encode())
-    except (ValueError, TypeError):
-        # Invalid hash format (e.g. "!" for legacy account) → always reject
-        return False
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.environ[key]
 
+def get_supabase_client() -> Client:
+    url = get_secret("SUPABASE_URL")
+    key = get_secret("SUPABASE_ANON_KEY")
+    return create_client(url, key)
+
+def get_authenticated_client() -> Client:
+    """Return a Supabase client initialized with the current user's session."""
+    client = get_supabase_client()
+    if "supabase_session" in st.session_state:
+        session = st.session_state["supabase_session"]
+        client.auth.set_session(session.access_token, session.refresh_token)
+    return client
 
 def _render_auth_forms() -> None:
-    """Render login and signup tabs; set session_state on success."""
     st.markdown("### 🔐 Please log in or create an account to continue")
-
     tab_login, tab_signup = st.tabs(["Log In", "Sign Up"])
+
+    client = get_supabase_client()
 
     with tab_login:
         with st.form("login_form"):
             email = st.text_input("Email", key="login_email")
             password = st.text_input("Password", type="password", key="login_password")
             submitted = st.form_submit_button("Log In")
-
             if submitted:
                 if not email or not password:
                     st.error("Please enter both email and password.")
                 else:
-                    user = db.get_user_by_email(email)
-                    if user and _verify_password(password, user["password_hash"]):
-                        st.session_state["user_id"] = user["id"]
-                        st.session_state["email"] = user["email"]
-                        st.session_state["display_name"] = user.get("display_name", "")
+                    try:
+                        response = client.auth.sign_in_with_password({"email": email, "password": password})
+                        st.session_state["supabase_session"] = response.session
+                        st.session_state["user_id"] = response.user.id
+                        st.session_state["email"] = response.user.email
                         st.rerun()
-                    else:
-                        st.error("Invalid email or password.")
+                    except Exception as e:
+                        st.error(f"Invalid email or password. Details: {e}")
 
     with tab_signup:
         with st.form("signup_form"):
             new_email = st.text_input("Email", key="signup_email")
-            new_name = st.text_input("Display Name (optional)", key="signup_name")
             new_password = st.text_input("Password", type="password", key="signup_password")
-            confirm_password = st.text_input(
-                "Confirm Password", type="password", key="signup_confirm"
-            )
+            confirm_password = st.text_input("Confirm Password", type="password", key="signup_confirm")
             submitted = st.form_submit_button("Create Account")
-
             if submitted:
                 if not new_email or not new_password:
                     st.error("Email and password are required.")
@@ -67,38 +63,47 @@ def _render_auth_forms() -> None:
                 elif len(new_password) < 8:
                     st.error("Password must be at least 8 characters.")
                 else:
-                    existing = db.get_user_by_email(new_email)
-                    if existing:
-                        st.error("An account with this email already exists.")
-                    else:
-                        hashed = _hash_password(new_password)
-                        user_id = db.create_user(
-                            email=new_email,
-                            password_hash=hashed,
-                            display_name=new_name or None,
-                        )
-                        st.session_state["user_id"] = user_id
-                        st.session_state["email"] = new_email
-                        st.session_state["display_name"] = new_name or ""
-                        st.success("Account created! Redirecting...")
-                        st.rerun()
-
+                    try:
+                        response = client.auth.sign_up({"email": new_email, "password": new_password})
+                        if response.session:
+                            st.session_state["supabase_session"] = response.session
+                            st.session_state["user_id"] = response.user.id
+                            st.session_state["email"] = response.user.email
+                            st.success("Account created! Redirecting...")
+                            st.rerun()
+                        else:
+                            st.info("Account created! Please verify your email to log in.")
+                    except Exception as e:
+                        st.error(f"Error creating account: {e}")
 
 def require_login() -> None:
     """
     Call at the top of any Streamlit page that requires authentication.
-
-    If the user is not logged in, renders a login/signup form and
-    calls st.stop() to prevent the rest of the page from rendering.
-
-    Session state keys set on successful auth:
-      - user_id (int)
-      - email (str)
-      - display_name (str)
     """
-    # Ensure DB schema is ready (idempotent)
-    db.init_db()
-
-    if "user_id" not in st.session_state:
+    if "supabase_session" not in st.session_state:
         _render_auth_forms()
         st.stop()
+        return
+    
+    client = get_supabase_client()
+    session = st.session_state["supabase_session"]
+    try:
+        # Refresh session if needed
+        res = client.auth.set_session(session.access_token, session.refresh_token)
+        if res.session:
+            st.session_state["supabase_session"] = res.session
+    except Exception:
+        # Session expired or invalid
+        st.session_state.pop("supabase_session", None)
+        st.session_state.pop("user_id", None)
+        st.session_state.pop("email", None)
+        st.rerun()
+
+def logout() -> None:
+    client = get_authenticated_client()
+    client.auth.sign_out()
+    st.session_state.pop("supabase_session", None)
+    st.session_state.pop("user_id", None)
+    st.session_state.pop("email", None)
+    st.session_state.pop("display_name", None)
+    st.rerun()

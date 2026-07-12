@@ -120,7 +120,7 @@ def main():
     # Save session summary to database and link reps
     try:
         session_id = db.save_session(s, EXERCISE_CONFIG[pipeline.current_key]["display_name"])
-        db.link_reps_to_session(session_id, pipeline.inserted_rep_ids)
+        db.save_all_reps(session_id, pipeline.session._all_feature_rows)
         logger.info(f"Workout session successfully saved to database with ID: {session_id}")
     except Exception as e:
         logger.error(f"Failed to save session to database: {e}")

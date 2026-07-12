@@ -293,13 +293,25 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Database Schema
 
-The application uses SQLite to persist training history across sessions. The schema layout is as follows:
+The application uses **Supabase (PostgreSQL)** to persist training history and user profiles securely. Row Level Security (RLS) ensures users can only access their own data.
 
 ```mermaid
 erDiagram
+    profiles {
+        uuid id PK
+        text display_name
+        real weight_kg
+        real height_cm
+        int age
+        text sex
+        text activity_level
+        text fitness_goal
+        text created_at
+    }
     sessions {
         int id PK
-        text date
+        uuid user_id FK
+        text started_at
         text exercise
         int total_reps
         int clean_reps
@@ -318,8 +330,9 @@ erDiagram
         real control
         real rep_score
         text rep_label
-        text timestamp
+        text created_at
     }
+    profiles ||--o{ sessions : "has"
     sessions ||--o{ reps : "tracks"
 ```
 
@@ -363,7 +376,7 @@ You can deploy the app to **Streamlit Community Cloud** or **Hugging Face Spaces
 ### 1. Streamlit Community Cloud
 - Push this repository to your GitHub profile.
 - Go to [share.streamlit.io](https://share.streamlit.io) and deploy a new app pointing at `Home.py` on your main branch.
-- **Ephemerality Note**: On the free tier, the SQLite file `workout_history.db` is ephemeral and resets on each redeploy.
+- Pushing to Streamlit Cloud allows the app to connect to your remote Supabase instance seamlessly. Ensure you add `SUPABASE_URL` and `SUPABASE_ANON_KEY` to the Streamlit Community Cloud secrets management dashboard.
 
 ### 2. Hugging Face Spaces
 - Alternatively, deploy as a Streamlit Space on Hugging Face. Set the SDK to `streamlit` and the entrypoint to `Home.py`.
@@ -386,7 +399,7 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 ### ✅ Completed
 - [x] **Live WebRTC Trainer** — real-time pose tracking in the browser
 - [x] **Workout History Dashboard** — session analytics with charts
-- [x] **User Accounts** — signup/login with bcrypt password hashing
+- [x] **User Accounts** — Supabase Auth for robust login and signup
 - [x] **Video-Upload Posture Analysis** — upload exercise videos for automated form scoring
 - [x] **Macro / Nutrition Calculator** — Mifflin-St Jeor BMR, TDEE, and macro targets
 - [x] **Supplement Info (Educational)** — goal-based supplement reference, static data only
@@ -418,7 +431,6 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 - **Single-person tracking only** — the pipeline currently tracks one person per frame.
 - **Lighting sensitivity** — MediaPipe performance degrades under low-light or heavy motion blur.
 - **Docker webcam limitations** — device mapping (`/dev/video0`) is only natively supported on Linux hosts.
-- **SQLite on free hosting** — `workout_history.db` is ephemeral on Streamlit Community Cloud's free tier.
 
 ---
 
