@@ -203,8 +203,7 @@ class FramePipeline:
                 last_row["rep_label"] = "good_rep" if final >= CLEAN_REP_SCORE_THRESHOLD else "bad_rep"
                 self.session.add_feature_row(last_row)
                 
-                # Skip saving to DB here. 
-                # Reps will be bulk-saved at the end of the session to satisfy Supabase RLS.
+                # Rep is incrementally saved to DB synchronously inside session.add_feature_row().
 
             # Voice coaching / Captions
             rom_ok = self.tracker.last_rep_min_angle <= cast(float, cfg.get("rom_min_angle", 100.0))

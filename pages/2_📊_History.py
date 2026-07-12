@@ -4,9 +4,9 @@
 
 import streamlit as st
 import pandas as pd
-import sqlite3
-import json
 import os
+import json
+import db
 from auth import require_login
 
 # ── Page Configuration ──────────────────────────────────────────
@@ -48,26 +48,14 @@ st.markdown("""
 DB_PATH = "workout_history.db"
 
 # ── Data Loading Helpers ────────────────────────────────────────
-def load_db_data(user_id: int):
+def load_db_data(user_id: str):
     """Load sessions and reps for the currently logged-in user."""
-    if not os.path.exists(DB_PATH):
-        return pd.DataFrame(), pd.DataFrame()
-
     try:
-        conn = sqlite3.connect(DB_PATH)
-        df_sessions = pd.read_sql_query(
-            "SELECT * FROM sessions WHERE user_id = ?",
-            conn,
-            params=(user_id,),
-        )
-        df_reps = pd.read_sql_query(
-            """SELECT r.* FROM reps r
-               JOIN sessions s ON r.session_id = s.id
-               WHERE s.user_id = ?""",
-            conn,
-            params=(user_id,),
-        )
-        conn.close()
+        sessions = db.get_history(user_id=user_id, limit=200)
+        reps = db.get_reps_for_user(user_id=user_id, limit=2000)
+        
+        df_sessions = pd.DataFrame(sessions)
+        df_reps = pd.DataFrame(reps)
         return df_sessions, df_reps
     except Exception as e:
         st.error(f"Error loading database: {e}")
