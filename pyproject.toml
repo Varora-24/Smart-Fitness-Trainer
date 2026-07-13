@@ -9,11 +9,11 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-exclude = ["venv", "venv1", "venv2", "venv3", ".venv", "test_venv"]
+exclude = ["venv", "venv1", "venv2", "venv3", ".venv"]
 
 [tool.mypy]
 ignore_missing_imports = true
-exclude = ["(?x)(^pages/|^venv/|^venv1/|^venv2/|^venv3/|^\\.venv/|^test_venv/)"]
+exclude = ["(?x)(^pages/|^venv/|^venv1/|^venv2/|^venv3/|^\\.venv/)"]
 
 [tool.bandit]
-exclude_dirs = ["tests", ".git", ".venv", "venv", "venv1", "venv2", "venv3", "test_venv", "SmartTrainer"]
+exclude_dirs = ["tests", ".git", ".venv", "venv", "venv1", "venv2", "venv3", "SmartTrainer"]

@@ -1,3 +1,4 @@
+import pytest  # noqa: F401
 import numpy as np
 from unittest.mock import MagicMock, patch
 from pose_module import PoseDetector
