@@ -19,7 +19,7 @@
 # ================================================================
 
 import numpy as np
-from config import EXERCISE_CONFIG, FRAME_HEIGHT
+from config import EXERCISE_CONFIG, FRAME_HEIGHT, CLASSIFIER_SWITCH_MARGIN
 
 
 # Per-exercise signal weights  { exercise_key: { signal: weight } }
@@ -50,7 +50,7 @@ _SIGNAL_WEIGHTS = {
     },
 }
 
-WINDOW_FRAMES = 45   # frames per classification window (~1.5 s at 30 fps)
+WINDOW_FRAMES = 90   # frames per classification window (~3 s at 30 fps)
 
 
 class ExerciseClassifier:
@@ -67,6 +67,10 @@ class ExerciseClassifier:
         self.exercise : str   = "squats"   # current best guess
         self._scores  : dict  = {k: 0.0 for k in EXERCISE_CONFIG}
         self._frame   : int   = 0
+        
+        self._pending_candidate: str | None = None
+        self._pending_count: int = 0
+
         # Smoothed signal values for the debug readout
         self._signals : dict  = {}
 
@@ -97,7 +101,25 @@ class ExerciseClassifier:
 
         # Every window: pick winner and reset
         if self._frame >= WINDOW_FRAMES:
-            self.exercise = max(self._scores, key=lambda k: float(self._scores[k]))
+            candidate = max(self._scores, key=lambda k: float(self._scores[k]))
+            current_score = float(self._scores.get(self.exercise, 0.0))
+            candidate_score = float(self._scores[candidate])
+
+            if candidate != self.exercise and candidate_score > current_score * CLASSIFIER_SWITCH_MARGIN:
+                if candidate == self._pending_candidate:
+                    self._pending_count += 1
+                else:
+                    self._pending_candidate = candidate
+                    self._pending_count = 1
+
+                if self._pending_count >= 2:
+                    self.exercise = candidate
+                    self._pending_candidate = None
+                    self._pending_count = 0
+            else:
+                self._pending_candidate = None
+                self._pending_count = 0
+
             self._scores  = {k: 0.0 for k in EXERCISE_CONFIG}
             self._frame   = 0
 

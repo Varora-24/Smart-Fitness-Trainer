@@ -11,6 +11,7 @@
 WINDOW_TITLE  = "AI Smart Fitness Trainer v3 Pro"
 FRAME_WIDTH   = 1280
 FRAME_HEIGHT  = 720
+CLASSIFIER_SWITCH_MARGIN = 1.3  # Winning score must exceed current by this multiplier
 
 # ── MediaPipe ────────────────────────────────────────────────────
 DETECTION_CONFIDENCE    = 0.7
