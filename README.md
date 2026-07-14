@@ -1,3 +1,13 @@
+---
+title: Smart Fitness Trainer
+emoji: 🏋️
+colorFrom: blue
+colorTo: green
+sdk: streamlit
+app_file: Home.py
+pinned: false
+license: mit
+---
 # AI Smart Fitness Trainer v4 Pro
 
 [![CI Verification](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml/badge.svg)](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml)
