@@ -28,4 +28,14 @@ jobs:
           git commit -m "Automated deployment to Hugging Face Spaces"
           
           # Force push this single snapshot commit to Hugging Face's main branch
-          git push hf hf-deploy:main --force
+          git push hf hf-deploy:main --force > push.log 2>&1 || (
+            git clone https://user:${HF_TOKEN}@huggingface.co/spaces/VanshAro/Smarttrainer hf_logs_space || true
+            cp push.log hf_logs_space/ || true
+            cd hf_logs_space || true
+            git config --global user.name "github-actions"
+            git config --global user.email "github-actions@github.com"
+            git add push.log
+            git commit -m "chore: upload orphan deploy failure log" || true
+            git push || true
+            exit 1
+          )
