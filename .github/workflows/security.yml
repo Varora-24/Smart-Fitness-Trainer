@@ -25,24 +25,10 @@ jobs:
           
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt > pip_install.log 2>&1 || exit 1
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt -r requirements-dev.txt
           
       - name: Run pip-audit
         run: |
           pip install pip-audit
-          pip-audit --local > audit.log 2>&1 || exit 1
-
-      - name: Commit and push logs to HF Space on failure
-        if: failure()
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git clone https://user:$HF_TOKEN@huggingface.co/spaces/VanshAro/Smarttrainer hf_space || true
-          cp *.log hf_space/ || true
-          cd hf_space || true
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add *.log
-          git commit -m "chore: upload failure logs" || true
-          git push || true
+          pip-audit --local

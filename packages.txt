@@ -5,3 +5,6 @@ portaudio19-dev
 libportaudio2
 espeak
 libasound2
+
+libgles2
+libgles2-mesa-dev
