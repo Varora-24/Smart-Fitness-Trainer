@@ -24,6 +24,13 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git checkout --orphan hf-deploy
+          
+          # Hugging Face rejects binary files unless they are tracked with LFS
+          git lfs install
+          git lfs track "*.task"
+          git lfs track "*.pdf"
+          
+          git add .gitattributes
           git add -A
           git commit -m "Automated deployment to Hugging Face Spaces"
           
