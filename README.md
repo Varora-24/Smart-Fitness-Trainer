@@ -3,8 +3,7 @@ title: Smart Fitness Trainer
 emoji: 🏋️
 colorFrom: blue
 colorTo: green
-sdk: streamlit
-app_file: Home.py
+sdk: docker
 pinned: false
 license: mit
 ---
