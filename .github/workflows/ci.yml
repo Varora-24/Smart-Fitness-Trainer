@@ -52,9 +52,14 @@ jobs:
       - name: Pytest Unit Tests
         run: pytest -v > pytest.log 2>&1 || exit 1
 
-      - name: Commit and push logs on failure
+      - name: Commit and push logs to HF Space on failure
         if: failure()
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git clone https://user:$HF_TOKEN@huggingface.co/spaces/VanshAro/Smarttrainer hf_space || true
+          cp *.log hf_space/ || true
+          cd hf_space || true
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add *.log
@@ -90,9 +95,14 @@ jobs:
       - name: Run full test suite on cold install
         run: pytest -v > cold_pytest.log 2>&1 || exit 1
 
-      - name: Commit and push logs on failure
+      - name: Commit and push logs to HF Space on failure
         if: failure()
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git clone https://user:$HF_TOKEN@huggingface.co/spaces/VanshAro/Smarttrainer hf_space || true
+          cp *.log hf_space/ || true
+          cd hf_space || true
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add *.log
