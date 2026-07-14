@@ -1,10 +1,5 @@
 libgl1
-libglib2.0-0
 libgomp1
 portaudio19-dev
-libportaudio2
 espeak
-libasound2
-
 libgles2
-libgles2-mesa-dev
