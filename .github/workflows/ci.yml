@@ -64,7 +64,14 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgomp1 portaudio19-dev libportaudio2 espeak libasound2t64
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 \
+            libglib2.0-0 \
+            libgomp1 \
+            portaudio19-dev \
+            libportaudio2 \
+            espeak
+          sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
       - name: Cold install (no cache)
         run: |
           python -m pip install --upgrade pip

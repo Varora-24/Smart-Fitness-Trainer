@@ -4,4 +4,4 @@ libgomp1
 portaudio19-dev
 libportaudio2
 espeak
-libasound2t64
+libasound2
