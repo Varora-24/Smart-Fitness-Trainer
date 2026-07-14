@@ -41,7 +41,7 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
+          pip install -r requirements.txt -r requirements-dev.txt > pip_install.log 2>&1 || exit 1
 
       - name: Ruff Check (Linting)
         run: ruff check .
@@ -50,7 +50,16 @@ jobs:
         run: mypy . --ignore-missing-imports
 
       - name: Pytest Unit Tests
-        run: pytest -v
+        run: pytest -v > pytest.log 2>&1 || exit 1
+
+      - name: Commit and push logs on failure
+        if: failure()
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add *.log
+          git commit -m "chore: upload failure logs" || true
+          git push || true
 
   cold-install-verify:
     runs-on: ubuntu-latest
@@ -75,8 +84,17 @@ jobs:
       - name: Cold install (no cache)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
+          pip install -r requirements.txt -r requirements-dev.txt > pip_install.log 2>&1 || exit 1
       - name: Verify mediapipe tasks API is importable
         run: python -c "from mediapipe.tasks.python.vision import PoseLandmarker"
       - name: Run full test suite on cold install
-        run: pytest -v
+        run: pytest -v > cold_pytest.log 2>&1 || exit 1
+
+      - name: Commit and push logs on failure
+        if: failure()
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add *.log
+          git commit -m "chore: upload failure logs" || true
+          git push || true
