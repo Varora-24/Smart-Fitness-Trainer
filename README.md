@@ -1,12 +1,3 @@
----
-title: Smart Fitness Trainer
-emoji: 🏋️
-colorFrom: blue
-colorTo: green
-sdk: docker
-pinned: false
-license: mit
----
 # AI Smart Fitness Trainer v4 Pro
 
 [![CI Verification](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml/badge.svg)](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml)
@@ -21,7 +12,6 @@ An advanced AI-powered fitness training application that uses computer vision an
 ![Python](https://img.shields.io/badge/Python-3.11+-green?style=for-the-badge)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red?style=for-the-badge)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10+-orange?style=for-the-badge)
-[![Hugging Face Space](https://img.shields.io/badge/🤗_Hugging_Face-Live_Demo-yellow?style=for-the-badge)](https://huggingface.co/spaces/VanshAro/Smarttrainer)
 
 ## 🎯 Overview
 
@@ -388,10 +378,6 @@ You can deploy the app to **Streamlit Community Cloud** or **Hugging Face Spaces
 - Go to [share.streamlit.io](https://share.streamlit.io) and deploy a new app pointing at `Home.py` on your main branch.
 - Pushing to Streamlit Cloud allows the app to connect to your remote Supabase instance seamlessly. Ensure you add `SUPABASE_URL` and `SUPABASE_ANON_KEY` to the Streamlit Community Cloud secrets management dashboard.
 
-### 2. Hugging Face Spaces (Live Demo)
-- The app is currently deployed as a Hugging Face Space using the Docker SDK: [Live Demo](https://huggingface.co/spaces/VanshAro/Smarttrainer).
-- The deployment is fully automated via GitHub Actions (`deploy-hf-spaces.yml`). Whenever code is merged into `main` and passes CI, it is automatically pushed and built on Hugging Face Spaces.
-
 ### 🛡️ WebRTC NAT/TURN Server Troubleshooting
 The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to resolve peer connections. If the video fails to load or connect when accessed on certain mobile or restrictive corporate networks, you must add a metered TURN server (such as Twilio or metered.ca) to the `RTC_CONFIGURATION` `iceServers` list in `pages/1_🔴_Live_Trainer.py`.
 
@@ -408,7 +394,6 @@ The live trainer uses a public STUN server (`stun:stun.l.google.com:19302`) to r
 ## 🗺️ Roadmap
 
 ### ✅ Completed
-- [x] **Public Deployment** — CI/CD Pipeline to Hugging Face Spaces via Docker SDK
 - [x] **Live WebRTC Trainer** — real-time pose tracking in the browser
 - [x] **Workout History Dashboard** — session analytics with charts
 - [x] **User Accounts** — Supabase Auth for robust login and signup
