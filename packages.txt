@@ -1,5 +1,8 @@
+build-essential
 libgl1
+libglib2.0-0
 libgomp1
 portaudio19-dev
+libportaudio2
 espeak
-libgles2
+libasound2t64
