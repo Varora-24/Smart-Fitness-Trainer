@@ -12,6 +12,7 @@ An advanced AI-powered fitness training application that uses computer vision an
 ![Python](https://img.shields.io/badge/Python-3.11+-green?style=for-the-badge)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red?style=for-the-badge)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10+-orange?style=for-the-badge)
+[![HF Space](https://img.shields.io/badge/🤗_Hugging_Face-Space_Demo-yellow?style=for-the-badge)](https://huggingface.co/spaces/VanshAro/Smart-Fitness-Trainer)
 
 ## 🎯 Overview
 

@@ -1,0 +1,42 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  workflow_run:
+    workflows: ["CI Verification"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
+
+      - name: Push landing page to HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python - <<'EOF'
+          from huggingface_hub import HfApi
+          api = HfApi(token="${HF_TOKEN}")
+          import os
+          token = os.environ["HF_TOKEN"]
+          api = HfApi(token=token)
+          api.upload_folder(
+              folder_path="hf_space",
+              repo_id="VanshAro/Smart-Fitness-Trainer",
+              repo_type="space",
+              commit_message="chore: sync landing page from main branch"
+          )
+          print("Deployed to https://huggingface.co/spaces/VanshAro/Smart-Fitness-Trainer")
+          EOF
