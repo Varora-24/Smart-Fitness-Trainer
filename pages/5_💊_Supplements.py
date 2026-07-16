@@ -27,8 +27,9 @@ st.error(f"⚠️ {MANDATORY_DISCLAIMER}", icon="⚠️")
 st.markdown("---")
 
 # ── Get the user's fitness goal ─────────────────────────────────
-user = db.get_user_by_email(st.session_state["email"])
-user_goal = user.get("fitness_goal") if user else None
+user_id = st.session_state.get("user_id", "")
+user = db.get_user_profile(user_id) or {}
+user_goal = user.get("fitness_goal")
 
 # Map DB goal keys to display labels
 GOAL_LABELS = {

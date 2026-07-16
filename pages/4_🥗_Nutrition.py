@@ -30,7 +30,8 @@ st.warning(
 st.markdown("---")
 
 # ── Load user profile ───────────────────────────────────────────
-user = db.get_user_by_email(st.session_state["email"])
+user_id = st.session_state.get("user_id", "")
+user = db.get_user_profile(user_id) or {}
 
 # ── Profile form ────────────────────────────────────────────────
 st.subheader("Your Profile")

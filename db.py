@@ -175,3 +175,17 @@ def get_reps_for_user(user_id: str, limit: int = 200) -> list:
         st.error("Could not fetch reps right now.")
         logger.error(f"Supabase reps fetch failed: {e}")
         return []
+
+
+def get_user_by_email(email: str) -> dict | None:
+    """
+    Convenience wrapper: look up the current user's profile using their
+    session user_id (already stored in st.session_state). The email
+    parameter is accepted for backward-compatibility but the lookup is
+    done by user_id via RLS so no cross-user data can be returned.
+    """
+    user_id = st.session_state.get("user_id")
+    if not user_id:
+        return None
+    return get_user_profile(user_id)
+
