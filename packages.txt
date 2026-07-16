@@ -1,6 +1,6 @@
 build-essential
 libgl1
-libglib2.0-0
+libglib2.0-0t64
 libgomp1
 portaudio19-dev
 libportaudio2

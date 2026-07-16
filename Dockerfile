@@ -12,12 +12,12 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgl1 \
-    libglib2.0-0 \
     libgomp1 \
     portaudio19-dev \
     libportaudio2 \
     espeak \
     && (apt-get install -y --no-install-recommends libasound2t64 || apt-get install -y --no-install-recommends libasound2) \
+    && (apt-get install -y --no-install-recommends libglib2.0-0t64 || apt-get install -y --no-install-recommends libglib2.0-0) \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
