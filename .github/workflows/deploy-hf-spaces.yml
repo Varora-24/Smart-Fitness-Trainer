@@ -33,6 +33,13 @@ jobs:
           token = os.environ.get("HF_TOKEN")
           api = HfApi(token=token)
           
+          try:
+              info = api.whoami()
+              print(f"Successfully authenticated as: {info.get('name')}")
+              print(f"Token type/permissions: {info.get('auth', {})}")
+          except Exception as e:
+              print(f"Authentication check failed: {e}")
+          
           api.create_repo(
               repo_id="VanshAro/Smart-Fitness-Trainer",
               repo_type="space",
