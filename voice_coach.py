@@ -37,18 +37,11 @@ class VoiceCoach:
         self._last_spoken : float = 0.0
         self._lock        = threading.Lock()
         self._busy        : bool  = False
-        self._engine      = None
+        self.muted        : bool  = False
 
         if VOICE_ENABLED and not _ENGINE_AVAILABLE:
             print("[VoiceCoach] pyttsx3 not installed – voice disabled.")
             print("            Run:  pip install pyttsx3")
-
-        if self._enabled:
-            try:
-                self._engine = pyttsx3.init()
-                self._engine.setProperty("rate", 155)
-            except Exception:
-                self._enabled = False
 
     # ── Public API ────────────────────────────────────────────
     def say(self, phrase: str) -> None:
@@ -56,7 +49,7 @@ class VoiceCoach:
         Speak *phrase* asynchronously.
         Silently drops if busy or within cooldown.
         """
-        if not self._enabled:
+        if not self._enabled or self.muted:
             return
         now = time.time()
         with self._lock:
@@ -66,6 +59,7 @@ class VoiceCoach:
                 return
             self._busy        = True
             self._last_spoken = now
+        
         threading.Thread(
             target=self._speak, args=(phrase,), daemon=True
         ).start()
@@ -133,9 +127,20 @@ class VoiceCoach:
     # ── TTS engine ────────────────────────────────────────────
     def _speak(self, phrase: str) -> None:
         try:
-            if self._engine is not None:
-                self._engine.say(phrase)
-                self._engine.runAndWait()
+            import subprocess
+            import sys
+            script = f'''
+import pyttsx3
+try:
+    engine = pyttsx3.init()
+    engine.setProperty("rate", 155)
+    engine.say({repr(phrase)})
+    engine.runAndWait()
+except Exception:
+    pass
+'''
+            subprocess.Popen([sys.executable, "-c", script], 
+                             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
         except Exception as e:
             logger.debug(f"Voice coach speech failed (non-fatal): {e}")
         finally:

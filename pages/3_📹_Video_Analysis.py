@@ -55,6 +55,17 @@ with col_sel:
     exercise_key = exercise_labels[chosen_label]
     kcal_per_rep = float(EXERCISE_CONFIG[exercise_key].get("kcal_per_rep", 0.25))
 
+    CAMERA_INSTRUCTIONS = {
+        "squats": "📸 **Camera Angle:** Place the camera at hip height, facing you from the side (profile view). Ensure your entire body from head to toe is visible.",
+        "pushups": "📸 **Camera Angle:** Place the camera on the floor, facing you from the side. Ensure your entire body from head to toe is visible.",
+        "curls": "📸 **Camera Angle:** Place the camera at chest height, facing you from the side (profile view). Ensure your upper body and arms are clearly visible.",
+        "lunges": "📸 **Camera Angle:** Place the camera at waist height, facing you from the side (profile view). Ensure your entire body is visible.",
+        "shoulder_press": "📸 **Camera Angle:** Place the camera at chest height, facing you from the front or slight angle. Ensure your upper body and arms extended overhead are fully visible."
+    }
+    
+    if exercise_key in CAMERA_INSTRUCTIONS:
+        st.info(CAMERA_INSTRUCTIONS[exercise_key])
+
 with col_up:
     uploaded = st.file_uploader(
         "🎬 Upload your workout video",
