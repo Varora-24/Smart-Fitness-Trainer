@@ -183,9 +183,9 @@ EXERCISE_CONFIG = {
         "landmarks_left"      : (11, 13, 15),
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (50, 170),   # 170° = arm straight, 50° = full curl
-        "stage_down_threshold": 120,
-        "stage_up_threshold"  : 140,
-        "rom_min_angle"       : 70,
+        "stage_down_threshold": 115,
+        "stage_up_threshold"  : 135,
+        "rom_min_angle"       : 80,
 
         # Posture: shoulder must stay still (shoulder→elbow→hip)
         # We validate that the shoulder-elbow angle doesn't swing

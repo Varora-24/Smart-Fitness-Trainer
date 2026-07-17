@@ -20,8 +20,8 @@ RTC_CONFIGURATION = RTCConfiguration({
 class LiveVideoProcessor(VideoProcessorBase):
     def __init__(self) -> None:
         self.pipeline = FramePipeline(exercise_key="squats", in_setup=False)
-        # Suppress server-side pyttsx3 voice coaching on Streamlit Community Cloud / headless
-        self.pipeline.voice_muted = True
+        # Enable voice coaching for local use
+        self.pipeline.voice_muted = False
         
         # Drop frames to maintain real-time performance with IMAGE mode
         self.frame_skip = 2 

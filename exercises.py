@@ -249,17 +249,25 @@ class ExerciseTracker:
             self.feedback = cfg["feedback_good"]
 
         # ── 10. Stage machine → rep counting ─────────────────
-        down_thr = cfg["stage_down_threshold"]
-        up_thr   = cfg["stage_up_threshold"]
-
-        if self.avg_angle < down_thr and self.stage == "up":
-            # Reached the bottom of the movement
-            self.stage = "down"
-
-        if self.avg_angle > up_thr and self.stage == "down":
-            # Returned to the top → full rep complete
-            self.stage = "up"
-            self._finish_rep()
+        # Add a time-based debounce to prevent double-counting fast jitter reps
+        import time
+        if not hasattr(self, "last_rep_time"):
+            self.last_rep_time = 0
+            
+        if self.avg_angle < cfg.get("stage_down_threshold", 90):
+            if self.stage == "up":
+                self.stage = "down"
+                self._rep_min_angle = self.avg_angle
+        elif self.avg_angle > cfg.get("stage_up_threshold", 160):
+            if self.stage == "down":
+                self.stage = "up"
+                
+                # Debounce: at least 1.0 seconds between reps
+                current_time = time.time()
+                if current_time - self.last_rep_time > 1.0:
+                    self.total_reps += 1
+                    self.last_rep_time = current_time
+                    self._finish_rep()
 
     # ── Private helpers ───────────────────────────────────────
 

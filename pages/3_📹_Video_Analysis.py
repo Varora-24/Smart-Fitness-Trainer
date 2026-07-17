@@ -109,7 +109,7 @@ try:
 
         # ── Init pipeline ─────────────────────────────────────
         pipeline = FramePipeline(exercise_key=exercise_key, in_setup=False)
-        pipeline.voice_muted = True   # no TTS on server
+        pipeline.voice_muted = False
 
         progress_bar = st.progress(0, text="Processing frames…")
 
