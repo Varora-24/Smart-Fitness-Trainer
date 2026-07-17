@@ -40,12 +40,9 @@ jobs:
           except Exception as e:
               print(f"Authentication check failed: {e}")
           
-          api.create_repo(
-              repo_id="VanshAro/Smart-Fitness-Trainer",
-              repo_type="space",
-              space_sdk="docker",
-              exist_ok=True,
-          )
+          # The Space already exists, so we skip api.create_repo() to avoid
+          # 402 Payment Required errors on free accounts when HF API tries
+          # to validate the SDK parameter.
           
           api.upload_folder(
               folder_path=".",
