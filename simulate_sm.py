@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 from pose_module import PoseDetector
 from config import EXERCISE_CONFIG
 
