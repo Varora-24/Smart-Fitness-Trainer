@@ -58,10 +58,10 @@ class PoseDetector:
         model_path = "models/pose_landmarker_lite.task"
         base_options = mp_python.BaseOptions(model_asset_path=model_path)
         
-        # Use VIDEO running mode for speed, but rely on high tracking confidence to force re-detection if stuck
+        # Use IMAGE running mode for best accuracy. VIDEO mode over-smooths fast, partial reps.
         options = mp_vision.PoseLandmarkerOptions(
             base_options=base_options,
-            running_mode=mp_vision.RunningMode.VIDEO,
+            running_mode=mp_vision.RunningMode.IMAGE,
             num_poses=1,
             min_pose_detection_confidence=detection_con,
             min_pose_presence_confidence=detection_con,
@@ -92,8 +92,8 @@ class PoseDetector:
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img_rgb)
         
-        raw_result = self._detector.detect_for_video(mp_image, self._frame_timestamp_ms)
-        self._frame_timestamp_ms += 33  # Assuming ~30fps 
+        # Use IMAGE mode for accurate angles without temporal smoothing
+        raw_result = self._detector.detect(mp_image)
         
         # Construct the shim: strictly set pose_landmarks to None if empty
         if raw_result and raw_result.pose_landmarks:

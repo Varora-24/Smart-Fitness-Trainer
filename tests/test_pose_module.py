@@ -42,7 +42,7 @@ def test_find_pose_empty_result_returns_none_shim(mock_create):
     # Mock detect to return an empty result
     empty_result = MagicMock()
     empty_result.pose_landmarks = []
-    detector._detector.detect_for_video.return_value = empty_result
+    detector._detector.detect.return_value = empty_result
     
     # Create a dummy image
     dummy_img = np.zeros((100, 100, 3), dtype=np.uint8)
@@ -70,7 +70,7 @@ def test_find_position_returns_correct_shape(mock_create):
         MockLandmark(x=0.5, y=0.6)  # id=2, at (50, 60)
     ]
     mock_result = MockPoseLandmarks(mock_lms)
-    detector._detector.detect_for_video.return_value = mock_result
+    detector._detector.detect.return_value = mock_result
     
     dummy_img = np.zeros((100, 100, 3), dtype=np.uint8)
     detector.find_pose(dummy_img, draw=False)
@@ -98,7 +98,7 @@ def test_find_angle_matches_known_geometry(mock_create):
         MockLandmark(x=0.0, y=1.0)  # p3 (id 2) - Down
     ]
     mock_result = MockPoseLandmarks(mock_lms)
-    detector._detector.detect_for_video.return_value = mock_result
+    detector._detector.detect.return_value = mock_result
     
     dummy_img = np.zeros((100, 100, 3), dtype=np.uint8)
     detector.find_pose(dummy_img, draw=False)
@@ -118,7 +118,7 @@ def test_find_angle_missing_landmarks_returns_zero(mock_create):
     # Only 2 landmarks detected
     mock_lms = [MockLandmark(x=0.0, y=0.0), MockLandmark(x=1.0, y=1.0)]
     mock_result = MockPoseLandmarks(mock_lms)
-    detector._detector.detect_for_video.return_value = mock_result
+    detector._detector.detect.return_value = mock_result
     
     dummy_img = np.zeros((100, 100, 3), dtype=np.uint8)
     detector.find_pose(dummy_img, draw=False)

@@ -23,6 +23,11 @@ class LiveVideoProcessor(VideoProcessorBase):
         # Suppress server-side pyttsx3 voice coaching on Streamlit Community Cloud / headless
         self.pipeline.voice_muted = True
         
+        # Drop frames to maintain real-time performance with IMAGE mode
+        self.frame_skip = 2 
+        self.frame_count = 0
+        self.last_out = None
+        
         # Init DB session
         try:
             import db
@@ -36,8 +41,14 @@ class LiveVideoProcessor(VideoProcessorBase):
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
-        annotated = self.pipeline.process_frame(img)
-        return av.VideoFrame.from_ndarray(annotated, format="bgr24")
+        
+        self.frame_count += 1
+        
+        # Only process every Nth frame through the ML pipeline to prevent lag
+        if self.frame_count % self.frame_skip == 0 or self.last_out is None:
+            self.last_out = self.pipeline.process_frame(img)
+            
+        return av.VideoFrame.from_ndarray(self.last_out, format="bgr24")
 
 
 st.title("🏋️ AI Smart Fitness Trainer — Live")
