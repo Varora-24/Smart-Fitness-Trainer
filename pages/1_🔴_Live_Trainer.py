@@ -65,6 +65,7 @@ with col_controls:
     st.subheader("Controls")
     exercise_labels = {cfg["display_name"]: key for key, cfg in EXERCISE_CONFIG.items()}
     chosen_label = st.selectbox("Exercise", list(exercise_labels.keys()))
+    assert chosen_label is not None
     
     CAMERA_INSTRUCTIONS = {
         "squats": "📸 **Camera Angle:** Place the camera at hip height, facing you from the side (profile view). Ensure your entire body from head to toe is visible.",

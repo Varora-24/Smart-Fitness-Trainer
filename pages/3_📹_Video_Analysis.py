@@ -52,6 +52,7 @@ with col_sel:
         list(exercise_labels.keys()),
         help="Select the exercise so the AI uses the correct form thresholds.",
     )
+    assert chosen_label is not None
     exercise_key = exercise_labels[chosen_label]
     kcal_per_rep = float(EXERCISE_CONFIG[exercise_key].get("kcal_per_rep", 0.25))
 
