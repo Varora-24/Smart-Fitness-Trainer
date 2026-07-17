@@ -43,6 +43,7 @@ jobs:
           api.create_repo(
               repo_id="VanshAro/Smart-Fitness-Trainer",
               repo_type="space",
+              space_sdk="docker",
               exist_ok=True,
           )
           
