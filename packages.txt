@@ -7,3 +7,4 @@ libportaudio2
 espeak
 libasound2t64
 libgles2
+libegl1
