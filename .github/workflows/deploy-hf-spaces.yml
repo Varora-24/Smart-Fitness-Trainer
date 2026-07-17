@@ -43,15 +43,16 @@ jobs:
           api.create_repo(
               repo_id="VanshAro/Smart-Fitness-Trainer",
               repo_type="space",
-              space_sdk="static",
+              space_sdk="streamlit",
               exist_ok=True,
           )
           
           api.upload_folder(
-              folder_path="hf_space",
+              folder_path=".",
               repo_id="VanshAro/Smart-Fitness-Trainer",
               repo_type="space",
-              commit_message="chore: sync landing page from main branch"
+              commit_message="deploy: full streamlit app from main branch",
+              ignore_patterns=[".git", ".github", ".venv", "hf_space", "__pycache__", "*.mp4", "*.db", "scratch", "test_venv*", "venv*"]
           )
           print("Deployed to https://huggingface.co/spaces/VanshAro/Smart-Fitness-Trainer")
           EOF
