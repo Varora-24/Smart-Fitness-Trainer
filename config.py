@@ -115,7 +115,7 @@ EXERCISE_CONFIG = {
         "angle_range"         : (90, 170),   # 170° = standing, 90° = deep squat
         # State machine: angle falls below down_threshold → "down"
         #                angle rises above up_threshold from "down" → rep
-        "stage_down_threshold": 110,
+        "stage_down_threshold": 135,
         "stage_up_threshold"  : 160,
         # ROM: knee angle must reach below this during the rep
         "rom_min_angle"       : 110,
@@ -150,7 +150,7 @@ EXERCISE_CONFIG = {
         "landmarks_left"      : (11, 13, 15),
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (70, 170),   # 170° = up, 70° = chest to floor
-        "stage_down_threshold": 100,
+        "stage_down_threshold": 130,
         "stage_up_threshold"  : 155,
         "rom_min_angle"       : 100,
 
@@ -183,7 +183,7 @@ EXERCISE_CONFIG = {
         "landmarks_left"      : (11, 13, 15),
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (50, 170),   # 170° = arm straight, 50° = full curl
-        "stage_down_threshold": 70,
+        "stage_down_threshold": 120,
         "stage_up_threshold"  : 155,
         "rom_min_angle"       : 70,
 
@@ -218,7 +218,7 @@ EXERCISE_CONFIG = {
         "landmarks_left"      : (23, 25, 27),
         "landmarks_right"     : (24, 26, 28),
         "angle_range"         : (80, 170),
-        "stage_down_threshold": 105,
+        "stage_down_threshold": 135,
         "stage_up_threshold"  : 155,
         "rom_min_angle"       : 105,
 
@@ -251,7 +251,7 @@ EXERCISE_CONFIG = {
         "landmarks_left"      : (11, 13, 15),
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (80, 170),
-        "stage_down_threshold": 105,
+        "stage_down_threshold": 130,
         "stage_up_threshold"  : 155,
         "rom_min_angle"       : 105,
 
