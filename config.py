@@ -15,7 +15,7 @@ CLASSIFIER_SWITCH_MARGIN = 1.3  # Winning score must exceed current by this mult
 
 # ── MediaPipe ────────────────────────────────────────────────────
 DETECTION_CONFIDENCE    = 0.7
-TRACKING_CONFIDENCE     = 0.5
+TRACKING_CONFIDENCE     = 0.85
 MODEL_COMPLEXITY        = 1          # 0=lite  1=full  2=heavy
 
 # ── Landmark visibility gate ─────────────────────────────────────
@@ -116,7 +116,7 @@ EXERCISE_CONFIG = {
         # State machine: angle falls below down_threshold → "down"
         #                angle rises above up_threshold from "down" → rep
         "stage_down_threshold": 135,
-        "stage_up_threshold"  : 160,
+        "stage_up_threshold"  : 150,
         # ROM: knee angle must reach below this during the rep
         "rom_min_angle"       : 110,
 
@@ -151,7 +151,7 @@ EXERCISE_CONFIG = {
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (70, 170),   # 170° = up, 70° = chest to floor
         "stage_down_threshold": 130,
-        "stage_up_threshold"  : 155,
+        "stage_up_threshold"  : 140,
         "rom_min_angle"       : 100,
 
         # Posture: body plank alignment (shoulder→hip→ankle)
@@ -184,7 +184,7 @@ EXERCISE_CONFIG = {
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (50, 170),   # 170° = arm straight, 50° = full curl
         "stage_down_threshold": 120,
-        "stage_up_threshold"  : 155,
+        "stage_up_threshold"  : 140,
         "rom_min_angle"       : 70,
 
         # Posture: shoulder must stay still (shoulder→elbow→hip)
@@ -219,7 +219,7 @@ EXERCISE_CONFIG = {
         "landmarks_right"     : (24, 26, 28),
         "angle_range"         : (80, 170),
         "stage_down_threshold": 135,
-        "stage_up_threshold"  : 155,
+        "stage_up_threshold"  : 145,
         "rom_min_angle"       : 105,
 
         # Posture: torso upright (shoulder→hip→knee)
@@ -252,7 +252,7 @@ EXERCISE_CONFIG = {
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (80, 170),
         "stage_down_threshold": 130,
-        "stage_up_threshold"  : 155,
+        "stage_up_threshold"  : 140,
         "rom_min_angle"       : 105,
 
         # Posture: torso alignment – no leaning back (hip→shoulder→elbow)
