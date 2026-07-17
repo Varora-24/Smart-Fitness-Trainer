@@ -252,7 +252,7 @@ class ExerciseTracker:
         # Add a time-based debounce to prevent double-counting fast jitter reps
         import time
         if not hasattr(self, "last_rep_time"):
-            self.last_rep_time = 0
+            self.last_rep_time = 0.0
             
         if self.avg_angle < cfg.get("stage_down_threshold", 90):
             if self.stage == "up":
