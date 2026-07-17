@@ -349,6 +349,7 @@ class ExerciseTracker:
         self._sym_samples      = []
         self._posture_samples  = []
         self._velocity_samples = []
+        self._posture_baseline = None
         self._rep_start_time   = time.time()
 
     def get_feature_rows(self) -> list:
