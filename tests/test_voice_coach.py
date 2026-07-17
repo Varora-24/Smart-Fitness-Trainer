@@ -2,8 +2,7 @@
 #  tests/test_voice_coach.py  –  Voice coach unit tests
 # ================================================================
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import voice_coach
 import time
 
