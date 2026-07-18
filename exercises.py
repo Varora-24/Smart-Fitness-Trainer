@@ -24,6 +24,7 @@ from config import (
     FEEDBACK_DEPTH_THRESHOLD,
     SYMMETRY_WARN_TEXT,
     VISIBILITY_WARN_TEXT,
+    LANDMARK_NAMES,
     FORM_WEIGHT_SYMMETRY,
     FORM_WEIGHT_ROM,
     FORM_WEIGHT_POSTURE,
@@ -100,6 +101,7 @@ class ExerciseTracker:
         self.is_asymmetric   : bool  = False
         self.bad_posture     : bool  = False
         self.low_visibility  : bool  = False
+        self.missing_landmarks: list[str] = []
         # Flash flag: set True for one frame after a rep completes
         self.rep_just_finished: bool = False
 
@@ -152,7 +154,15 @@ class ExerciseTracker:
         # ── 1. Visibility gate ────────────────────────────────
         self.low_visibility = not self._check_visibility(detector)
         if self.low_visibility:
-            self.feedback = VISIBILITY_WARN_TEXT
+            if self.missing_landmarks:
+                unique = list(dict.fromkeys(self.missing_landmarks))
+                if len(unique) > 2:
+                    names = ", ".join(unique[:2]) + "..."
+                else:
+                    names = " & ".join(unique)
+                self.feedback = f"{names} not clearly visible"
+            else:
+                self.feedback = VISIBILITY_WARN_TEXT
             return
 
         # ── 2. Compute primary angles (both sides) ────────────
@@ -274,18 +284,22 @@ class ExerciseTracker:
         """
         Return True only when all required landmarks have
         MediaPipe visibility scores above the threshold.
+        Populates self.missing_landmarks with names of missing ones.
         """
+        self.missing_landmarks = []
         if detector.results is None:
             return False
         if not detector.results.pose_landmarks:
             return False
+        
         lms = detector.results.pose_landmarks.landmark
         for idx in self.cfg["required_landmarks"]:
             if idx >= len(lms):
-                return False
-            if lms[idx].visibility < LANDMARK_VISIBILITY_THRESHOLD:
-                return False
-        return True
+                self.missing_landmarks.append(LANDMARK_NAMES.get(idx, str(idx)))
+            elif lms[idx].visibility < LANDMARK_VISIBILITY_THRESHOLD:
+                self.missing_landmarks.append(LANDMARK_NAMES.get(idx, str(idx)))
+                
+        return len(self.missing_landmarks) == 0
 
     def _compute_rom_score(self) -> float:
         """

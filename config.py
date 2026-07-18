@@ -64,6 +64,18 @@ SETUP_HOLD_SECONDS         = 2.0
 # ── Anti-cheat / feedback strings ────────────────────────────────
 SYMMETRY_WARN_TEXT       = "Uneven Movement!"
 VISIBILITY_WARN_TEXT     = "Ensure full body is visible."
+
+LANDMARK_NAMES = {
+    0: "Nose", 1: "Left Eye", 2: "Right Eye", 3: "Left Ear", 4: "Right Ear",
+    11: "Left Shoulder", 12: "Right Shoulder",
+    13: "Left Elbow", 14: "Right Elbow",
+    15: "Left Wrist", 16: "Right Wrist",
+    23: "Left Hip", 24: "Right Hip",
+    25: "Left Knee", 26: "Right Knee",
+    27: "Left Ankle", 28: "Right Ankle",
+    29: "Left Heel", 30: "Right Heel",
+    31: "Left Foot", 32: "Right Foot"
+}
 FEEDBACK_DEPTH_THRESHOLD = 50          # % depth below which "go lower" fires
 
 # ── UI colours (BGR for OpenCV) ──────────────────────────────────
