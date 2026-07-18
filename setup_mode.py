@@ -37,7 +37,7 @@ class CameraSetup:
 
     def __init__(self):
         self._hold_start : float | None = None   # when continuous visibility began
-        self._history = deque(maxlen=5)
+        self._history: deque[bool] = deque(maxlen=5)
 
     # ── Main check ──────────────────────────────────────────
     def check(self, results) -> bool:

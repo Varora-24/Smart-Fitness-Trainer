@@ -42,8 +42,8 @@ def test_pipeline_rep_label_thresholding(mock_detector_cls):
     pipeline.ml_model = None  # Force blended score to equal rule score
     
     # Mock PoseDetector results and position list to pass gates
-    pipeline.detector.find_position.return_value = [[i, 50, 100] for i in range(33)]
-    pipeline.detector.find_pose = lambda img, *args, **kwargs: img
+    pipeline.detector.find_position.return_value = [[i, 50, 100] for i in range(33)]  # type: ignore  # type: ignore
+    pipeline.detector.find_pose = lambda img, *args, **kwargs: img  # type: ignore  # type: ignore
     
     # We mock tracker.update to simulate a rep finishing with a score of 63.0
     # 63.0 is below clean_depth (70) for squats, but above CLEAN_REP_SCORE_THRESHOLD (60.0)
@@ -57,7 +57,7 @@ def test_pipeline_rep_label_thresholding(mock_detector_cls):
             "posture": 90.0,
             "control": 90.0,
         }]
-    pipeline.tracker.update = mock_update
+    pipeline.tracker.update = mock_update  # type: ignore  # type: ignore
     
     import numpy as np
     dummy_img = np.zeros((720, 1280, 3), dtype=np.uint8)

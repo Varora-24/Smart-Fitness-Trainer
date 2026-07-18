@@ -72,7 +72,7 @@ def main():
     pipeline = FramePipeline(exercise_key="squats", in_setup=in_setup)
     
     try:
-        session_id = db.save_session({}, EXERCISE_CONFIG[pipeline.current_key]["display_name"])
+        session_id = db.save_session({}, str(EXERCISE_CONFIG[pipeline.current_key]["display_name"]))
         pipeline.session.session_id = session_id
         logger.info(f"Started DB session ID: {session_id}")
     except Exception as e:
@@ -106,7 +106,7 @@ def main():
                 
                 # Create a new session in DB for the new exercise
                 try:
-                    session_id = db.save_session({}, ex_cfg["display_name"])
+                    session_id = db.save_session({}, str(ex_cfg["display_name"]))
                     pipeline.session.session_id = session_id
                 except Exception as e:
                     logger.error(f"Failed to start new DB session: {e}")
@@ -164,7 +164,7 @@ def main():
         bad_reps      = s["bad_reps"],
         calories      = s["calories"],
         elapsed_secs  = s["duration_secs"],
-        exercise_name = EXERCISE_CONFIG[pipeline.current_key]["display_name"],
+        exercise_name = str(EXERCISE_CONFIG[pipeline.current_key]["display_name"]),
         avg_symmetry  = pipeline.tracker.avg_symmetry,
         avg_form      = pipeline.tracker.avg_form,
         avg_rep_score = s["avg_rep_score"],

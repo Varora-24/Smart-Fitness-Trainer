@@ -63,7 +63,7 @@ def test_depth_direction_percentage():
     tracker_squats = ExerciseTracker("squats")
     detector_squats = MockPoseDetector()
     # Mock find_angle for squats to return 90.0 (fully down)
-    detector_squats.find_angle = MagicMock(return_value=90.0)
+    detector_squats.find_angle = MagicMock(return_value=90.0)  # type: ignore  # type: ignore  # type: ignore
     lm_list = [[i, 0, 0] for i in range(33)]
     
     tracker_squats.update(detector_squats, MagicMock(), lm_list, draw=False)
@@ -72,7 +72,7 @@ def test_depth_direction_percentage():
     # 2. Up direction (shoulder_press: angle range 80-170, top = large angle = 100% extension)
     tracker_sp = ExerciseTracker("shoulder_press")
     detector_sp = MockPoseDetector()
-    detector_sp.find_angle = MagicMock(return_value=170.0) # arms fully extended
+    detector_sp.find_angle = MagicMock(return_value=170.0)  # type: ignore
     
     tracker_sp.update(detector_sp, MagicMock(), lm_list, draw=False)
     assert tracker_sp.percentage >= 95.0
@@ -84,18 +84,18 @@ def test_curl_posture_baseline_delta():
     lm_list = [[i, 0, 0] for i in range(33)]
     
     # Frame 1: Set baseline to 15.0
-    detector.find_angle = MagicMock(side_effect=[120.0, 120.0, 15.0, 15.0])
+    detector.find_angle = MagicMock(side_effect=[120.0, 120.0, 15.0, 15.0])  # type: ignore  # type: ignore
     tracker.update(detector, MagicMock(), lm_list, draw=False)
     assert tracker._posture_baseline == 15.0
     assert tracker.bad_posture is False
     
     # Frame 2: Subsequent frame within delta (smoothed value: (15 + 25)/2 = 20, delta = 5 <= 20)
-    detector.find_angle = MagicMock(side_effect=[120.0, 120.0, 25.0, 25.0])
+    detector.find_angle = MagicMock(side_effect=[120.0, 120.0, 25.0, 25.0])  # type: ignore  # type: ignore
     tracker.update(detector, MagicMock(), lm_list, draw=False)
     assert tracker.bad_posture is False
     
     # Frame 3: Exceeding delta (smoothed value: (15 + 25 + 100)/3 = 46.67, delta = 31.67 > 20)
-    detector.find_angle = MagicMock(side_effect=[120.0, 120.0, 100.0, 100.0])
+    detector.find_angle = MagicMock(side_effect=[120.0, 120.0, 100.0, 100.0])  # type: ignore  # type: ignore
     tracker.update(detector, MagicMock(), lm_list, draw=False)
     assert tracker.bad_posture is True
 
@@ -148,7 +148,7 @@ def test_all_exercises_single_frame():
     for exercise_key in ["squats", "pushups", "curls", "lunges", "shoulder_press"]:
         tracker = ExerciseTracker(exercise_key)
         detector = MockPoseDetector()
-        detector.find_angle = MagicMock(return_value=120.0)
+        detector.find_angle = MagicMock(return_value=120.0)  # type: ignore  # type: ignore
         # Must not raise
         tracker.update(detector, MagicMock(), lm_list, draw=False)
         assert tracker.total_reps == 0, f"{exercise_key}: no rep should fire at 120° initial frame"

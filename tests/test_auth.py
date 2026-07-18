@@ -12,7 +12,7 @@ import db
 @pytest.fixture(autouse=True)
 def mock_streamlit_session():
     """Mock Streamlit session state with a dict before each test."""
-    fake_state = {}
+    fake_state: dict = {}
     with patch("streamlit.session_state", fake_state):
         yield fake_state
 
