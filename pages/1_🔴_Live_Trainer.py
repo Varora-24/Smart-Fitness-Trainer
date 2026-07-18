@@ -54,9 +54,8 @@ class LiveVideoProcessor(VideoProcessorBase):
 st.title("🏋️ AI Smart Fitness Trainer — Live")
 st.caption(
     "Runs entirely in your browser session via WebRTC. Grant camera access "
-    "below, then use the sidebar to pick an exercise. Voice coaching is "
-    "shown as on-screen captions in this browser version - see the README "
-    "for why server-side text-to-speech doesn't carry over the network."
+    "below, then use the sidebar to pick an exercise. Voice coaching uses "
+    "the Web Speech API to provide audio feedback directly in your browser."
 )
 
 col_video, col_controls = st.columns([3, 1])
@@ -140,3 +139,31 @@ if ctx.video_processor:
 
         st.subheader("📊 Session Summary")
         st.json(s)
+
+# ── Web Speech API TTS Polling ──────────────────────────────────
+# Poll the background TTS server on port 8081 for new voice phrases
+# and execute them directly in the browser.
+st.components.v1.html("""
+    <script>
+        const API_URL = "http://" + window.location.hostname + ":8081/";
+        
+        async function pollTTS() {
+            try {
+                let response = await fetch(API_URL);
+                if (response.ok) {
+                    let data = await response.json();
+                    if (data.phrase) {
+                        let utterance = new SpeechSynthesisUtterance(data.phrase);
+                        utterance.rate = 1.0;
+                        window.speechSynthesis.speak(utterance);
+                    }
+                }
+            } catch (err) {
+                // Server might not be ready or reachable
+            }
+            setTimeout(pollTTS, 500);
+        }
+        
+        pollTTS();
+    </script>
+""", height=0, width=0)
