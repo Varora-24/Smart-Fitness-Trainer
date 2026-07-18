@@ -6,20 +6,25 @@ from unittest.mock import patch
 import voice_coach
 import time
 
-# ── Test 1.4: Single pyttsx3 init call & engine reuse ───────────
-@patch("subprocess.Popen")
-def test_voice_coach_single_init(mock_popen):
+# ── Test: Voice Coach Queue ───────────
+def test_voice_coach_queue():
     # Enable voice
-    with patch("voice_coach.VOICE_ENABLED", True), \
-         patch("voice_coach._ENGINE_AVAILABLE", True):
-
+    with patch("voice_coach.VOICE_ENABLED", True):
         coach = voice_coach.VoiceCoach()
+
+        # Clear queue just in case
+        while not voice_coach.tts_queue.empty():
+            voice_coach.tts_queue.get()
 
         # Call say multiple times
         coach.say("Hello")
-        coach.say("World")
+        coach.say("World")  # Should be dropped due to cooldown
 
-        # Because of cooldown and threading, wait a tiny bit
+        # Wait a tiny bit for queue
         time.sleep(0.1)
 
-        assert mock_popen.call_count >= 1
+        # Check queue
+        assert not voice_coach.tts_queue.empty()
+        phrase = voice_coach.tts_queue.get()
+        assert phrase == "Hello"
+        assert voice_coach.tts_queue.empty()

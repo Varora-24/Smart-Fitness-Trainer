@@ -40,10 +40,7 @@ def _start_tts_server(port=8081):
         logger.warning(f"Could not start TTS server on port {port}: {e}")
         return None
 
-# Start server once when module loads
-if VOICE_ENABLED:
-    _start_tts_server()
-
+_server_started = False
 
 class VoiceCoach:
     """
@@ -57,11 +54,18 @@ class VoiceCoach:
     """
 
     def __init__(self):
+        global _server_started
         self._enabled     = VOICE_ENABLED
         self._last_spoken : float = 0.0
         self._lock        = threading.Lock()
         self._busy        : bool  = False
         self.muted        : bool  = False
+
+        if VOICE_ENABLED and not _server_started:
+            import sys
+            if "pytest" not in sys.modules and "pytest" not in sys.argv[0]:
+                _start_tts_server()
+            _server_started = True
 
     # ── Public API ────────────────────────────────────────────
     def say(self, phrase: str) -> None:
