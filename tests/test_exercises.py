@@ -98,3 +98,58 @@ def test_curl_posture_baseline_delta():
     detector.find_angle = MagicMock(side_effect=[120.0, 120.0, 100.0, 100.0])
     tracker.update(detector, MagicMock(), lm_list, draw=False)
     assert tracker.bad_posture is True
+
+# ── Test: NO double-count (regression for the bug where update() AND ────────
+# ── _finish_rep() both incremented total_reps, doubling every count) ─────────
+def test_no_double_count():
+    """
+    _finish_rep() is the single authoritative place for total_reps += 1.
+    Calling _finish_rep() directly must increment total_reps exactly once.
+    Previously, update() also did total_reps += 1, then called _finish_rep()
+    which did it again, causing every rep to display as 2.
+    """
+    tracker = ExerciseTracker("curls")
+    tracker._sym_samples = [100.0]
+    tracker._posture_samples = [100.0]
+    tracker._velocity_samples = [100.0]
+    tracker._rep_min_angle = 70.0
+
+    assert tracker.total_reps == 0
+    tracker._finish_rep()
+    # Must be exactly 1, not 2
+    assert tracker.total_reps == 1, (
+        f"Expected 1 rep after one _finish_rep() call, got {tracker.total_reps}. "
+        "Double-count bug reintroduced!"
+    )
+
+# ── Test: Bad rep still counted in total_reps ────────────────────────────────
+def test_bad_rep_counted_in_total():
+    """
+    A rep with a low quality score must still increment total_reps and bad_reps,
+    but NOT increment clean_reps. Reps must never be silently dropped.
+    """
+    tracker = ExerciseTracker("squats")
+    # Simulate a very bad rep: poor symmetry, no ROM reached
+    tracker._sym_samples = [20.0]      # asymmetric
+    tracker._posture_samples = [0.0]   # bad posture
+    tracker._velocity_samples = [20.0] # jerky
+    tracker._rep_min_angle = 160.0     # never went deep enough
+
+    tracker._finish_rep()
+
+    assert tracker.total_reps == 1, "Bad rep must still count toward total_reps"
+    assert tracker.bad_reps == 1, "Low-quality rep must be classified as bad_rep"
+    assert tracker.clean_reps == 0, "Low-quality rep must not count as clean_rep"
+
+# ── Test: All 5 exercises initialise and run without crashing ────────────────
+def test_all_exercises_single_frame():
+    """Smoke test: every exercise must handle a single frame without exception."""
+    lm_list = [[i, 50, 100] for i in range(33)]
+    for exercise_key in ["squats", "pushups", "curls", "lunges", "shoulder_press"]:
+        tracker = ExerciseTracker(exercise_key)
+        detector = MockPoseDetector()
+        detector.find_angle = MagicMock(return_value=120.0)
+        # Must not raise
+        tracker.update(detector, MagicMock(), lm_list, draw=False)
+        assert tracker.total_reps == 0, f"{exercise_key}: no rep should fire at 120° initial frame"
+

@@ -109,6 +109,7 @@ class ExerciseTracker:
         self.last_rep_rom_score      : float = 0.0
         self.last_rep_control_score  : float = 0.0
         self.last_rep_was_clean      : bool  = False
+        self.last_rep_time   : float = 0.0   # for inter-rep debounce
         self._posture_baseline       : float | None = None
 
     # ── Public properties ────────────────────────────────────
@@ -249,11 +250,9 @@ class ExerciseTracker:
             self.feedback = cfg["feedback_good"]
 
         # ── 10. Stage machine → rep counting ─────────────────
-        # Add a time-based debounce to prevent double-counting fast jitter reps
-        import time
-        if not hasattr(self, "last_rep_time"):
-            self.last_rep_time = 0.0
-            
+        # Hysteresis: require angle to cross DOWN threshold to start a rep,
+        # then cross UP threshold to complete it. The gap between thresholds
+        # prevents oscillation-induced false reps.
         if self.avg_angle < cfg.get("stage_down_threshold", 90):
             if self.stage == "up":
                 self.stage = "down"
@@ -261,13 +260,13 @@ class ExerciseTracker:
         elif self.avg_angle > cfg.get("stage_up_threshold", 160):
             if self.stage == "down":
                 self.stage = "up"
-                
-                # Debounce: at least 1.0 seconds between reps
+
+                # Debounce: at least 0.8 seconds between reps to avoid
+                # double-counting fast jitter or oscillation at the threshold.
                 current_time = time.time()
-                if current_time - self.last_rep_time > 1.0:
-                    self.total_reps += 1
+                if current_time - self.last_rep_time > 0.8:
                     self.last_rep_time = current_time
-                    self._finish_rep()
+                    self._finish_rep()   # _finish_rep() handles total_reps += 1
 
     # ── Private helpers ───────────────────────────────────────
 
@@ -318,6 +317,7 @@ class ExerciseTracker:
         ))
 
         self.rep_score = rep_score
+        # NOTE: total_reps is incremented here (only here — NOT in update())
         self.total_reps += 1
         self.calories   += self.cfg["kcal_per_rep"]
 
