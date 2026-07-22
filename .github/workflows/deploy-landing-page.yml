@@ -1,15 +1,14 @@
-name: Deploy to Hugging Face Spaces
+name: Deploy Landing Page to Hugging Face Spaces
 
 on:
-  workflow_run:
-    workflows: ["CI Verification"]
-    types: [completed]
+  push:
     branches: [main]
+    paths:
+      - 'landing_page/**'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -36,20 +35,17 @@ jobs:
           try:
               info = api.whoami()
               print(f"Successfully authenticated as: {info.get('name')}")
-              print(f"Token type/permissions: {info.get('auth', {})}")
           except Exception as e:
               print(f"Authentication check failed: {e}")
           
-          # The Space already exists, so we skip api.create_repo() to avoid
-          # 402 Payment Required errors on free accounts when HF API tries
-          # to validate the SDK parameter.
-          
+          # Upload only the landing_page directory
+          # This intrinsically isolates the upload from the repository root,
+          # completely securing .env, secrets.toml, and other sensitive files.
           api.upload_folder(
-              folder_path=".",
+              folder_path="landing_page",
               repo_id="VanshAro/Smart-Fitness-Trainer",
               repo_type="space",
-              commit_message="deploy: full streamlit app from main branch",
-              ignore_patterns=[".git", ".github", ".venv", "hf_space", "__pycache__", "*.mp4", "*.db", "scratch", "test_venv*", "venv*"]
+              commit_message="deploy: static landing page",
           )
           print("Deployed to https://huggingface.co/spaces/VanshAro/Smart-Fitness-Trainer")
           EOF

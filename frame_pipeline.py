@@ -220,6 +220,12 @@ class FramePipeline:
                     self.voice.say(phrase)
                 self.set_coaching_caption(phrase)
 
+        # ── Low Visibility Coaching ───────────────────────────
+        if self.tracker.low_visibility and self.tracker.feedback and self.tracker.feedback != "No pose detected":
+            if not self.voice_muted:
+                self.voice.say(self.tracker.feedback + ", step back")
+            self.set_coaching_caption(self.tracker.feedback)
+
         # ── FPS ───────────────────────────────────────────────
         now            = time.time()
         self.fps       = 1.0 / max(now - self.prev_time, 1e-6)
