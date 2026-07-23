@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+import streamlit.components.v1 as components
 import av
 import db
 from auth import require_login
@@ -22,6 +23,7 @@ class LiveVideoProcessor(VideoProcessorBase):
         self.pipeline = FramePipeline(exercise_key="squats", in_setup=False)
         # Enable voice coaching for local use
         self.pipeline.voice_muted = False
+        self.pipeline.is_browser = True
         
         # Drop frames to maintain real-time performance with IMAGE mode
         self.frame_skip = 2 
@@ -140,30 +142,29 @@ if ctx.video_processor:
         st.subheader("📊 Session Summary")
         st.json(s)
 
-# ── Web Speech API TTS Polling ──────────────────────────────────
-# Poll the background TTS server on port 8081 for new voice phrases
-# and execute them directly in the browser.
-st.components.v1.html("""
-    <script>
-        const API_URL = "http://" + window.location.hostname + ":8081/";
-        
-        async function pollTTS() {
-            try {
-                let response = await fetch(API_URL);
-                if (response.ok) {
-                    let data = await response.json();
-                    if (data.phrase) {
-                        let utterance = new SpeechSynthesisUtterance(data.phrase);
-                        utterance.rate = 1.0;
-                        window.speechSynthesis.speak(utterance);
-                    }
-                }
-            } catch (err) {
-                // Server might not be ready or reachable
-            }
-            setTimeout(pollTTS, 500);
-        }
-        
-        pollTTS();
-    </script>
-""", height=0, width=0)
+# ── Web Speech API TTS (State-based) ────────────────────────
+# Check if the WebRTC background thread has queued a new phrase.
+# Due to Streamlit's execution model, this will only fire when the UI
+# reruns (e.g., via user interaction), but prevents spam via dedup.
+
+if "last_spoken_ts" not in st.session_state:
+    st.session_state["last_spoken_ts"] = 0.0
+
+if ctx.video_processor:
+    phrase, ts = ctx.video_processor.pipeline.voice.get_browser_phrase()
+    if phrase and ts > st.session_state["last_spoken_ts"]:
+        st.session_state["last_spoken_ts"] = ts
+        safe_phrase = phrase.replace('"', '\\"').replace("\n", " ")
+        components.html(
+            f"""
+            <script>
+            if ('speechSynthesis' in window) {{
+                const utterance = new SpeechSynthesisUtterance("{safe_phrase}");
+                utterance.rate = 1.05;
+                window.speechSynthesis.speak(utterance);
+            }}
+            </script>
+            """,
+            height=0,
+            width=0,
+        )

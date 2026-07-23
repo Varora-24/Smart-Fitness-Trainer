@@ -105,6 +105,7 @@ class FramePipeline:
 
         # Voice output suppression & text overlay captions
         self.voice_muted      = False
+        self.is_browser       = False
         self.coaching_caption: str | None = None
         self.caption_expiry   = 0.0
 
@@ -122,7 +123,7 @@ class FramePipeline:
         self.auto_mode = not self.auto_mode
         logger.info(f"Auto-detect {'ON' if self.auto_mode else 'OFF'}")
         if not self.voice_muted:
-            self.voice.say(f"Auto detect {'on' if self.auto_mode else 'off'}")
+            self.voice.say(f"Auto detect {'on' if self.auto_mode else 'off'}", is_browser=self.is_browser)
         else:
             self.set_coaching_caption(f"Auto detect {'on' if self.auto_mode else 'off'}")
 
@@ -150,7 +151,7 @@ class FramePipeline:
                 self.in_setup = False
                 msg = "Setup complete. Let's train!"
                 if not self.voice_muted:
-                    self.voice.say(msg)
+                    self.voice.say(msg, is_browser=self.is_browser)
                 self.set_coaching_caption(msg)
                 logger.info("Setup complete – workout started.")
 
@@ -217,13 +218,13 @@ class FramePipeline:
             )
             if phrase:
                 if not self.voice_muted:
-                    self.voice.say(phrase)
+                    self.voice.say(phrase, is_browser=self.is_browser)
                 self.set_coaching_caption(phrase)
 
         # ── Low Visibility Coaching ───────────────────────────
         if self.tracker.low_visibility and self.tracker.feedback and self.tracker.feedback != "No pose detected":
             if not self.voice_muted:
-                self.voice.say(self.tracker.feedback + ", step back")
+                self.voice.say(self.tracker.feedback + ", step back", is_browser=self.is_browser)
             self.set_coaching_caption(self.tracker.feedback)
 
         # ── FPS ───────────────────────────────────────────────
