@@ -19,7 +19,7 @@
 # ================================================================
 
 import numpy as np
-from config import EXERCISE_CONFIG, FRAME_HEIGHT, CLASSIFIER_SWITCH_MARGIN
+from core.utils.config import EXERCISE_CONFIG, FRAME_HEIGHT, CLASSIFIER_SWITCH_MARGIN
 
 
 # Per-exercise signal weights  { exercise_key: { signal: weight } }

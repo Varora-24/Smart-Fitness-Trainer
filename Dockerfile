@@ -36,4 +36,4 @@ COPY . .
 EXPOSE 8501
 
 # Default command runs the streamlit dashboard
-CMD ["streamlit", "run", "Home.py", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app/Home.py", "--server.address=0.0.0.0"]

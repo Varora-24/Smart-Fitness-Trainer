@@ -5,7 +5,7 @@ colorFrom: red
 colorTo: blue
 sdk: streamlit
 sdk_version: 1.36.0
-app_file: Home.py
+app_file: app/Home.py
 pinned: false
 license: mit
 ---

@@ -5,8 +5,8 @@
 import time
 import numpy as np
 import cv2
-from pose_module import PoseDetector
-from exercises import ExerciseTracker
+from core.tracking.pose_module import PoseDetector
+from core.tracking.exercises import ExerciseTracker
 
 def run_benchmark(num_frames: int = 500):
     print(f"Starting performance profiling over {num_frames} frames...")

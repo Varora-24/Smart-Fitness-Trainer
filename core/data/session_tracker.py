@@ -11,7 +11,7 @@
 import csv
 import os
 import time
-from config import DATASET_CSV_PATH
+from core.utils.config import DATASET_CSV_PATH
 
 
 class WorkoutSession:

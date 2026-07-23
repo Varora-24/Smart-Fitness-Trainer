@@ -5,7 +5,7 @@
 import logging
 from datetime import datetime
 import streamlit as st
-import auth
+import core.utils.auth as auth
 
 logger = logging.getLogger("db")
 

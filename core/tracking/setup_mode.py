@@ -10,7 +10,7 @@
 import time
 import cv2
 from collections import deque
-from config import (
+from core.utils.config import (
     SETUP_LANDMARKS, SETUP_VISIBILITY_THRESHOLD,
     SETUP_HOLD_SECONDS, EXERCISE_CONFIG,
     FRAME_WIDTH, FRAME_HEIGHT,

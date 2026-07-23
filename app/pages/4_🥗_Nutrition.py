@@ -4,9 +4,9 @@
 
 import streamlit as st
 import pandas as pd
-import db
-from auth import require_login
-from nutrition import calculate_bmr, calculate_tdee, calculate_macros
+import core.data.db as db
+from core.utils.auth import require_login
+from core.data.nutrition import calculate_bmr, calculate_tdee, calculate_macros
 
 st.set_page_config(page_title="AI Fitness Trainer — Nutrition", page_icon="🥗", layout="wide")
 

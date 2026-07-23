@@ -3,7 +3,7 @@
 # ================================================================
 
 import random
-from exercise_classifier import ExerciseClassifier
+from core.tracking.exercise_classifier import ExerciseClassifier
 
 class MockPoseDetector:
     def find_angle(self, img, p1, p2, p3, draw=False):

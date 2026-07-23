@@ -1,5 +1,5 @@
 import streamlit as st
-from auth import require_login, logout
+from core.utils.auth import require_login, logout
 
 st.set_page_config(page_title="AI Fitness Trainer — Home", page_icon="🏋️", layout="wide")
 

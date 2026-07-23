@@ -3,9 +3,9 @@
 # ================================================================
 
 from unittest.mock import patch
-from frame_pipeline import FramePipeline
+from core.tracking.frame_pipeline import FramePipeline
 
-@patch("frame_pipeline.PoseDetector")
+@patch("core.tracking.frame_pipeline.PoseDetector")
 def test_pipeline_set_exercise_resets_tracker(mock_detector_cls):
     pipeline = FramePipeline(exercise_key="squats", in_setup=False)
     assert pipeline.current_key == "squats"
@@ -23,7 +23,7 @@ def test_pipeline_set_exercise_resets_tracker(mock_detector_cls):
     assert pipeline.prev_rep_count == 0
     assert pipeline.flash_frames == 0
 
-@patch("frame_pipeline.PoseDetector")
+@patch("core.tracking.frame_pipeline.PoseDetector")
 def test_pipeline_get_summary_keys(mock_detector_cls):
     pipeline = FramePipeline(exercise_key="squats", in_setup=False)
     summary = pipeline.get_summary()
@@ -36,7 +36,7 @@ def test_pipeline_get_summary_keys(mock_detector_cls):
     }
     assert expected_keys.issubset(summary.keys())
 
-@patch("frame_pipeline.PoseDetector")
+@patch("core.tracking.frame_pipeline.PoseDetector")
 def test_pipeline_rep_label_thresholding(mock_detector_cls):
     pipeline = FramePipeline(exercise_key="squats", in_setup=False)
     pipeline.ml_model = None  # Force blended score to equal rule score

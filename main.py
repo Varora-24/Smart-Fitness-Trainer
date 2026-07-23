@@ -20,14 +20,14 @@ import cv2
 import argparse
 import json
 import logging
-from logger_setup import setup_logger
-import db
+from core.utils.logger_setup import setup_logger
+import core.data.db as db
 
-from config import (
+from core.utils.config import (
     WINDOW_TITLE, FRAME_WIDTH, FRAME_HEIGHT, EXERCISE_CONFIG, MAX_CONSECUTIVE_FAILURES,
 )
-from frame_pipeline import FramePipeline
-from utils import show_summary
+from core.tracking.frame_pipeline import FramePipeline
+from core.utils.utils import show_summary
 
 logger = logging.getLogger("main")
 

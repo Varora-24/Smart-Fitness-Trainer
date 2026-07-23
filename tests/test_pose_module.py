@@ -1,7 +1,7 @@
 import pytest  # noqa: F401
 import numpy as np
 from unittest.mock import MagicMock, patch
-from pose_module import PoseDetector
+from core.tracking.pose_module import PoseDetector
 
 class MockLandmark:
     def __init__(self, x, y, z=0, visibility=1.0, presence=1.0):

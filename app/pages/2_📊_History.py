@@ -6,8 +6,8 @@ import streamlit as st
 import pandas as pd
 import os
 import json
-import db
-from auth import require_login
+import core.data.db as db
+from core.utils.auth import require_login
 
 # ── Page Configuration ──────────────────────────────────────────
 st.set_page_config(

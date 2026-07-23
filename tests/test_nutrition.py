@@ -3,7 +3,7 @@
 # ================================================================
 
 import pytest
-from nutrition import (
+from core.data.nutrition import (
     calculate_bmr,
     calculate_tdee,
     calculate_macros,

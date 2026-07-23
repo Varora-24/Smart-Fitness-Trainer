@@ -6,8 +6,8 @@ import pytest
 import streamlit as st
 from unittest.mock import MagicMock, patch
 
-import auth
-import db
+import core.utils.auth as auth
+import core.data.db as db
 
 @pytest.fixture(autouse=True)
 def mock_streamlit_session():
@@ -19,11 +19,11 @@ def mock_streamlit_session():
 @pytest.fixture
 def mock_supabase():
     """Mock the Supabase client."""
-    with patch("auth.create_client") as mock_create:
+    with patch("core.utils.auth.create_client") as mock_create:
         mock_client = MagicMock()
         mock_create.return_value = mock_client
         # Also mock get_secret to return dummy values to avoid KeyError
-        with patch("auth.get_secret", side_effect=lambda key: f"dummy_{key}"):
+        with patch("core.utils.auth.get_secret", side_effect=lambda key: f"dummy_{key}"):
             yield mock_client
 
 class TestAuthFunctions:
@@ -31,7 +31,7 @@ class TestAuthFunctions:
 
     def test_require_login_redirects_if_not_logged_in(self, mock_supabase):
         # When no session exists, require_login calls _render_auth_forms and stops
-        with patch("auth._render_auth_forms") as mock_render:
+        with patch("core.utils.auth._render_auth_forms") as mock_render:
             with patch("streamlit.stop") as mock_stop:
                 auth.require_login()
                 mock_render.assert_called_once()
@@ -83,7 +83,7 @@ class TestAuthFunctions:
 class TestUserProfile:
     """Verify profile functions use Supabase."""
 
-    @patch("db._get_client")
+    @patch("core.data.db._get_client")
     def test_get_user_profile(self, mock_get_client):
         mock_client = MagicMock()
         mock_get_client.return_value = mock_client
@@ -98,7 +98,7 @@ class TestUserProfile:
         assert profile["display_name"] == "Test User"
         mock_client.table.assert_called_with("profiles")
 
-    @patch("db._get_client")
+    @patch("core.data.db._get_client")
     def test_update_profile_fields(self, mock_get_client):
         mock_client = MagicMock()
         mock_get_client.return_value = mock_client

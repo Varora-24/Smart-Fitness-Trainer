@@ -28,7 +28,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, accuracy_score
 
-from config import DATASET_CSV_PATH, MODEL_SKOPS_PATH
+from core.utils.config import DATASET_CSV_PATH, MODEL_SKOPS_PATH
 
 # Feature columns used for training
 FEATURE_COLS = ["symmetry", "range_of_motion", "posture", "control"]

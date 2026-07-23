@@ -3,7 +3,7 @@
 # ================================================================
 
 from unittest.mock import MagicMock
-from exercises import ExerciseTracker
+from core.tracking.exercises import ExerciseTracker
 
 class MockPoseDetector:
     def __init__(self, visible=True):

@@ -9,7 +9,7 @@
 import threading
 import time
 import logging
-from config import VOICE_ENABLED, VOICE_COOLDOWN_SECS
+from core.utils.config import VOICE_ENABLED, VOICE_COOLDOWN_SECS
 
 logger = logging.getLogger("voice_coach")
 

@@ -10,19 +10,19 @@ import numpy as np
 import logging
 from typing import cast
 
-from config import (
+from core.utils.config import (
     COLOR_GREEN, COLOR_RED, COLOR_ORANGE, EXERCISE_CONFIG, MODEL_SKOPS_PATH,
     FRAME_WIDTH, FRAME_HEIGHT, CLEAN_REP_SCORE_THRESHOLD,
 )
-from pose_module         import PoseDetector
-from exercises           import ExerciseTracker
-from exercise_classifier import ExerciseClassifier
-from session_tracker     import WorkoutSession
-from setup_mode          import CameraSetup
-from voice_coach         import VoiceCoach
+from core.tracking.pose_module import PoseDetector
+from core.tracking.exercises import ExerciseTracker
+from core.tracking.exercise_classifier import ExerciseClassifier
+from core.data.session_tracker import WorkoutSession
+from core.tracking.setup_mode import CameraSetup
+from core.utils.voice_coach import VoiceCoach
 
 
-from utils import (
+from core.utils.utils import (
     draw_progress_bar, draw_rep_panel, draw_stats_panel,
     draw_exercise_badge, draw_fps, draw_feedback,
     draw_hints, draw_symmetry_panel, draw_form_score,

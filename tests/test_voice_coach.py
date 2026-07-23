@@ -3,15 +3,15 @@
 # ================================================================
 
 from unittest.mock import patch
-import voice_coach
+import core.utils.voice_coach as voice_coach
 import time
 
 # ── Test 1.4: Single pyttsx3 init call & engine reuse ───────────
 @patch("subprocess.Popen")
 def test_voice_coach_single_init(mock_popen):
     # Enable voice
-    with patch("voice_coach.VOICE_ENABLED", True), \
-         patch("voice_coach._ENGINE_AVAILABLE", True):
+    with patch("core.utils.voice_coach.VOICE_ENABLED", True), \
+         patch("core.utils.voice_coach._ENGINE_AVAILABLE", True):
 
         coach = voice_coach.VoiceCoach()
 

@@ -12,7 +12,7 @@
 import cv2
 import numpy as np
 from collections import deque
-from config import (
+from core.utils.config import (
     COLOR_GREEN, COLOR_RED, COLOR_WHITE, COLOR_ORANGE, COLOR_CYAN, COLOR_YELLOW, COLOR_DARK_GRAY,
     COLOR_BLUE,
     FRAME_WIDTH, FRAME_HEIGHT,

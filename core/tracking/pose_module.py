@@ -11,7 +11,7 @@ from mediapipe.tasks.python import vision as mp_vision
 import math
 import numpy as np
 from typing import Any
-from config import (
+from core.utils.config import (
     DETECTION_CONFIDENCE,
     TRACKING_CONFIDENCE,
     MODEL_COMPLEXITY,

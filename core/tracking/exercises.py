@@ -18,7 +18,7 @@
 import time
 from typing import Any
 import numpy as np
-from config import (
+from core.utils.config import (
     EXERCISE_CONFIG,
     LANDMARK_VISIBILITY_THRESHOLD,
     FEEDBACK_DEPTH_THRESHOLD,
@@ -32,7 +32,7 @@ from config import (
     CLEAN_REP_SCORE_THRESHOLD,
     MAX_VELOCITY_DEG_PER_FRAME,
 )
-from utils import AngleSmoother
+from core.utils.utils import AngleSmoother
 
 
 class ExerciseTracker:

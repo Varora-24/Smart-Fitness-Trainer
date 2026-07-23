@@ -2,11 +2,11 @@ import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import streamlit.components.v1 as components
 import av
-import db
-from auth import require_login
+import core.data.db as db
+from core.utils.auth import require_login
 
-from frame_pipeline import FramePipeline
-from config import EXERCISE_CONFIG
+from core.tracking.frame_pipeline import FramePipeline
+from core.utils.config import EXERCISE_CONFIG
 
 st.set_page_config(page_title="AI Fitness Trainer — Live", page_icon="🏋️", layout="wide")
 

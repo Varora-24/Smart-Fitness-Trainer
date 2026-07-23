@@ -3,9 +3,9 @@
 # ================================================================
 
 import streamlit as st
-import db
-from auth import require_login
-from supplement_data import SUPPLEMENT_INFO, MANDATORY_DISCLAIMER
+import core.data.db as db
+from core.utils.auth import require_login
+from core.data.supplement_data import SUPPLEMENT_INFO, MANDATORY_DISCLAIMER
 
 st.set_page_config(
     page_title="AI Fitness Trainer — Supplements",

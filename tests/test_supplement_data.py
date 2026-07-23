@@ -2,7 +2,7 @@
 #  tests/test_supplement_data.py  –  Supplement data integrity tests
 # ================================================================
 
-from supplement_data import SUPPLEMENT_INFO, MANDATORY_DISCLAIMER
+from core.data.supplement_data import SUPPLEMENT_INFO, MANDATORY_DISCLAIMER
 
 
 # All valid fitness_goal values that the db.py users table accepts

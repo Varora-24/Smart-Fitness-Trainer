@@ -12,10 +12,10 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-import db
-from auth import require_login
-from config import EXERCISE_CONFIG
-from frame_pipeline import FramePipeline
+import core.data.db as db
+from core.utils.auth import require_login
+from core.utils.config import EXERCISE_CONFIG
+from core.tracking.frame_pipeline import FramePipeline
 
 st.set_page_config(
     page_title="AI Fitness Trainer — Video Analysis",
