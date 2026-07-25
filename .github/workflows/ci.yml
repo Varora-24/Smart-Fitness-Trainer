@@ -49,7 +49,7 @@ jobs:
         run: ruff check .
 
       - name: Mypy Check (Type safety)
-        run: mypy . --ignore-missing-imports --exclude "pages/" --exclude "scratch/"
+        run: mypy . --ignore-missing-imports --exclude "app/pages/" --exclude "scratch/"
 
       - name: Pytest Unit Tests
         run: pytest -v

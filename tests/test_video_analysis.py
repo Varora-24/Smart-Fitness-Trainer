@@ -23,7 +23,7 @@ class TestVideoAnalysisPipeline:
 
     def test_pipeline_returns_summary_with_expected_keys(self, blank_frames):
         """Process synthetic frames and check the summary dict structure."""
-        from frame_pipeline import FramePipeline
+        from core.tracking.frame_pipeline import FramePipeline
 
         pipeline = FramePipeline(exercise_key="squats", in_setup=False)
         pipeline.voice_muted = True
@@ -48,7 +48,7 @@ class TestVideoAnalysisPipeline:
 
     def test_pipeline_processes_multiple_exercises(self, blank_frames):
         """Switching exercises mid-video doesn't crash."""
-        from frame_pipeline import FramePipeline
+        from core.tracking.frame_pipeline import FramePipeline
 
         pipeline = FramePipeline(exercise_key="squats", in_setup=False)
         pipeline.voice_muted = True
@@ -68,7 +68,7 @@ class TestVideoAnalysisPipeline:
 
     def test_mock_video_capture_flow(self, blank_frames):
         """Simulate the exact flow from the Video Analysis page using a mock VideoCapture."""
-        from frame_pipeline import FramePipeline
+        from core.tracking.frame_pipeline import FramePipeline
 
         mock_cap = MagicMock()
         # Return True + frame for each blank frame, then False to stop
