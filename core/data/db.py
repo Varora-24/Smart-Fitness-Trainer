@@ -4,6 +4,7 @@
 
 import logging
 from datetime import datetime
+import threading
 import streamlit as st
 import core.utils.auth as auth
 
@@ -102,8 +103,6 @@ def update_session(session_id: int, summary_dict: dict) -> None:
         }).eq("id", session_id).execute()
     except Exception as e:
         logger.error(f"Supabase session update failed: {e}")
-
-import threading
 
 def _save_rep_background(client, rep_data):
     try:
