@@ -103,13 +103,22 @@ def update_session(session_id: int, summary_dict: dict) -> None:
     except Exception as e:
         logger.error(f"Supabase session update failed: {e}")
 
+import threading
+
+def _save_rep_background(client, rep_data):
+    try:
+        client.table("reps").insert(rep_data).execute()
+    except Exception as e:
+        logger.error(f"Supabase rep insert failed (background): {e}")
+
 def save_rep(session_id: int, row: dict) -> None:
     """
-    Save a single rep incrementally.
+    Save a single rep incrementally (non-blocking).
     """
     if not session_id or not row:
         return
     
+    # Get client in the calling thread (where st.session_state is available)
     client = _get_client()
     now_str = datetime.now().isoformat()
     rep_data = {
@@ -124,10 +133,7 @@ def save_rep(session_id: int, row: dict) -> None:
             "created_at": now_str
         }
         
-    try:
-        client.table("reps").insert(rep_data).execute()
-    except Exception as e:
-        logger.error(f"Supabase rep insert failed: {e}")
+    threading.Thread(target=_save_rep_background, args=(client, rep_data), daemon=True).start()
 
 
 def get_history(exercise: str | None = None, limit: int = 50, user_id: str | None = None) -> list:

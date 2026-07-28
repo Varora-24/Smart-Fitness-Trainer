@@ -26,7 +26,7 @@ class LiveVideoProcessor(VideoProcessorBase):
         self.pipeline.is_browser = True
         
         # Drop frames to maintain real-time performance with IMAGE mode
-        self.frame_skip = 2 
+        self.frame_skip = 3
         self.frame_count = 0
         self.last_out = None
         
