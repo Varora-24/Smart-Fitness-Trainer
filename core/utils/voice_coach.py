@@ -161,7 +161,7 @@ except Exception:
     pass
 '''
             subprocess.Popen([sys.executable, "-c", script], 
-                             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0)
         except Exception as e:
             logger.debug(f"Voice coach speech failed (non-fatal): {e}")
         finally:
