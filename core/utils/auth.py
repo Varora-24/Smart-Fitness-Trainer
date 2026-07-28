@@ -6,19 +6,22 @@ import os
 import streamlit as st
 from supabase import create_client, Client
 
-def get_secret(key: str) -> str:
+def get_secret(key: str) -> str | None:
     try:
         return st.secrets[key]
     except (KeyError, FileNotFoundError):
-        if key in os.environ:
-            return os.environ[key]
-        st.error(f"⚠️ Missing Secret: `{key}`. Please add it to your Streamlit Cloud Secrets or set it as an environment variable.")
-        st.stop()
-        return ""
+        pass
+    try:
+        return os.environ[key]
+    except KeyError:
+        return None
 
 def get_supabase_client() -> Client:
     url = get_secret("SUPABASE_URL")
     key = get_secret("SUPABASE_ANON_KEY")
+    if url is None or key is None:
+        st.error("App configuration error - required secrets are missing")
+        st.stop()
     return create_client(url, key)
 
 def get_authenticated_client() -> Client:
