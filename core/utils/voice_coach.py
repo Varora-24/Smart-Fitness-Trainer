@@ -25,6 +25,14 @@ class VoiceCoach:
     """
     Fire-and-forget async TTS coach.
 
+    Two independent channels:
+      1. pyttsx3 (desktop / local)  – speaks via the OS TTS engine
+      2. Browser TTS                – stores a phrase that Streamlit injects
+                                      into the page via Web Speech API
+
+    The two channels are fully independent.  Browser TTS works even when
+    pyttsx3 is not installed (e.g., Streamlit Community Cloud).
+
     Usage
     -----
         coach = VoiceCoach()
@@ -33,19 +41,22 @@ class VoiceCoach:
     """
 
     def __init__(self):
-        self._enabled     = VOICE_ENABLED and _ENGINE_AVAILABLE
+        # pyttsx3 path – only usable locally
+        self._pyttsx3_enabled = VOICE_ENABLED and _ENGINE_AVAILABLE
+        # Browser TTS path – always available; no library needed
+        self._browser_enabled = VOICE_ENABLED
+
         self._last_spoken : float = 0.0
         self._lock        = threading.Lock()
         self._busy        : bool  = False
         self.muted        : bool  = False
-        
-        # For browser TTS (Streamlit component injection)
-        self.browser_phrase : str = ""
+
+        # Latest phrase queued for browser TTS
+        self.browser_phrase : str   = ""
         self.browser_ts     : float = 0.0
 
         if VOICE_ENABLED and not _ENGINE_AVAILABLE:
-            print("[VoiceCoach] pyttsx3 not installed – voice disabled.")
-            print("            Run:  pip install pyttsx3")
+            logger.debug("[VoiceCoach] pyttsx3 not installed – desktop TTS disabled; browser TTS still active.")
 
     # ── Public API ────────────────────────────────────────────
     def get_browser_phrase(self):
@@ -56,25 +67,36 @@ class VoiceCoach:
     def say(self, phrase: str, is_browser: bool = False) -> None:
         """
         Speak *phrase* asynchronously.
-        Silently drops if busy or within cooldown.
+
+        Browser path: stores phrase for Web Speech API injection — works on
+        Streamlit Cloud with no TTS library installed.
+        Desktop path: spawns pyttsx3 in a subprocess (local only).
+
+        Both paths respect the cooldown and muted flag.
         """
-        if not self._enabled or self.muted:
+        if self.muted:
             return
+
         now = time.time()
+
         with self._lock:
-            if self._busy:
-                return
             if now - self._last_spoken < VOICE_COOLDOWN_SECS:
                 return
-            self._busy        = True
             self._last_spoken = now
-            
-            if is_browser:
+
+            if is_browser and self._browser_enabled:
+                # Store for Streamlit frontend to inject via Web Speech API.
+                # This path does NOT need pyttsx3.
                 self.browser_phrase = phrase
-                self.browser_ts = now
-                # Browser TTS is handled externally, release lock quickly
-                threading.Timer(2.0, self._release_busy).start()
+                self.browser_ts     = now
                 return
+
+            # Desktop pyttsx3 path
+            if not self._pyttsx3_enabled:
+                return
+            if self._busy:
+                return
+            self._busy = True
 
         threading.Thread(
             target=self._speak, args=(phrase,), daemon=True
@@ -109,7 +131,8 @@ class VoiceCoach:
             self.say(phrase, is_browser=is_browser)
 
     def enabled(self) -> bool:
-        return self._enabled
+        """True if ANY voice channel is active."""
+        return self._pyttsx3_enabled or self._browser_enabled
 
     # ── Phrase selection ──────────────────────────────────────
     def _select_phrase(
