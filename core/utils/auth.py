@@ -10,7 +10,11 @@ def get_secret(key: str) -> str:
     try:
         return st.secrets[key]
     except (KeyError, FileNotFoundError):
-        return os.environ[key]
+        if key in os.environ:
+            return os.environ[key]
+        st.error(f"⚠️ Missing Secret: `{key}`. Please add it to your Streamlit Cloud Secrets or set it as an environment variable.")
+        st.stop()
+        return ""
 
 def get_supabase_client() -> Client:
     url = get_secret("SUPABASE_URL")
