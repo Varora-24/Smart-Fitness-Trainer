@@ -3,12 +3,12 @@
 #  Full analysis dashboard: per-rep table, form charts, summary
 # ================================================================
 
+import gc
 import os
 import tempfile
 import time
 
 import cv2
-import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -16,6 +16,7 @@ import core.data.db as db
 from core.utils.auth import require_login
 from core.utils.config import EXERCISE_CONFIG
 from core.tracking.frame_pipeline import FramePipeline
+from core.tracking.exercise_classifier import ExerciseClassifier
 
 st.set_page_config(
     page_title="AI Fitness Trainer — Video Analysis",
@@ -33,12 +34,40 @@ st.caption(
     "and a downloadable annotated video."
 )
 
-st.info(
-    "📌 **Tips for best results**: film yourself from the side or front, "
-    "ensure your full body is visible, use good lighting, and keep clips "
-    "under 3 minutes for fastest processing.",
-    icon="📌",
-)
+# ── Video quality guidance ────────────────────────────────────────
+with st.expander("📐 Video Requirements & Tips for Best Results", expanded=False):
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown("""
+**✅ Recommended Settings**
+- **Aspect ratio:** 16:9 landscape (horizontal recording)
+- **Minimum resolution:** 720p (1280×720)
+- **Frame rate:** 24fps or higher
+- **Maximum duration:** 90 seconds
+- **File size:** Under 100 MB
+
+**📸 Camera Placement**
+- Place camera at **hip/chest height** for most exercises
+- Ensure your **entire body** is in frame (head to toe)
+- Good lighting — avoid backlit setups
+- Solid, non-patterned background helps detection
+""")
+    with col_b:
+        st.markdown("""
+**📱 Portrait Videos (9:16) — Supported!**
+We automatically add black bars (letterboxing) to portrait videos
+so your body proportions are preserved and the AI reads angles correctly.
+No stretching or distortion.
+
+**Required body visibility per exercise:**
+| Exercise | Minimum Required |
+|---|---|
+| Squats | Full body (head to toe) |
+| Lunges | Full body (head to toe) |
+| Push-ups | Upper body + torso (hips) |
+| Shoulder Press | Upper body + arms overhead |
+| Bicep Curls | Upper body (shoulders to wrists) |
+""")
 
 st.markdown("---")
 
@@ -57,13 +86,13 @@ with col_sel:
     kcal_per_rep = float(EXERCISE_CONFIG[exercise_key].get("kcal_per_rep", 0.25))
 
     CAMERA_INSTRUCTIONS = {
-        "squats": "📸 **Camera Angle:** Place the camera at hip height, facing you from the side (profile view). Ensure your entire body from head to toe is visible.",
-        "pushups": "📸 **Camera Angle:** Place the camera on the floor, facing you from the side. Ensure your entire body from head to toe is visible.",
-        "curls": "📸 **Camera Angle:** Place the camera at chest height, facing you from the side (profile view). Ensure your upper body and arms are clearly visible.",
-        "lunges": "📸 **Camera Angle:** Place the camera at waist height, facing you from the side (profile view). Ensure your entire body is visible.",
-        "shoulder_press": "📸 **Camera Angle:** Place the camera at chest height, facing you from the front or slight angle. Ensure your upper body and arms extended overhead are fully visible."
+        "squats":         "📸 **Camera Angle:** Side profile, hip height, full body head-to-toe visible.",
+        "pushups":        "📸 **Camera Angle:** Side profile at floor level, full body visible.",
+        "curls":          "📸 **Camera Angle:** Side profile at chest height, upper body & arms visible.",
+        "lunges":         "📸 **Camera Angle:** Side profile at waist height, full body visible.",
+        "shoulder_press": "📸 **Camera Angle:** Front-facing or slight angle, full overhead extension visible.",
     }
-    
+
     if exercise_key in CAMERA_INSTRUCTIONS:
         st.info(CAMERA_INSTRUCTIONS[exercise_key])
 
@@ -71,7 +100,7 @@ with col_up:
     uploaded = st.file_uploader(
         "🎬 Upload your workout video",
         type=["mp4", "mov", "avi", "mkv"],
-        help="Max 200 MB. Supported formats: MP4, MOV, AVI, MKV",
+        help="Max 100 MB · Max 90 seconds · Supported: MP4, MOV, AVI, MKV",
     )
 
 if not uploaded:
@@ -82,8 +111,8 @@ if not uploaded:
         | 📊 Metric | Description |
         |---|---|
         | **Total Reps** | All completed repetitions detected |
-        | **✅ Good Reps** | Reps scored ≥ 75/100 — correct form |
-        | **❌ Bad Reps** | Reps below 75 — form corrections flagged |
+        | **✅ Good Reps** | Reps scored ≥ 60/100 — correct form |
+        | **❌ Bad Reps** | Reps below 60 — form corrections flagged |
         | **🔥 Calories** | Estimated calories based on exercise & rep count |
         | **⏱️ Duration** | Total video processing time |
         | **📈 Avg Form Score** | Overall quality across all reps |
@@ -97,14 +126,24 @@ if not uploaded:
 if not st.button("🚀 Analyze Video", type="primary", use_container_width=True):
     st.stop()
 
-video_path = None
+video_path  = None
 output_path = None
+pipeline    = None
 
 try:
     # ── Write temp input file ─────────────────────────────────
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
         tmp.write(uploaded.read())
         video_path = tmp.name
+
+    # ── Validate file size ────────────────────────────────────
+    size_mb = os.path.getsize(video_path) / 1_048_576
+    if size_mb > 100:
+        st.error(
+            f"❌ Video is {size_mb:.0f} MB — the limit is 100 MB. "
+            "Please trim your clip and try again."
+        )
+        st.stop()
 
     # ── Open video ────────────────────────────────────────────
     cap = cv2.VideoCapture(video_path)
@@ -114,40 +153,118 @@ try:
 
     src_fps    = cap.get(cv2.CAP_PROP_FPS) or 30.0
     total_frms = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 1
+    src_w      = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    src_h      = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     duration_s = total_frms / src_fps
 
-    st.markdown("---")
-    with st.spinner(f"🔍 Analysing {int(duration_s)}s of video — this may take a moment…"):
+    # ── Validate duration ─────────────────────────────────────
+    if duration_s > 90:
+        st.error(
+            f"❌ Video is {duration_s:.0f}s long — the limit is 90 seconds. "
+            "Please trim your clip. Longer videos will exceed cloud memory limits."
+        )
+        cap.release()
+        st.stop()
 
-        # ── Init pipeline ─────────────────────────────────────
-        pipeline = FramePipeline(exercise_key=exercise_key, in_setup=False)
-        pipeline.voice_muted = False
+    # ── Notify if portrait / non-16:9 ────────────────────────
+    src_ratio = src_w / src_h if src_h > 0 else 1.0
+    if src_ratio < 1.1:   # portrait or nearly square
+        st.info(
+            f"📱 Detected a portrait/square video ({src_w}×{src_h}). "
+            "Black bars will be added automatically — no distortion to your pose.",
+            icon="📱",
+        )
+    elif abs(src_ratio - 16/9) > 0.1:
+        st.info(
+            f"📐 Non-standard aspect ratio detected ({src_w}×{src_h}, {src_ratio:.2f}:1). "
+            "Letterboxing applied automatically.",
+            icon="📐",
+        )
+
+    st.markdown("---")
+    with st.spinner(f"🔍 Analysing {int(duration_s)}s of video — using VIDEO tracking mode for best accuracy…"):
+
+        # ── Init pipeline in VIDEO mode ───────────────────────
+        # VIDEO mode gives MediaPipe temporal continuity across frames,
+        # dramatically improving detection on recorded clips.
+        pipeline = FramePipeline(exercise_key=exercise_key, in_setup=False, video_mode=True)
+        pipeline.voice_muted = True   # No audio in video analysis
+
+        # ── Open output video writer ──────────────────────────
+        # CRITICAL: Stream frames directly to disk — never accumulate in RAM.
+        # A 30-second 1280×720 video = ~2.5 GB in-memory. This would OOM the server.
+        out_fd, output_path = tempfile.mkstemp(suffix=".mp4")
+        os.close(out_fd)
+
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        out_w, out_h = 1280, 720
+        writer = cv2.VideoWriter(output_path, fourcc, min(src_fps, 30.0), (out_w, out_h))
 
         progress_bar = st.progress(0, text="Processing frames…")
 
-        frame_idx     = 0
-        output_frames: list[np.ndarray] = []
-        start_wall    = time.time()
+        frame_idx   = 0
+        start_wall  = time.time()
+
+        # ── Wrong-exercise early detection buffer ─────────────
+        # Collect landmark data from first 90 frames to cross-check exercise.
+        classifier_lm_samples: list = []
+        classifier = ExerciseClassifier()
 
         while True:
             ok, frame = cap.read()
             if not ok:
                 break
-            annotated = pipeline.process_frame(frame)
-            output_frames.append(annotated)
+
+            # Pass src_fps so the pipeline computes accurate timestamps for VIDEO mode
+            annotated = pipeline.process_frame(frame, src_fps=src_fps)
+            writer.write(annotated)
+
+            # Collect for wrong-exercise detection (first 90 frames only)
+            if frame_idx < 90 and pipeline.detector.lm_list:
+                classifier_lm_samples.append(pipeline.detector.lm_list)
+
             frame_idx += 1
-            if frame_idx % 10 == 0:
+            if frame_idx % 15 == 0:
                 progress_bar.progress(
                     min(frame_idx / total_frms, 1.0),
                     text=f"Processing frame {frame_idx}/{total_frms}…",
                 )
 
         cap.release()
+        writer.release()
         progress_bar.empty()
         wall_time = time.time() - start_wall
 
-    summary = pipeline.get_summary()
-    feature_rows: list[dict] = pipeline.session._all_feature_rows  # rep-level data
+    summary      = pipeline.get_summary()
+    feature_rows: list[dict] = pipeline.session._all_feature_rows
+
+    # ─────────────────────────────────────────────────────────────
+    # ── WRONG EXERCISE DETECTION ─────────────────────────────────
+    # ─────────────────────────────────────────────────────────────
+    if classifier_lm_samples:
+        # Run classifier on collected samples
+        detected_exercise = exercise_key   # default to user's selection
+        vote_counts: dict[str, int] = {}
+        for lm_list in classifier_lm_samples:
+            detected = classifier.update(lm_list, pipeline.detector)
+            vote_counts[detected] = vote_counts.get(detected, 0) + 1
+
+        if vote_counts:
+            top_detected = max(vote_counts, key=vote_counts.get)  # type: ignore[arg-type]
+            top_count = vote_counts[top_detected]
+            confidence = top_count / len(classifier_lm_samples)
+
+            if top_detected != exercise_key and confidence > 0.55:
+                top_label = EXERCISE_CONFIG[top_detected]["display_name"]
+                st.warning(
+                    f"⚠️ **Possible Exercise Mismatch!** \n\n"
+                    f"Our AI detected **{top_label}** movements in your video "
+                    f"(confidence: {confidence*100:.0f}%), but you selected "
+                    f"**{chosen_label}**.\n\n"
+                    f"If this is wrong, cancel and re-upload with the correct exercise "
+                    f"selected to get accurate rep counts and form scores.",
+                    icon="⚠️",
+                )
 
     # ─────────────────────────────────────────────────────────────
     # ── RESULTS DASHBOARD ────────────────────────────────────────
@@ -184,7 +301,6 @@ try:
     if feature_rows:
         df = pd.DataFrame(feature_rows)
 
-        # Rename for display
         rename_map = {
             "symmetry": "Symmetry",
             "range_of_motion": "Range of Motion",
@@ -199,7 +315,6 @@ try:
             lambda x: "✅ Good" if x == "good_rep" else "❌ Bad"
         )
 
-        # ── Per-rep score chart ───────────────────────────────────
         chart_cols = [c for c in ["Symmetry", "Range of Motion", "Posture", "Control"] if c in df_display.columns]
         if chart_cols:
             col_chart1, col_chart2 = st.columns(2)
@@ -216,31 +331,32 @@ try:
                 avg_df = pd.DataFrame.from_dict(avgs, orient="index", columns=["Score"])
                 st.bar_chart(avg_df, height=220)
 
-        # ── Good vs Bad rep donut style ──────────────────────────
         col_g, col_b = st.columns(2)
         with col_g:
             good_pct = round(clean_reps / total_reps * 100) if total_reps else 0
             st.metric("Good Rep Rate", f"{good_pct}%",
-                      help="Percentage of reps with form score ≥ 75")
+                      help="Percentage of reps with form score ≥ 60")
 
         with col_b:
-            st.metric(
-                "Weakest Dimension",
-                min(avgs, key=avgs.get) if chart_cols else "N/A",
-                help="The form dimension needing the most attention",
-            )
+            if chart_cols:
+                avgs_local = {col: float(df_display[col].mean()) for col in chart_cols}
+                st.metric(
+                    "Weakest Dimension",
+                    min(avgs_local, key=avgs_local.get),  # type: ignore[arg-type]
+                    help="The form dimension needing the most attention",
+                )
 
-        # ── Avg per-dimension table ───────────────────────────────
         st.markdown("**🏅 Average Scores per Dimension (0–100)**")
-        dim_cols = st.columns(len(chart_cols))
-        for i, col_name in enumerate(chart_cols):
-            val = avgs.get(col_name, 0.0)
-            color = "🟢" if val >= 75 else "🟡" if val >= 50 else "🔴"
-            dim_cols[i].metric(f"{color} {col_name}", f"{val:.1f}")
+        if chart_cols:
+            avgs_final = {col: float(df_display[col].mean()) for col in chart_cols}
+            dim_cols = st.columns(len(chart_cols))
+            for i, col_name in enumerate(chart_cols):
+                val = avgs_final.get(col_name, 0.0)
+                color = "🟢" if val >= 75 else "🟡" if val >= 50 else "🔴"
+                dim_cols[i].metric(f"{color} {col_name}", f"{val:.1f}")
 
         st.markdown("---")
 
-        # ── Per-rep detail table ─────────────────────────────────
         st.subheader("📋 Per-Rep Detail Table")
         display_cols = ["Rep #", "Quality", "Rep Score"] + chart_cols
         display_cols = [c for c in display_cols if c in df_display.columns]
@@ -253,11 +369,11 @@ try:
             hide_index=True,
         )
 
-        # ── Coaching tips based on weakest dimension ─────────────
         st.markdown("---")
         st.subheader("💡 AI Coaching Tips")
         if chart_cols:
-            weakest = min(avgs, key=avgs.get)
+            avgs_tips = {col: float(df_display[col].mean()) for col in chart_cols}
+            weakest = min(avgs_tips, key=avgs_tips.get)  # type: ignore[arg-type]
             TIPS = {
                 "Symmetry": (
                     "**Symmetry needs work.** Your left and right sides are moving unevenly. "
@@ -285,8 +401,12 @@ try:
 
     else:
         st.warning(
-            "No reps were detected in this video. Make sure your full body is visible "
-            "and you completed at least one full repetition.",
+            "No reps were detected in this video. Common reasons:\n"
+            "- Full body not visible in frame (especially lower body)\n"
+            "- Wrong exercise selected — check for the mismatch warning above\n"
+            "- Video too short to complete a full repetition\n"
+            "- Very fast movement causing pose detection to struggle\n\n"
+            "Try re-recording from the side with your entire body visible.",
             icon="⚠️",
         )
 
@@ -294,17 +414,7 @@ try:
     st.markdown("---")
     st.subheader("🎬 Annotated Video")
 
-    if output_frames:
-        out_h, out_w = output_frames[0].shape[:2]
-        out_fd, output_path = tempfile.mkstemp(suffix=".mp4")
-        os.close(out_fd)
-
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        writer = cv2.VideoWriter(output_path, fourcc, src_fps, (out_w, out_h))
-        for f in output_frames:
-            writer.write(f)
-        writer.release()
-
+    if output_path and os.path.exists(output_path):
         with open(output_path, "rb") as fh:
             video_bytes = fh.read()
 
@@ -318,12 +428,13 @@ try:
                 use_container_width=True,
             )
         with col_info:
-            size_mb = len(video_bytes) / 1_048_576
+            size_mb_out = len(video_bytes) / 1_048_576
             st.caption(
                 f"Video contains pose skeleton overlay, rep counter, form score badge, "
                 f"and stage indicator on every frame. "
-                f"File size: {size_mb:.1f} MB"
+                f"File size: {size_mb_out:.1f} MB"
             )
+        del video_bytes   # free memory immediately after creating download button
 
     # ── Save session to DB ────────────────────────────────────────
     user_id = st.session_state.get("user_id")
@@ -334,14 +445,21 @@ try:
                 db.update_session(session_id, {**summary, "calories": calories})
             st.caption("✅ Session saved to your workout history.")
         except Exception:
-            pass   # Non-fatal: don't interrupt the results display
+            pass   # Non-fatal
 
 except Exception as exc:
     st.error(f"❌ An error occurred during analysis: {exc}")
     raise
 
 finally:
+    # ── Aggressive memory cleanup ─────────────────────────────────
+    if pipeline is not None:
+        del pipeline
     if video_path and os.path.exists(video_path):
         os.unlink(video_path)
     if output_path and os.path.exists(output_path):
-        os.unlink(output_path)
+        try:
+            os.unlink(output_path)
+        except Exception:
+            pass
+    gc.collect()

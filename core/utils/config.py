@@ -128,7 +128,9 @@ EXERCISE_CONFIG = {
         # State machine: angle falls below down_threshold → "down"
         #                angle rises above up_threshold from "down" → rep
         "stage_down_threshold": 120,   # angle falls below this → "down"
-        "stage_up_threshold"  : 160,   # angle rises above this (from down) → rep counted
+        # Diagnostic on squats1 showed max angle of 159.1° — just below 160.
+        # Lowered to 150° to reliably catch the stand-up transition.
+        "stage_up_threshold"  : 150,   # angle rises above this (from down) → rep counted
         # ROM: knee angle must reach below this during the rep
         "rom_min_angle"       : 110,
 
@@ -177,7 +179,10 @@ EXERCISE_CONFIG = {
         "kcal_per_rep"        : 0.29,
         "depth_direction"     : "down",
 
-        "required_landmarks"  : [11, 12, 13, 14, 15, 16, 23, 24, 27, 28],
+        # Diagnostic confirmed: ankles (27,28) are almost NEVER visible from the
+        # side during push-ups (person is horizontal, feet at weird angle).
+        # Required set reduced to landmarks actually visible in side-view push-ups.
+        "required_landmarks"  : [11, 12, 13, 14, 23, 24],
 
         "feedback_low"        : "Go Deeper!",
         "feedback_good"       : "Perfect!",
@@ -264,7 +269,9 @@ EXERCISE_CONFIG = {
         "landmarks_right"     : (12, 14, 16),
         "angle_range"         : (80, 170),
         "stage_down_threshold": 100,   # elbow clearly bent at starting position
-        "stage_up_threshold"  : 155,   # arm clearly pressed overhead
+        # Diagnostic: only 16 frames hit 155°. Lowered to 145° to catch the
+        # full extension that our angle smoother rounds down slightly.
+        "stage_up_threshold"  : 145,   # arm clearly pressed overhead
         "rom_min_angle"       : 105,
 
         # Posture: torso alignment – no leaning back (hip→shoulder→elbow)

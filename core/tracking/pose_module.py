@@ -54,14 +54,19 @@ class PoseDetector:
         smooth_landmarks    : bool  = True,
         detection_con       : float = DETECTION_CONFIDENCE,
         tracking_con        : float = TRACKING_CONFIDENCE,
+        video_mode          : bool  = False,
     ):
         model_path = "models/pose_landmarker_lite.task"
         base_options = mp_python.BaseOptions(model_asset_path=model_path)
         
-        # Use IMAGE running mode for best accuracy. VIDEO mode over-smooths fast, partial reps.
+        # IMAGE mode: each frame detected independently — best for live WebRTC (no lag).
+        # VIDEO mode: uses temporal tracking across frames — far better for offline video
+        #             analysis because it recovers from momentary occlusion/blur.
+        self._video_mode = video_mode
+        running_mode = mp_vision.RunningMode.VIDEO if video_mode else mp_vision.RunningMode.IMAGE
         options = mp_vision.PoseLandmarkerOptions(
             base_options=base_options,
-            running_mode=mp_vision.RunningMode.IMAGE,
+            running_mode=running_mode,
             num_poses=1,
             min_pose_detection_confidence=detection_con,
             min_pose_presence_confidence=detection_con,
@@ -76,14 +81,16 @@ class PoseDetector:
         self.lm_list : list[list[int]] = []
 
     # ----------------------------------------------------------
-    def find_pose(self, img: "np.ndarray", draw: bool = True) -> "np.ndarray":
+    def find_pose(self, img: "np.ndarray", draw: bool = True, timestamp_ms: int = 0) -> "np.ndarray":
         """
         Run pose estimation on *img*.
 
         Parameters
         ----------
-        img  : BGR image (numpy array from OpenCV)
-        draw : Whether to overlay the skeleton on the image
+        img          : BGR image (numpy array from OpenCV)
+        draw         : Whether to overlay the skeleton on the image
+        timestamp_ms : Frame timestamp in milliseconds — required for VIDEO mode.
+                       Must be strictly increasing across calls.
 
         Returns
         -------
@@ -92,8 +99,12 @@ class PoseDetector:
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img_rgb)
         
-        # Use IMAGE mode for accurate angles without temporal smoothing
-        raw_result = self._detector.detect(mp_image)
+        if self._video_mode:
+            # VIDEO mode requires strictly-increasing timestamps
+            self._frame_timestamp_ms = max(self._frame_timestamp_ms + 1, timestamp_ms)
+            raw_result = self._detector.detect_for_video(mp_image, self._frame_timestamp_ms)
+        else:
+            raw_result = self._detector.detect(mp_image)
         
         # Construct the shim: strictly set pose_landmarks to None if empty
         if raw_result and raw_result.pose_landmarks:

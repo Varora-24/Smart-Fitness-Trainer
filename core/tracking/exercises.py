@@ -165,7 +165,9 @@ class ExerciseTracker:
                 self.feedback = VISIBILITY_WARN_TEXT
             return
 
-        # ── 2. Compute primary angles (both sides) ────────────
+        # ── 2. Compute primary angles ──────────────────────────
+        # Use best-side: if one arm/leg is occluded (common in side-view
+        # recordings), fall back to the visible side alone.
         lL, lR = cfg["landmarks_left"], cfg["landmarks_right"]
         if max(*lL, *lR) >= len(lm_list):
             self.feedback = "Move into frame"
@@ -174,9 +176,31 @@ class ExerciseTracker:
         raw_left  = detector.find_angle(img, lL[0], lL[1], lL[2], draw=draw)
         raw_right = detector.find_angle(img, lR[0], lR[1], lR[2], draw=draw)
 
-        self.left_angle  = self._sm_left.update(raw_left)
-        self.right_angle = self._sm_right.update(raw_right)
-        self.avg_angle   = (self.left_angle + self.right_angle) / 2.0
+        # Determine which sides produced a usable angle
+        lms = detector.results.pose_landmarks.landmark if detector.results.pose_landmarks else []
+        left_vis  = all(lms[i].visibility >= LANDMARK_VISIBILITY_THRESHOLD
+                        for i in lL if i < len(lms)) if lms else False
+        right_vis = all(lms[i].visibility >= LANDMARK_VISIBILITY_THRESHOLD
+                        for i in lR if i < len(lms)) if lms else False
+
+        if left_vis and right_vis:
+            # Both sides visible — standard bilateral tracking
+            self.left_angle  = self._sm_left.update(raw_left)
+            self.right_angle = self._sm_right.update(raw_right)
+        elif left_vis:
+            # Only left side visible (far arm occluded in side-view)
+            self.left_angle  = self._sm_left.update(raw_left)
+            self.right_angle = self._sm_right.update(raw_left)   # mirror
+        elif right_vis:
+            # Only right side visible
+            self.right_angle = self._sm_right.update(raw_right)
+            self.left_angle  = self._sm_left.update(raw_right)   # mirror
+        else:
+            # Neither side is fully visible — skip frame
+            self.feedback = VISIBILITY_WARN_TEXT
+            return
+
+        self.avg_angle = (self.left_angle + self.right_angle) / 2.0
 
         # ── 3. Velocity ───────────────────────────────────────
         self.velocity = abs(self.avg_angle - self._prev_avg_angle)
@@ -271,10 +295,11 @@ class ExerciseTracker:
             if self.stage == "down":
                 self.stage = "up"
 
-                # Debounce: at least 0.8 seconds between reps to avoid
-                # double-counting fast jitter or oscillation at the threshold.
+                # Debounce: minimum time between reps to avoid double-counting
+                # oscillation or jitter at the threshold.
+                # 0.3s is correct for recorded video; 0.8s was over-filtering.
                 current_time = time.time()
-                if current_time - self.last_rep_time > 0.8:
+                if current_time - self.last_rep_time > 0.3:
                     self.last_rep_time = current_time
                     self._finish_rep()   # _finish_rep() handles total_reps += 1
 
@@ -282,24 +307,48 @@ class ExerciseTracker:
 
     def _check_visibility(self, detector) -> bool:
         """
-        Return True only when all required landmarks have
-        MediaPipe visibility scores above the threshold.
-        Populates self.missing_landmarks with names of missing ones.
+        Return True when the pose meets the minimum visibility requirement.
+
+        Strategy: "best-side" — pass if AT LEAST ONE complete side has
+        all required landmarks above the visibility threshold.  This handles
+        the very common case where one arm/leg is occluded from a side-view
+        camera (e.g. far arm during push-ups, far leg during lunges).
+
+        Populates self.missing_landmarks with the best-effort missing names.
         """
         self.missing_landmarks = []
         if detector.results is None:
             return False
         if not detector.results.pose_landmarks:
             return False
-        
+
         lms = detector.results.pose_landmarks.landmark
-        for idx in self.cfg["required_landmarks"]:
-            if idx >= len(lms):
-                self.missing_landmarks.append(LANDMARK_NAMES.get(idx, str(idx)))
-            elif lms[idx].visibility < LANDMARK_VISIBILITY_THRESHOLD:
-                self.missing_landmarks.append(LANDMARK_NAMES.get(idx, str(idx)))
-                
-        return len(self.missing_landmarks) == 0
+        cfg = self.cfg
+        lL  = cfg["landmarks_left"]
+        lR  = cfg["landmarks_right"]
+
+        # Collect required landmarks split by side
+        # Left-side primaries: lL[0], lL[1], lL[2]
+        # Right-side primaries: lR[0], lR[1], lR[2]
+        def side_ok(indices: tuple) -> bool:
+            return all(
+                i < len(lms) and lms[i].visibility >= LANDMARK_VISIBILITY_THRESHOLD
+                for i in indices
+            )
+
+        left_ok  = side_ok(lL)
+        right_ok = side_ok(lR)
+
+        if left_ok or right_ok:
+            return True
+
+        # Neither side is visible — populate missing landmarks for the
+        # side that was closest (fewest missing landmarks).
+        left_missing  = [i for i in lL if i >= len(lms) or lms[i].visibility < LANDMARK_VISIBILITY_THRESHOLD]
+        right_missing = [i for i in lR if i >= len(lms) or lms[i].visibility < LANDMARK_VISIBILITY_THRESHOLD]
+        worst = left_missing if len(left_missing) <= len(right_missing) else right_missing
+        self.missing_landmarks = [LANDMARK_NAMES.get(i, str(i)) for i in worst]
+        return False
 
     def _compute_rom_score(self) -> float:
         """

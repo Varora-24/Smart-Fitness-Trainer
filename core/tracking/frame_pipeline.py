@@ -78,15 +78,25 @@ class FramePipeline:
     OpenCV entry point (main.py) and the browser WebRTC entry point
     (live_app.py). Owns no camera or window state - only receives a
     frame and returns a processed frame plus the current tracker state.
+    
+    Parameters
+    ----------
+    video_mode : bool
+        If True, uses MediaPipe VIDEO running mode (temporal tracking
+        across frames) which dramatically improves detection on
+        recorded videos.  Use False for live WebRTC streams.
     """
 
-    def __init__(self, exercise_key: str = "squats", in_setup: bool = True):
-        self.detector    = PoseDetector()
+    def __init__(self, exercise_key: str = "squats", in_setup: bool = True,
+                 video_mode: bool = False):
+        self.detector    = PoseDetector(video_mode=video_mode)
         self.setup       = CameraSetup()
         self.classifier  = ExerciseClassifier()
         self.session     = WorkoutSession()
         self.voice       = VoiceCoach()
         self.ml_model    = _load_ml_model()
+        self.video_mode  = video_mode
+        self._frame_idx  = 0   # used to compute timestamps for VIDEO mode
 
         self.current_key = exercise_key
         self.tracker      = ExerciseTracker(exercise_key)
@@ -131,15 +141,50 @@ class FramePipeline:
         self.coaching_caption = phrase
         self.caption_expiry   = time.time() + 3.0  # display for 3.0 seconds
 
-    def process_frame(self, img) -> np.ndarray:
+    @staticmethod
+    def _letterbox(img: np.ndarray, target_w: int = FRAME_WIDTH,
+                   target_h: int = FRAME_HEIGHT) -> np.ndarray:
+        """Pad *img* to target aspect ratio with black bars, then resize.
+        Preserves the original aspect ratio so landmark geometry is correct."""
+        h, w = img.shape[:2]
+        target_ratio = target_w / target_h
+        src_ratio    = w / h
+
+        if abs(src_ratio - target_ratio) < 0.01:   # already 16:9
+            return cv2.resize(img, (target_w, target_h))
+
+        if src_ratio > target_ratio:               # wider than 16:9 → pillarbox
+            new_w = target_w
+            new_h = int(target_w / src_ratio)
+        else:                                       # taller than 16:9 → letterbox
+            new_h = target_h
+            new_w = int(target_h * src_ratio)
+
+        resized = cv2.resize(img, (new_w, new_h))
+        canvas  = np.zeros((target_h, target_w, 3), dtype=np.uint8)
+        y_off   = (target_h - new_h) // 2
+        x_off   = (target_w - new_w) // 2
+        canvas[y_off:y_off + new_h, x_off:x_off + new_w] = resized
+        return canvas
+
+    def process_frame(self, img: np.ndarray, src_fps: float = 30.0) -> np.ndarray:
         """
         Run one frame through pose detection, exercise tracking, and
         overlay drawing. Returns the annotated image.
+        
+        Parameters
+        ----------
+        img     : Raw BGR frame from camera or video file.
+        src_fps : Source video FPS (used to compute VIDEO-mode timestamps).
         """
-        img = cv2.resize(img, (FRAME_WIDTH, FRAME_HEIGHT))
+        # Letterbox to target resolution — preserves aspect ratio.
+        img = self._letterbox(img)
+
+        self._frame_idx += 1
+        timestamp_ms = int(self._frame_idx * 1000 / max(src_fps, 1.0))
 
         # ── Pose detection ────────────────────────────────────
-        img     = self.detector.find_pose(img, draw=False)
+        img     = self.detector.find_pose(img, draw=False, timestamp_ms=timestamp_ms)
         lm_list = self.detector.find_position(img, draw=False)
 
         # ════════════════════════════════════════════════════════
