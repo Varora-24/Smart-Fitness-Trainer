@@ -43,14 +43,10 @@ class LiveVideoProcessor(VideoProcessorBase):
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
-        
-        self.frame_count += 1
-        
-        # Only process every Nth frame through the ML pipeline to prevent lag
-        if self.frame_count % self.frame_skip == 0 or self.last_out is None:
-            self.last_out = self.pipeline.process_frame(img)
-            
-        return av.VideoFrame.from_ndarray(self.last_out, format="bgr24")
+        # Process every frame. WebRTC will naturally adjust FPS.
+        # Repeating old frames causes visual stutter.
+        out = self.pipeline.process_frame(img)
+        return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
 st.title("🏋️ AI Smart Fitness Trainer — Live")
@@ -88,7 +84,15 @@ with col_video:
         key="fitness-trainer-live",
         video_processor_factory=LiveVideoProcessor,
         rtc_configuration=RTC_CONFIGURATION,
-        media_stream_constraints={"video": True, "audio": False},
+        media_stream_constraints={
+            "video": {
+                "width": {"ideal": 640, "max": 800},
+                "height": {"ideal": 480, "max": 600},
+                "frameRate": {"ideal": 30, "max": 30}
+            }, 
+            "audio": False
+        },
+        async_processing=True,
     )
 
 # Push control updates into the pipeline processor state
