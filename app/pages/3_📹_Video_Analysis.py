@@ -15,7 +15,7 @@ import streamlit as st
 import core.data.db as db
 from core.utils.auth import require_login
 from core.utils.config import EXERCISE_CONFIG, YOGA_POSE_CONFIG
-from core.tracking.pose_detector import PoseDetector
+from core.tracking.pose_module import PoseDetector
 from core.tracking.yoga_tracker import YogaPoseTracker
 from core.tracking.frame_pipeline import FramePipeline
 from core.tracking.exercise_classifier import ExerciseClassifier
