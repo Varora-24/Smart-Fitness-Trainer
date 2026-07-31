@@ -16,6 +16,7 @@
 # ================================================================
 
 import time
+from collections import deque
 from typing import Any
 import numpy as np
 from core.utils.config import (
@@ -74,9 +75,9 @@ class ExerciseTracker:
         # ── Per-rep accumulators ─────────────────────────────
         self._rep_min_angle   : float = 360.0   # smallest primary angle seen
         self._rep_max_angle   : float = 0.0     # largest primary angle seen
-        self._sym_samples     : list  = []
-        self._posture_samples : list  = []
-        self._velocity_samples: list  = []
+        self._sym_samples     : deque = deque(maxlen=300)
+        self._posture_samples : deque = deque(maxlen=300)
+        self._velocity_samples: deque = deque(maxlen=300)
         self._prev_avg_angle  : float = 0.0
         self._rep_start_time  : float = time.time()
 
@@ -390,7 +391,7 @@ class ExerciseTracker:
             self.bad_reps += 1
 
         self.last_rep_min_angle = self._rep_min_angle
-        self.last_rep_velocity_samples = self._velocity_samples.copy()
+        self.last_rep_velocity_samples = list(self._velocity_samples)
         self.last_rep_rom_score = rep_rom
         self.last_rep_control_score = rep_control
         self.last_rep_was_clean = rep_score >= CLEAN_REP_SCORE_THRESHOLD
@@ -417,9 +418,9 @@ class ExerciseTracker:
         # Reset per-rep accumulators
         self._rep_min_angle    = 360.0
         self._rep_max_angle    = 0.0
-        self._sym_samples      = []
-        self._posture_samples  = []
-        self._velocity_samples = []
+        self._sym_samples      = deque(maxlen=300)
+        self._posture_samples  = deque(maxlen=300)
+        self._velocity_samples = deque(maxlen=300)
         self._posture_baseline = None
         self._rep_start_time   = time.time()
 

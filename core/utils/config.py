@@ -294,3 +294,108 @@ EXERCISE_CONFIG = {
         "autodetect_signals"  : ["elbow_flex", "arms_overhead"],
     },
 }
+
+# ================================================================
+#  YOGA POSE CONFIGURATION
+# ================================================================
+#  Separate from EXERCISE_CONFIG: yoga is hold-based, not rep-based.
+#  landmark_checks: chain=(p1,p2,p3) angle at p2, range=(lo,hi) degrees.
+#  All chains verified in scratch/yoga_angle_dryrun_v3.py (32/32 PASS).
+# ================================================================
+
+YOGA_POSE_CONFIG: dict = {
+
+    "mountain_pose": {
+        "display_name": "Mountain Pose", "sanskrit": "Tadasana",
+        "min_hold_secs": 10, "alignment_threshold": 75,
+        "landmark_checks": [
+            {"chain": (23, 25, 27), "range": (165, 180), "feedback": "Straighten your left leg"},
+            {"chain": (24, 26, 28), "range": (165, 180), "feedback": "Straighten your right leg"},
+            {"chain": (25, 23, 11), "range": (160, 180), "feedback": "Stand tall - hips over ankles"},
+            {"chain": (26, 24, 12), "range": (160, 180), "feedback": "Stand tall - hips over ankles"},
+            {"chain": (23, 11, 13), "range": (0, 30),    "feedback": "Relax your left arm to your side"},
+            {"chain": (24, 12, 14), "range": (0, 30),    "feedback": "Relax your right arm to your side"},
+        ],
+        "cues": {"start": "Stand with feet together, arms at your sides",
+                 "hold": "Stay grounded and breathe steadily",
+                 "complete": "Mountain Pose complete!"},
+    },
+
+    "tree_pose": {
+        "display_name": "Tree Pose", "sanskrit": "Vrikshasana",
+        "min_hold_secs": 15, "alignment_threshold": 75,
+        "landmark_checks": [
+            {"chain": (23, 25, 27), "range": (165, 180), "feedback": "Straighten your standing leg"},
+            {"chain": (25, 23, 11), "range": (155, 180), "feedback": "Square your hips and stand tall"},
+            {"chain": (24, 26, 28), "range": (50, 110),  "feedback": "Raise your bent knee higher and rotate it outward"},
+        ],
+        "cues": {"start": "Stand on your left leg, raise right foot to inner thigh",
+                 "hold": "Find your balance - breathe steadily",
+                 "complete": "Tree Pose complete!"},
+    },
+
+    "warrior_2": {
+        "display_name": "Warrior II", "sanskrit": "Virabhadrasana II",
+        "min_hold_secs": 20, "alignment_threshold": 75,
+        "landmark_checks": [
+            {"chain": (11, 13, 15), "range": (165, 180), "feedback": "Straighten your left arm"},
+            {"chain": (12, 14, 16), "range": (165, 180), "feedback": "Straighten your right arm"},
+            {"chain": (23, 11, 13), "range": (70, 110),  "feedback": "Extend left arm to shoulder height"},
+            {"chain": (24, 12, 14), "range": (70, 110),  "feedback": "Extend right arm to shoulder height"},
+            {"chain": (11, 23, 25), "range": (100, 160), "feedback": "Sink hips lower, widen your stance"},
+            {"chain": (12, 24, 26), "range": (100, 160), "feedback": "Sink hips lower, widen your stance"},
+        ],
+        "cues": {"start": "Wide stance - front knee bent, arms extended to the sides at shoulder height",
+                 "hold": "Hold strong - gaze over your front fingertips",
+                 "complete": "Warrior II complete!"},
+    },
+
+    "chair_pose": {
+        "display_name": "Chair Pose", "sanskrit": "Utkatasana",
+        "min_hold_secs": 20, "alignment_threshold": 75,
+        # torso-lean (25->23->11) AND arm-overhead (23->11->13) must both pass.
+        # Forward fold alone fails arm check. Upright squat alone fails torso check.
+        "landmark_checks": [
+            {"chain": (23, 11, 13), "range": (130, 180), "feedback": "Raise your left arm overhead"},
+            {"chain": (24, 12, 14), "range": (130, 180), "feedback": "Raise your right arm overhead"},
+            {"chain": (11, 13, 15), "range": (155, 180), "feedback": "Straighten your left arm"},
+            {"chain": (12, 14, 16), "range": (155, 180), "feedback": "Straighten your right arm"},
+            {"chain": (25, 23, 11), "range": (120, 165), "feedback": "Sit deeper - lean torso slightly forward from hips"},
+            {"chain": (26, 24, 12), "range": (120, 165), "feedback": "Sit deeper - lean torso slightly forward from hips"},
+        ],
+        "cues": {"start": "Feet together, sink into a partial squat, raise arms overhead",
+                 "hold": "Hold the burn - arms up, weight in your heels",
+                 "complete": "Chair Pose complete!"},
+    },
+
+    "triangle_pose": {
+        "display_name": "Triangle Pose", "sanskrit": "Trikonasana",
+        "min_hold_secs": 20, "alignment_threshold": 75,
+        "landmark_checks": [
+            {"chain": (11, 23, 24), "range": (50, 90),   "feedback": "Tilt your torso further sideways - reach toward the floor"},
+            {"chain": (11, 13, 15), "range": (140, 180), "feedback": "Extend your top arm straight up"},
+            {"chain": (24, 12, 14), "range": (140, 180), "feedback": "Reach your bottom hand toward the floor"},
+            {"chain": (23, 25, 27), "range": (160, 180), "feedback": "Straighten your left leg"},
+            {"chain": (24, 26, 28), "range": (160, 180), "feedback": "Straighten your right leg"},
+        ],
+        "cues": {"start": "Wide stance - right hand toward floor, left arm reaching up",
+                 "hold": "Both legs straight, top arm up - breathe into the stretch",
+                 "complete": "Triangle Pose complete!"},
+    },
+
+    "warrior_1": {
+        "display_name": "Warrior I", "sanskrit": "Virabhadrasana I",
+        "min_hold_secs": 20, "alignment_threshold": 75,
+        "landmark_checks": [
+            {"chain": (23, 11, 13), "range": (130, 180), "feedback": "Raise your left arm overhead"},
+            {"chain": (24, 12, 14), "range": (130, 180), "feedback": "Raise your right arm overhead"},
+            {"chain": (11, 13, 15), "range": (155, 180), "feedback": "Straighten your left arm"},
+            {"chain": (12, 14, 16), "range": (155, 180), "feedback": "Straighten your right arm"},
+            {"chain": (26, 24, 12), "range": (140, 180), "feedback": "Square your torso forward"},
+            {"chain": (11, 23, 25), "range": (120, 165), "feedback": "Sink deeper into your front knee lunge"},
+        ],
+        "cues": {"start": "Lunge stance - front knee over ankle, arms raised overhead",
+                 "hold": "Strong foundation - hips square, arms pressing up",
+                 "complete": "Warrior I complete!"},
+    },
+}

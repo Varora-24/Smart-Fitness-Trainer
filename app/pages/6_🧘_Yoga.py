@@ -1,0 +1,223 @@
+"""
+6_🧘_Yoga.py — Yoga Hold-Tracking Page
+=======================================
+Uses the same WebRTC / FramePipeline infrastructure as the Live Trainer
+but routes pose-detection output to YogaPoseTracker instead of ExerciseTracker.
+No rep-counting — tracks alignment score and hold duration per pose.
+"""
+
+from __future__ import annotations
+
+
+import av
+import streamlit as st
+from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfiguration
+
+from core.utils.auth import require_login
+from core.utils.config import YOGA_POSE_CONFIG
+from core.tracking.frame_pipeline import FramePipeline
+from core.tracking.yoga_tracker import YogaPoseTracker
+
+# ── Page config ───────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="AI Fitness Trainer — Yoga",
+    page_icon="🧘",
+    layout="wide",
+)
+
+require_login()
+
+RTC_CONFIGURATION = RTCConfiguration(
+    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+)
+
+# ── Session state defaults ────────────────────────────────────────────────────
+if "yoga_pose_key" not in st.session_state:
+    st.session_state["yoga_pose_key"] = "mountain_pose"
+if "yoga_completed" not in st.session_state:
+    st.session_state["yoga_completed"] = []
+
+
+# ── WebRTC Video Processor ────────────────────────────────────────────────────
+class YogaVideoProcessor(VideoProcessorBase):
+    """
+    Processes WebRTC frames for yoga hold detection.
+    Shares PoseDetector plumbing via FramePipeline (in_setup=False,
+    video_mode=False) but routes landmarks to YogaPoseTracker, not
+    ExerciseTracker. No rep state machine runs.
+    """
+
+    def __init__(self) -> None:
+        # Use FramePipeline only for pose detection + drawing infrastructure.
+        # ExerciseTracker is still initialised inside FramePipeline but is
+        # never called from this processor — we call yoga_tracker.update() only.
+        self._pipeline = FramePipeline(exercise_key="squats", in_setup=False,
+                                       video_mode=False)
+        self._pipeline.voice_muted = False
+        self._pipeline.is_browser  = True
+
+        self._yoga_key     = st.session_state.get("yoga_pose_key", "mountain_pose")
+        self._yoga_tracker = YogaPoseTracker(self._yoga_key)
+
+        # Frame-skip: run MediaPipe inference every 3rd frame for stability,
+        # hold last annotated frame for the skipped frames.
+        self._skip_n   = 3
+        self._frame_idx = 0
+        self._last_out: "av.VideoFrame | None" = None
+
+        # Shared state (read by the main thread for UI display)
+        self.alignment_score:     float = 0.0
+        self.hold_duration_secs:  float = 0.0
+        self.is_holding:          bool  = False
+        self.active_feedback:     str   = ""
+        self.pose_completed:      bool  = False
+
+    def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+        img = frame.to_ndarray(format="bgr24")
+
+        # Swap pose if the sidebar changed it
+        new_key = st.session_state.get("yoga_pose_key", "mountain_pose")
+        if new_key != self._yoga_key:
+            self._yoga_key     = new_key
+            self._yoga_tracker = YogaPoseTracker(new_key)
+
+        # Inference every 3rd frame, render every frame
+        if self._frame_idx % self._skip_n == 0 or self._last_out is None:
+            # Use FramePipeline's pose detector to get lm_list
+            img = self._pipeline.detector.find_pose(img, draw=False)
+            lm_list = self._pipeline.detector.find_position(img, draw=False)
+
+            # Route to yoga tracker (not ExerciseTracker)
+            self._yoga_tracker.update(
+                detector=self._pipeline.detector,
+                img=img,
+                lm_list=lm_list,
+                draw=True,
+            )
+
+            # Expose state for UI
+            self.alignment_score    = self._yoga_tracker.alignment_score
+            self.hold_duration_secs = self._yoga_tracker.hold_duration_secs
+            self.is_holding         = self._yoga_tracker.is_holding_correctly
+            self.active_feedback    = self._yoga_tracker.active_feedback
+            self.pose_completed     = self._yoga_tracker.pose_completed
+
+            self._last_out = av.VideoFrame.from_ndarray(img, format="bgr24")
+
+        self._frame_idx = (self._frame_idx + 1) % self._skip_n
+        return self._last_out  # type: ignore[return-value]
+
+
+# ── UI ────────────────────────────────────────────────────────────────────────
+st.title("🧘 AI Yoga Coach — Hold & Align")
+st.caption(
+    "Select a pose, position yourself in front of the camera, and hold it "
+    "correctly for the required duration. Your alignment is scored in real-time "
+    "using the same MediaPipe skeleton used by the Live Trainer."
+)
+
+# ── Sidebar: pose selector ────────────────────────────────────────────────────
+with st.sidebar:
+    st.header("Pose Selection")
+    pose_options = {
+        cfg["display_name"]: key
+        for key, cfg in YOGA_POSE_CONFIG.items()
+    }
+    selected_display = st.selectbox(
+        "Choose a pose",
+        list(pose_options.keys()),
+        index=0,
+    )
+    selected_key = pose_options[selected_display]
+    st.session_state["yoga_pose_key"] = selected_key
+
+    cfg = YOGA_POSE_CONFIG[selected_key]
+    st.markdown(f"**Sanskrit:** *{cfg['sanskrit']}*")
+    st.markdown(f"**Hold required:** {cfg['min_hold_secs']} seconds")
+    st.markdown(f"**Alignment threshold:** {cfg['alignment_threshold']}%")
+    st.markdown("---")
+    st.info(cfg["cues"]["start"])
+
+    st.markdown("---")
+    if st.button("Reset Completions"):
+        st.session_state["yoga_completed"] = []
+        st.rerun()
+
+# ── Main: WebRTC stream + metrics ─────────────────────────────────────────────
+col_cam, col_stats = st.columns([3, 1])
+
+with col_cam:
+    ctx = webrtc_streamer(
+        key="yoga-trainer",
+        video_processor_factory=YogaVideoProcessor,
+        rtc_configuration=RTC_CONFIGURATION,
+        media_stream_constraints={
+            "video": {
+                "width":     {"ideal": 640, "max": 800},
+                "height":    {"ideal": 480, "max": 600},
+                "frameRate": {"ideal": 30,  "max": 30},
+            },
+            "audio": False,
+        },
+        async_processing=True,
+    )
+
+with col_stats:
+    st.subheader("Live Stats")
+
+    if ctx.video_processor:
+        proc = ctx.video_processor
+        cfg  = YOGA_POSE_CONFIG[st.session_state.get("yoga_pose_key", "mountain_pose")]
+
+        # Alignment score
+        score = proc.alignment_score
+        color = "green" if proc.is_holding else "orange"
+        st.metric("Alignment Score", f"{score:.0f}%")
+
+        # Hold progress bar
+        hold_s    = proc.hold_duration_secs
+        min_hold  = cfg["min_hold_secs"]
+        progress  = min(hold_s / max(min_hold, 1.0), 1.0)
+        st.progress(float(progress),
+                    text=f"Hold: {hold_s:.1f}s / {min_hold}s")
+
+        # Feedback cue
+        if proc.active_feedback:
+            st.warning(f"🔧 {proc.active_feedback}")
+        elif proc.is_holding:
+            st.success(cfg["cues"]["hold"])
+
+        # Completion flash
+        if proc.pose_completed:
+            st.balloons()
+            pose_name = cfg["display_name"]
+            if pose_name not in st.session_state["yoga_completed"]:
+                st.session_state["yoga_completed"].append(pose_name)
+            st.success(f"✅ {cfg['cues']['complete']}")
+
+        st.divider()
+        st.markdown("**Session Completions**")
+        completed = st.session_state["yoga_completed"]
+        if completed:
+            for name in completed:
+                st.markdown(f"- ✅ {name}")
+        else:
+            st.caption("No poses completed yet this session.")
+
+    else:
+        st.info("Start the camera to see live alignment stats.")
+
+# ── Pose reference cards ──────────────────────────────────────────────────────
+st.markdown("---")
+st.subheader("Pose Library")
+cols = st.columns(3)
+for i, (key, pose_cfg) in enumerate(YOGA_POSE_CONFIG.items()):
+    with cols[i % 3]:
+        is_done = pose_cfg["display_name"] in st.session_state["yoga_completed"]
+        title   = f"{'✅ ' if is_done else ''}{pose_cfg['display_name']}"
+        with st.expander(title):
+            st.markdown(f"*{pose_cfg['sanskrit']}*")
+            st.markdown(f"- Hold: **{pose_cfg['min_hold_secs']}s**")
+            st.markdown(f"- Min alignment: **{pose_cfg['alignment_threshold']}%**")
+            st.markdown(f"- Checks: **{len(pose_cfg['landmark_checks'])} joint angles**")
+            st.caption(pose_cfg["cues"]["start"])

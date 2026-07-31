@@ -25,10 +25,14 @@ class LiveVideoProcessor(VideoProcessorBase):
         self.pipeline.voice_muted = False
         self.pipeline.is_browser = True
         
-        # Drop frames to maintain real-time performance with IMAGE mode
-        self.frame_skip = 3
-        self.frame_count = 0
-        self.last_out = None
+        # Frame-skip: run MediaPipe inference every N frames for stability.
+        # recv() still returns a rendered frame every call (full ~30 fps video)
+        # by holding the last annotated output between inference frames.
+        # Before: inference on every frame  → ~30 fps inference load
+        # After:  inference every 3rd frame → ~10 fps inference, 30 fps render
+        self._skip_n     = 3      # run inference on frame 0, 3, 6, …
+        self._frame_idx  = 0      # rolling counter (reset mod _skip_n)
+        self._last_out   = None   # last annotated ndarray to hold & return
         
         # Init DB session
         try:
@@ -43,10 +47,17 @@ class LiveVideoProcessor(VideoProcessorBase):
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
-        # Process every frame. WebRTC will naturally adjust FPS.
-        # Repeating old frames causes visual stutter.
-        out = self.pipeline.process_frame(img)
-        return av.VideoFrame.from_ndarray(out, format="bgr24")
+
+        # Run MediaPipe inference only on every _skip_n-th frame.
+        # On skipped frames return the previous annotated output so the
+        # browser stream stays smooth at full camera FPS (~30 fps) while
+        # inference load drops to ~10 fps — the accuracy-for-stability
+        # tradeoff requested for Live Trainer only.
+        if self._frame_idx % self._skip_n == 0 or self._last_out is None:
+            self._last_out = self.pipeline.process_frame(img)
+
+        self._frame_idx = (self._frame_idx + 1) % self._skip_n
+        return av.VideoFrame.from_ndarray(self._last_out, format="bgr24")
 
 
 st.title("🏋️ AI Smart Fitness Trainer — Live")

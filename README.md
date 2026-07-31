@@ -42,13 +42,16 @@ An advanced AI-powered fitness training application that uses computer vision an
 - [x] **Macro / Nutrition Calculator** — Mifflin-St Jeor BMR, TDEE, and macro targets
 - [x] **Supplement Info (Educational)** — goal-based supplement reference, static data only
 - [x] **Migrate to MediaPipe Tasks API** — Migrated `pose_module.py` to the Tasks API and unpinned dependencies, resolving PYSEC-2026-1805.
+- [x] **Yoga Coach** — hold-based pose tracking with alignment scoring, joint correction cues, and a 6-pose library (Mountain, Tree, Warrior I & II, Chair, Triangle)
 
 ### 🔜 Planned
+<!-- Keep this list in sync with the Coming Soon section in app/Home.py -->
+- [ ] **Google Sign-In** — one-click login via Google OAuth, no password required
 - [ ] **Multi-Person Tracking** — independent pose instances per detected person
 - [ ] **Mobile-Responsive Layout** — tuned for phones and tablets
-- [ ] **Web Speech API Browser TTS** — client-side speech synthesis
 - [ ] **Custom Exercise Builder** — record baseline poses to create new exercises
 - [ ] **Integration with Wearables** — sync heart rate and metabolic data
+- [ ] **AI Workout Planner** — personalised weekly training plans from workout history
 
 ## ⚠️ Known Limitations
 

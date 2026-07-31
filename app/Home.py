@@ -64,11 +64,54 @@ with c4:
 
 with c5:
     st.markdown("""
-    #### 💊 Supplement Guide
+    #### 💪 Supplement Guide
     Goal-based educational supplement reference  
     (static data, medical disclaimers always shown).
     """)
     st.page_link("pages/5_💊_Supplements.py", label="Open Supplements →", icon="💊")
+
+st.markdown("")
+
+c6, _ = st.columns([1, 2])
+with c6:
+    st.markdown("""
+    #### 🧘 Yoga Coach
+    Hold-based yoga pose tracking with real-time alignment scoring,  
+    joint-level correction cues, and a 6-pose library.
+    """)
+    st.page_link("pages/6_🧘_Yoga.py", label="Open Yoga Coach →", icon="🧘")
+
+st.markdown("---")
+
+# ── Coming Soon ─────────────────────────────────────────────
+# Kept in sync with README.md #-roadmap section.
+# If you add an item here, add it there too (and vice versa).
+st.subheader("🔮 Coming Soon")
+st.caption(
+    "These features are planned but not yet built. "
+    "The app is actively developed — check back regularly."
+)
+with st.container(border=True):
+    cols_cs = st.columns(3)
+    with cols_cs[0]:
+        st.markdown("**👥 Google Sign-In**")
+        st.caption("One-click login via Google OAuth — no password required.")
+    with cols_cs[1]:
+        st.markdown("**📱 Multi-Person Tracking**")
+        st.caption("Independent pose instances for each detected person in the frame.")
+    with cols_cs[2]:
+        st.markdown("**📱 Mobile-Responsive Layout**")
+        st.caption("Optimised UI for phones and tablets.")
+    cols_cs2 = st.columns(3)
+    with cols_cs2[0]:
+        st.markdown("**🏗️ Custom Exercise Builder**")
+        st.caption("Record baseline poses to define entirely new exercises.")
+    with cols_cs2[1]:
+        st.markdown("**⌚ Integration with Wearables**")
+        st.caption("Sync heart rate and metabolic data from fitness devices.")
+    with cols_cs2[2]:
+        st.markdown("**🤖 AI Workout Planner**")
+        st.caption("Personalised weekly training plans generated from your history.")
 
 st.markdown("---")
 st.caption("Built with ❤️ using Python, Streamlit, MediaPipe, OpenCV and Supabase.")
