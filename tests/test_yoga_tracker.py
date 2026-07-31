@@ -81,15 +81,15 @@ def test_hold_completes_after_min_duration(monkeypatch):
     must become True.
     """
     tracker = YogaPoseTracker("mountain_pose")
-    assert tracker._min_hold == 10  # sanity-check config
+    assert tracker._min_hold == 15  # sanity-check config
 
     lm_list = make_lm_list(MOUNTAIN_CORRECT_POSITIONS)
     img      = make_img()
     detector = make_detector()
 
-    # Manually force _hold_start to 11 seconds ago so the timer fires.
+    # Manually force _hold_start to 16 seconds ago so the timer fires.
     monkeypatch.setattr(time, "time", lambda: 1000.0)
-    tracker._hold_start = 1000.0 - 11.0  # 11 sec ago
+    tracker._hold_start = 1000.0 - 16.0  # 16 sec ago
 
     # Update once with correct pose (alignment >= 75)
     tracker.update(detector, img, lm_list, draw=False)
@@ -117,7 +117,7 @@ def test_broken_hold_does_not_complete(monkeypatch):
     correct_lm = make_lm_list(MOUNTAIN_CORRECT_POSITIONS)
     tracker._hold_start = 1000.0 - 5.0
     tracker.update(detector, img, correct_lm, draw=False)
-    assert tracker.pose_completed is False   # only 5s, need 10s
+    assert tracker.pose_completed is False   # only 5s, need 15s
 
     # Now break the pose (arms up — fails arm-at-side check)
     wrong_lm = make_lm_list(MOUNTAIN_ARMS_UP_POSITIONS)
@@ -208,7 +208,7 @@ def test_reset_completion_allows_re_trigger(monkeypatch):
     monkeypatch.setattr(time, "time", lambda: 1000.0)
 
     # Complete the pose
-    tracker._hold_start = 1000.0 - 11.0
+    tracker._hold_start = 1000.0 - 16.0
     correct_lm = make_lm_list(MOUNTAIN_CORRECT_POSITIONS)
     tracker.update(detector, img, correct_lm, draw=False)
     assert tracker.pose_completed is True
@@ -220,7 +220,7 @@ def test_reset_completion_allows_re_trigger(monkeypatch):
     assert tracker._hold_start          is None
 
     # Complete again
-    tracker._hold_start = 1000.0 - 11.0
+    tracker._hold_start = 1000.0 - 16.0
     tracker.update(detector, img, correct_lm, draw=False)
     assert tracker.pose_completed is True
 
