@@ -57,7 +57,7 @@ class LiveVideoProcessor(VideoProcessorBase):
             self._last_out = self.pipeline.process_frame(img)
 
         self._frame_idx = (self._frame_idx + 1) % self._skip_n
-        return av.VideoFrame.from_ndarray(self._last_out, format="bgr24")
+        return av.VideoFrame.from_ndarray(self._last_out.copy(), format="bgr24")
 
 
 st.title("🏋️ AI Smart Fitness Trainer — Live")
@@ -87,9 +87,20 @@ with col_controls:
     
     cfg = EXERCISE_CONFIG[selected_key]
     if "image_url" in cfg:
-        st.image(cfg["image_url"], caption=cfg.get("image_source", ""), use_container_width=True)
+        st.markdown(
+            f'<img src="{cfg["image_url"]}" style="width:100%; border-radius:8px;" alt="{cfg["display_name"]}">'
+            f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{cfg.get("image_source", "")}</p>',
+            unsafe_allow_html=True,
+        )
     if "description" in cfg:
         st.markdown(f"**About:** {cfg['description']}")
+        
+    if "kcal_per_rep" in cfg:
+        st.markdown(f"**Est. Burn:** {cfg['kcal_per_rep']} kcal / rep")
+    if "angle_range" in cfg:
+        lo, hi = cfg['angle_range']
+        st.markdown(f"**Target Range of Motion:** {lo}° – {hi}°")
+    st.markdown("---")
 
     if selected_key in CAMERA_INSTRUCTIONS:
         st.info(CAMERA_INSTRUCTIONS[selected_key])
