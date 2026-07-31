@@ -29,8 +29,8 @@ class LiveVideoProcessor(VideoProcessorBase):
         # recv() still returns a rendered frame every call (full ~30 fps video)
         # by holding the last annotated output between inference frames.
         # Before: inference on every frame  → ~30 fps inference load
-        # After:  inference every 3rd frame → ~10 fps inference, 30 fps render
-        self._skip_n     = 3      # run inference on frame 0, 3, 6, …
+        # After:  inference every 4th frame → ~4 fps inference (at 15fps source), 15 fps render
+        self._skip_n     = 4      # run inference on frame 0, 4, 8, …
         self._frame_idx  = 0      # rolling counter (reset mod _skip_n)
         self._last_out   = None   # last annotated ndarray to hold & return
         
@@ -84,6 +84,13 @@ with col_controls:
     }
     
     selected_key = exercise_labels[chosen_label]
+    
+    cfg = EXERCISE_CONFIG[selected_key]
+    if "image_url" in cfg:
+        st.image(cfg["image_url"], caption=cfg.get("image_source", ""), use_container_width=True)
+    if "description" in cfg:
+        st.markdown(f"**About:** {cfg['description']}")
+
     if selected_key in CAMERA_INSTRUCTIONS:
         st.info(CAMERA_INSTRUCTIONS[selected_key])
         
@@ -99,7 +106,7 @@ with col_video:
             "video": {
                 "width": {"ideal": 640, "max": 800},
                 "height": {"ideal": 480, "max": 600},
-                "frameRate": {"ideal": 30, "max": 30}
+                "frameRate": {"ideal": 15, "max": 15}
             }, 
             "audio": False
         },

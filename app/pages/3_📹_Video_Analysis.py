@@ -14,7 +14,9 @@ import streamlit as st
 
 import core.data.db as db
 from core.utils.auth import require_login
-from core.utils.config import EXERCISE_CONFIG
+from core.utils.config import EXERCISE_CONFIG, YOGA_POSE_CONFIG
+from core.tracking.pose_detector import PoseDetector
+from core.tracking.yoga_tracker import YogaPoseTracker
 from core.tracking.frame_pipeline import FramePipeline
 from core.tracking.exercise_classifier import ExerciseClassifier
 
@@ -75,26 +77,40 @@ st.markdown("---")
 col_sel, col_up = st.columns([1, 2])
 
 with col_sel:
-    exercise_labels = {cfg["display_name"]: key for key, cfg in EXERCISE_CONFIG.items()}
-    chosen_label = st.selectbox(
-        "🏋️ Which exercise is in this video?",
-        list(exercise_labels.keys()),
-        help="Select the exercise so the AI uses the correct form thresholds.",
-    )
-    assert chosen_label is not None
-    exercise_key = exercise_labels[chosen_label]
-    kcal_per_rep = float(EXERCISE_CONFIG[exercise_key].get("kcal_per_rep", 0.25))
+    mode = st.radio("Category", ["Rep-Based Exercise", "Hold-Based Yoga"], horizontal=True)
+    is_yoga = mode == "Hold-Based Yoga"
 
-    CAMERA_INSTRUCTIONS = {
-        "squats":         "📸 **Camera Angle:** Side profile, hip height, full body head-to-toe visible.",
-        "pushups":        "📸 **Camera Angle:** Side profile at floor level, full body visible.",
-        "curls":          "📸 **Camera Angle:** Side profile at chest height, upper body & arms visible.",
-        "lunges":         "📸 **Camera Angle:** Side profile at waist height, full body visible.",
-        "shoulder_press": "📸 **Camera Angle:** Front-facing or slight angle, full overhead extension visible.",
-    }
+    if not is_yoga:
+        exercise_labels = {cfg["display_name"]: key for key, cfg in EXERCISE_CONFIG.items()}
+        chosen_label = st.selectbox(
+            "🏋️ Which exercise is in this video?",
+            list(exercise_labels.keys()),
+            help="Select the exercise so the AI uses the correct form thresholds.",
+        )
+        assert chosen_label is not None
+        selected_key = exercise_labels[chosen_label]
+        kcal_per_rep = float(EXERCISE_CONFIG[selected_key].get("kcal_per_rep", 0.25))
 
-    if exercise_key in CAMERA_INSTRUCTIONS:
-        st.info(CAMERA_INSTRUCTIONS[exercise_key])
+        CAMERA_INSTRUCTIONS = {
+            "squats":         "📸 **Camera Angle:** Side profile, hip height, full body head-to-toe visible.",
+            "pushups":        "📸 **Camera Angle:** Side profile at floor level, full body visible.",
+            "curls":          "📸 **Camera Angle:** Side profile at chest height, upper body & arms visible.",
+            "lunges":         "📸 **Camera Angle:** Side profile at waist height, full body visible.",
+            "shoulder_press": "📸 **Camera Angle:** Front-facing or slight angle, full overhead extension visible.",
+        }
+
+        if selected_key in CAMERA_INSTRUCTIONS:
+            st.info(CAMERA_INSTRUCTIONS[selected_key])
+    else:
+        yoga_labels = {cfg["display_name"]: key for key, cfg in YOGA_POSE_CONFIG.items()}
+        chosen_label = st.selectbox(
+            "🧘 Which yoga pose is in this video?",
+            list(yoga_labels.keys()),
+        )
+        assert chosen_label is not None
+        selected_key = yoga_labels[chosen_label]
+        st.info("📸 **Camera Angle:** Position the camera at hip/chest height, facing you from the front or slight angle. Ensure your entire body is visible.")
+
 
 with col_up:
     uploaded = st.file_uploader(
@@ -187,7 +203,7 @@ try:
         # ── Init pipeline in VIDEO mode ───────────────────────
         # VIDEO mode gives MediaPipe temporal continuity across frames,
         # dramatically improving detection on recorded clips.
-        pipeline = FramePipeline(exercise_key=exercise_key, in_setup=False, video_mode=True)
+        pipeline = FramePipeline(selected_key=selected_key, in_setup=False, video_mode=True)
         pipeline.voice_muted = True   # No audio in video analysis
 
         # ── Open output video writer ──────────────────────────
@@ -216,11 +232,25 @@ try:
                 break
 
             # Pass src_fps so the pipeline computes accurate timestamps for VIDEO mode
-            annotated = pipeline.process_frame(frame, src_fps=src_fps)
+            if is_yoga:
+                timestamp_ms = int(frame_idx * 1000 / max(src_fps, 1.0))
+                img = detector.find_pose(frame, draw=False, timestamp_ms=timestamp_ms)
+                lm_list = detector.find_position(img, draw=False)
+                yoga_tracker.update(detector, img, lm_list, draw=True)
+                annotated = img
+                if yoga_tracker.alignment_score > 0:
+                    yoga_scores.append({
+                        "frame": frame_idx,
+                        "time_s": frame_idx / src_fps,
+                        "score": yoga_tracker.alignment_score
+                    })
+            else:
+                annotated = pipeline.process_frame(frame, src_fps=src_fps)
+                
             writer.write(annotated)
 
             # Collect for wrong-exercise detection (first 90 frames only)
-            if frame_idx < 90 and pipeline.detector.lm_list:
+            if not is_yoga and frame_idx < 90 and pipeline.detector.lm_list:
                 classifier_lm_samples.append(pipeline.detector.lm_list)
 
             frame_idx += 1
@@ -235,15 +265,19 @@ try:
         progress_bar.empty()
         wall_time = time.time() - start_wall
 
-    summary      = pipeline.get_summary()
-    feature_rows: list[dict] = pipeline.session._all_feature_rows
+    if not is_yoga:
+        summary      = pipeline.get_summary()
+        feature_rows: list[dict] = pipeline.session._all_feature_rows
+    else:
+        summary = {}
+        feature_rows = []
 
     # ─────────────────────────────────────────────────────────────
     # ── WRONG EXERCISE DETECTION ─────────────────────────────────
     # ─────────────────────────────────────────────────────────────
     if classifier_lm_samples:
         # Run classifier on collected samples
-        detected_exercise = exercise_key   # default to user's selection
+        detected_exercise = selected_key   # default to user's selection
         vote_counts: dict[str, int] = {}
         for lm_list in classifier_lm_samples:
             detected = classifier.update(lm_list, pipeline.detector)
@@ -254,7 +288,7 @@ try:
             top_count = vote_counts[top_detected]
             confidence = top_count / len(classifier_lm_samples)
 
-            if top_detected != exercise_key and confidence > 0.55:
+            if top_detected != selected_key and confidence > 0.55:
                 top_label = EXERCISE_CONFIG[top_detected]["display_name"]
                 st.warning(
                     f"⚠️ **Possible Exercise Mismatch!** \n\n"
@@ -282,23 +316,36 @@ try:
 
     # ── Top metric cards ─────────────────────────────────────────
     st.subheader("📊 Session Summary")
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
-    c1.metric("🏋️ Exercise",    chosen_label)
-    c2.metric("🔢 Total Reps",  total_reps)
-    c3.metric("✅ Good Reps",   clean_reps,
-              delta=f"+{clean_reps}" if clean_reps else None)
-    c4.metric("❌ Bad Reps",    bad_reps,
-              delta=f"-{bad_reps}" if bad_reps else None,
-              delta_color="inverse")
-    c5.metric("🔥 Calories",    f"{calories} kcal")
-    c6.metric("📈 Avg Score",   f"{avg_score:.1f}/100")
+    if is_yoga:
+        c1, c2, c3 = st.columns(3)
+        avg_yoga_score = sum(s["score"] for s in yoga_scores) / len(yoga_scores) if yoga_scores else 0
+        held_secs = len(yoga_scores) / src_fps if src_fps else 0
+        c1.metric("🧘 Pose", chosen_label)
+        c2.metric("⏱️ Duration Held", f"{held_secs:.1f}s")
+        c3.metric("📈 Avg Alignment", f"{avg_yoga_score:.1f}%")
+    else:
+        c1, c2, c3, c4, c5, c6 = st.columns(6)
+        c1.metric("🏋️ Exercise",    chosen_label)
+        c2.metric("🔢 Total Reps",  total_reps)
+        c3.metric("✅ Good Reps",   clean_reps,
+                  delta=f"+{clean_reps}" if clean_reps else None)
+        c4.metric("❌ Bad Reps",    bad_reps,
+                  delta=f"-{bad_reps}" if bad_reps else None,
+                  delta_color="inverse")
+        c5.metric("🔥 Calories",    f"{calories} kcal")
+        c6.metric("📈 Avg Score",   f"{avg_score:.1f}/100")
 
     st.markdown("---")
 
     # ── Form quality breakdown ────────────────────────────────────
     st.subheader("🧠 Form Quality Breakdown")
 
-    if feature_rows:
+    if is_yoga and yoga_scores:
+        df = pd.DataFrame(yoga_scores)
+        st.line_chart(df.set_index("time_s")["score"], height=250)
+        st.caption("Alignment score over time (seconds). Consistently staying above the threshold is key.")
+        
+    elif not is_yoga and feature_rows:
         df = pd.DataFrame(feature_rows)
 
         rename_map = {
@@ -423,7 +470,7 @@ try:
             st.download_button(
                 label="⬇️ Download Annotated Video",
                 data=video_bytes,
-                file_name=f"annotated_{exercise_key}_{int(time.time())}.mp4",
+                file_name=f"annotated_{selected_key}_{int(time.time())}.mp4",
                 mime="video/mp4",
                 use_container_width=True,
             )
@@ -440,7 +487,7 @@ try:
     user_id = st.session_state.get("user_id")
     if user_id and total_reps > 0:
         try:
-            session_id = db.save_session(summary, exercise_key, user_id)
+            session_id = db.save_session(summary, selected_key, user_id)
             if session_id:
                 db.update_session(session_id, {**summary, "calories": calories})
             st.caption("✅ Session saved to your workout history.")

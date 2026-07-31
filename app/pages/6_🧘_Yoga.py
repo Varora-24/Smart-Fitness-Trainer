@@ -56,12 +56,14 @@ class YogaVideoProcessor(VideoProcessorBase):
         self._pipeline.voice_muted = False
         self._pipeline.is_browser  = True
 
-        self._yoga_key     = st.session_state.get("yoga_pose_key", "mountain_pose")
+        # Safe pose key passing from main thread
+        self.pending_yoga_key: str | None = None
+        self._yoga_key     = "mountain_pose"
         self._yoga_tracker = YogaPoseTracker(self._yoga_key)
 
-        # Frame-skip: run MediaPipe inference every 3rd frame for stability,
+        # Frame-skip: run MediaPipe inference every 4th frame for stability,
         # hold last annotated frame for the skipped frames.
-        self._skip_n   = 3
+        self._skip_n   = 4
         self._frame_idx = 0
         self._last_out: "av.VideoFrame | None" = None
 
@@ -75,13 +77,14 @@ class YogaVideoProcessor(VideoProcessorBase):
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
 
-        # Swap pose if the sidebar changed it
-        new_key = st.session_state.get("yoga_pose_key", "mountain_pose")
-        if new_key != self._yoga_key:
-            self._yoga_key     = new_key
-            self._yoga_tracker = YogaPoseTracker(new_key)
+        # Swap pose if the main thread set a pending key
+        if self.pending_yoga_key is not None:
+            if self.pending_yoga_key != self._yoga_key:
+                self._yoga_key     = self.pending_yoga_key
+                self._yoga_tracker = YogaPoseTracker(self.pending_yoga_key)
+            self.pending_yoga_key = None
 
-        # Inference every 3rd frame, render every frame
+        # Inference every 4th frame, render every frame
         if self._frame_idx % self._skip_n == 0 or self._last_out is None:
             # Use FramePipeline's pose detector to get lm_list
             img = self._pipeline.detector.find_pose(img, draw=False)
@@ -132,6 +135,12 @@ with st.sidebar:
     st.session_state["yoga_pose_key"] = selected_key
 
     cfg = YOGA_POSE_CONFIG[selected_key]
+    
+    if "image_url" in cfg:
+        st.image(cfg["image_url"], caption=cfg.get("image_source", ""), use_container_width=True)
+    if "description" in cfg:
+        st.markdown(f"**About:** {cfg['description']}")
+        
     st.markdown(f"**Sanskrit:** *{cfg['sanskrit']}*")
     st.markdown(f"**Hold required:** {cfg['min_hold_secs']} seconds")
     st.markdown(f"**Alignment threshold:** {cfg['alignment_threshold']}%")
@@ -155,12 +164,16 @@ with col_cam:
             "video": {
                 "width":     {"ideal": 640, "max": 800},
                 "height":    {"ideal": 480, "max": 600},
-                "frameRate": {"ideal": 30,  "max": 30},
+                "frameRate": {"ideal": 15,  "max": 15},
             },
             "audio": False,
         },
         async_processing=True,
     )
+
+if ctx.video_processor:
+    if ctx.video_processor._yoga_key != selected_key:
+        ctx.video_processor.pending_yoga_key = selected_key
 
 with col_stats:
     st.subheader("Live Stats")
