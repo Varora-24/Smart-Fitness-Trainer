@@ -78,8 +78,11 @@ class WorkoutSession:
         """Accumulate feature row for CSV/DB export later, and save to DB."""
         self._all_feature_rows.append(row)
         if self.session_id:
-            import db
-            db.save_rep(self.session_id, row)
+            try:
+                import core.data.db as db
+                db.save_rep(self.session_id, row)
+            except Exception:
+                pass
 
     # ── Analytics ────────────────────────────────────────────
     @property

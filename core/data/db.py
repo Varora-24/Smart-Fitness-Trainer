@@ -118,7 +118,11 @@ def save_rep(session_id: int, row: dict) -> None:
         return
     
     # Get client in the calling thread (where st.session_state is available)
-    client = _get_client()
+    try:
+        client = _get_client()
+    except Exception as e:
+        logger.warning(f"Could not get Supabase client in save_rep (thread context): {e}")
+        return
     now_str = datetime.now().isoformat()
     rep_data = {
             "session_id": session_id,

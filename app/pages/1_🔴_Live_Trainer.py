@@ -36,7 +36,7 @@ class LiveVideoProcessor(VideoProcessorBase):
         
         # Init DB session
         try:
-            import db
+            import core.data.db as db
             import streamlit as st
             db.init_db()
             user_id = st.session_state.get("user_id")
@@ -47,6 +47,7 @@ class LiveVideoProcessor(VideoProcessorBase):
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
+        orig_h, orig_w = img.shape[:2]
 
         # Run MediaPipe inference only on every _skip_n-th frame.
         # On skipped frames return the previous annotated output so the
@@ -57,7 +58,11 @@ class LiveVideoProcessor(VideoProcessorBase):
             self._last_out = self.pipeline.process_frame(img)
 
         self._frame_idx = (self._frame_idx + 1) % self._skip_n
-        return av.VideoFrame.from_ndarray(self._last_out.copy(), format="bgr24")
+        out = self._last_out.copy()
+        if out.shape[:2] != (orig_h, orig_w):
+            import cv2
+            out = cv2.resize(out, (orig_w, orig_h))
+        return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
 st.title("🏋️ AI Smart Fitness Trainer — Live")
@@ -88,7 +93,7 @@ with col_controls:
     cfg = EXERCISE_CONFIG[selected_key]
     if "image_url" in cfg:
         st.markdown(
-            f'<img src="{cfg["image_url"]}" style="width:100%; border-radius:8px;" alt="{cfg["display_name"]}">'
+            f'<img src="{cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; border-radius:8px;" alt="{cfg["display_name"]}">'
             f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{cfg.get("image_source", "")}</p>',
             unsafe_allow_html=True,
         )

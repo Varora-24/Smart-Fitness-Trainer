@@ -80,6 +80,7 @@ class YogaVideoProcessor(VideoProcessorBase):
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
+        orig_h, orig_w = img.shape[:2]
 
         # Swap mode or pose if the main thread set pending updates
         if self.pending_mode is not None:
@@ -130,7 +131,11 @@ class YogaVideoProcessor(VideoProcessorBase):
             self._last_out = img.copy()
 
         self._frame_idx = (self._frame_idx + 1) % self._skip_n
-        return av.VideoFrame.from_ndarray(self._last_out.copy(), format="bgr24")
+        out = self._last_out.copy()
+        if out.shape[:2] != (orig_h, orig_w):
+            import cv2
+            out = cv2.resize(out, (orig_w, orig_h))
+        return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
 # ── UI ────────────────────────────────────────────────────────────────────────
@@ -171,7 +176,7 @@ with st.sidebar:
         cfg = YOGA_POSE_CONFIG[selected_key]
         if "image_url" in cfg:
             st.markdown(
-                f'<img src="{cfg["image_url"]}" style="width:100%; border-radius:8px;" alt="{cfg["display_name"]}">'
+                f'<img src="{cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; border-radius:8px;" alt="{cfg["display_name"]}">'
                 f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{cfg.get("image_source", "")}</p>',
                 unsafe_allow_html=True,
             )
@@ -190,7 +195,7 @@ with st.sidebar:
         st.subheader(f"Current: {step_cfg['name']}")
         if "image_url" in step_cfg:
             st.markdown(
-                f'<img src="{step_cfg["image_url"]}" style="width:100%; border-radius:8px;" alt="{step_cfg["name"]}">'
+                f'<img src="{step_cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; border-radius:8px;" alt="{step_cfg["name"]}">'
                 f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{step_cfg.get("image_source", "")}</p>',
                 unsafe_allow_html=True,
             )
@@ -236,6 +241,31 @@ if ctx.video_processor:
 
 with col_stats:
     st.subheader("Live Stats")
+
+    # Display reference pose image directly in the main workout layout next to camera feed
+    if mode_key == "single_pose":
+        active_key = st.session_state.get("yoga_pose_key", "mountain_pose")
+        if ctx.video_processor and ctx.video_processor.mode == "single_pose":
+            active_key = ctx.video_processor._yoga_key
+        ref_cfg = YOGA_POSE_CONFIG[active_key]
+        if "image_url" in ref_cfg:
+            st.markdown(
+                f'<p style="font-weight:600; margin-bottom:2px;">Target Reference:</p>'
+                f'<img src="{ref_cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; max-height:240px; object-fit:contain; border-radius:8px; border: 1px solid #555;" alt="{ref_cfg.get("display_name", "")}">'
+                f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{ref_cfg.get("display_name", "")}</p>',
+                unsafe_allow_html=True,
+            )
+    else:
+        step_idx = ctx.video_processor.current_step_idx if ctx.video_processor and ctx.video_processor.mode == "surya_namaskar" else st.session_state.get("surya_step_idx", 0)
+        step_cfg = SURYA_NAMASKAR_STEPS[step_idx]
+        if "image_url" in step_cfg:
+            st.markdown(
+                f'<p style="font-weight:600; margin-bottom:2px;">Target Reference (Step {step_idx+1}):</p>'
+                f'<img src="{step_cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; max-height:240px; object-fit:contain; border-radius:8px; border: 1px solid #555;" alt="{step_cfg.get("name", "")}">'
+                f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{step_cfg.get("name", "")}</p>',
+                unsafe_allow_html=True,
+            )
+    st.divider()
 
     if ctx.video_processor:
         proc = ctx.video_processor
