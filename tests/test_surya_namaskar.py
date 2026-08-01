@@ -1,5 +1,4 @@
 import time
-import pytest
 import numpy as np
 from core.tracking.surya_namaskar_tracker import SuryaNamaskarTracker, SURYA_NAMASKAR_STEPS
 

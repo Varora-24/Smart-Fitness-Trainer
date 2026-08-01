@@ -10,6 +10,7 @@ from __future__ import annotations
 
 
 import av
+import numpy as np
 import streamlit as st
 from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfiguration
 

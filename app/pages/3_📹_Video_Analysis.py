@@ -203,8 +203,17 @@ try:
         # ── Init pipeline in VIDEO mode ───────────────────────
         # VIDEO mode gives MediaPipe temporal continuity across frames,
         # dramatically improving detection on recorded clips.
-        pipeline = FramePipeline(selected_key=selected_key, in_setup=False, video_mode=True)
-        pipeline.voice_muted = True   # No audio in video analysis
+        if is_yoga:
+            detector = PoseDetector(video_mode=True)
+            yoga_tracker = YogaPoseTracker(selected_key)
+            yoga_scores = []
+            pipeline = None
+        else:
+            pipeline = FramePipeline(exercise_key=selected_key, in_setup=False, video_mode=True)
+            pipeline.voice_muted = True   # No audio in video analysis
+            detector = None
+            yoga_tracker = None
+            yoga_scores = []
 
         # ── Open output video writer ──────────────────────────
         # CRITICAL: Stream frames directly to disk — never accumulate in RAM.
@@ -232,9 +241,10 @@ try:
                 break
 
             # Pass src_fps so the pipeline computes accurate timestamps for VIDEO mode
-            if is_yoga:
+            if is_yoga and detector and yoga_tracker:
                 timestamp_ms = int(frame_idx * 1000 / max(src_fps, 1.0))
-                img = detector.find_pose(frame, draw=False, timestamp_ms=timestamp_ms)
+                frame_lb = FramePipeline._letterbox(frame, out_w, out_h)
+                img = detector.find_pose(frame_lb, draw=False, timestamp_ms=timestamp_ms)
                 lm_list = detector.find_position(img, draw=False)
                 yoga_tracker.update(detector, img, lm_list, draw=True)
                 annotated = img
