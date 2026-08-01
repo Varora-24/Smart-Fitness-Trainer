@@ -6,7 +6,7 @@ import core.data.db as db
 from core.utils.auth import require_login
 
 from core.tracking.frame_pipeline import FramePipeline
-from core.utils.config import EXERCISE_CONFIG
+from core.utils.config import EXERCISE_CONFIG, display_reference_image
 
 st.set_page_config(page_title="AI Fitness Trainer — Live", page_icon="🏋️", layout="wide")
 
@@ -79,39 +79,13 @@ with col_controls:
     exercise_labels = {cfg["display_name"]: key for key, cfg in EXERCISE_CONFIG.items()}
     chosen_label = st.selectbox("Exercise", list(exercise_labels.keys()))
     assert chosen_label is not None
-    
-    CAMERA_INSTRUCTIONS = {
-        "squats": "📸 **Camera Angle:** Place the camera at hip height, facing you from the side (profile view). Ensure your entire body from head to toe is visible.",
-        "pushups": "📸 **Camera Angle:** Place the camera on the floor, facing you from the side. Ensure your entire body from head to toe is visible.",
-        "curls": "📸 **Camera Angle:** Place the camera at chest height, facing you from the side (profile view). Ensure your upper body and arms are clearly visible.",
-        "lunges": "📸 **Camera Angle:** Place the camera at waist height, facing you from the side (profile view). Ensure your entire body is visible.",
-        "shoulder_press": "📸 **Camera Angle:** Place the camera at chest height, facing you from the front or slight angle. Ensure your upper body and arms extended overhead are fully visible."
-    }
-    
     selected_key = exercise_labels[chosen_label]
-    
     cfg = EXERCISE_CONFIG[selected_key]
-    if "image_url" in cfg:
-        st.markdown(
-            f'<img src="{cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; border-radius:8px;" alt="{cfg["display_name"]}">'
-            f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{cfg.get("image_source", "")}</p>',
-            unsafe_allow_html=True,
-        )
-    if "description" in cfg:
-        st.markdown(f"**About:** {cfg['description']}")
-        
-    if "kcal_per_rep" in cfg:
-        st.markdown(f"**Est. Burn:** {cfg['kcal_per_rep']} kcal / rep")
-    if "angle_range" in cfg:
-        lo, hi = cfg['angle_range']
-        st.markdown(f"**Target Range of Motion:** {lo}° – {hi}°")
-    st.markdown("---")
 
-    if selected_key in CAMERA_INSTRUCTIONS:
-        st.info(CAMERA_INSTRUCTIONS[selected_key])
-        
+    st.markdown("---")
     auto_mode = st.checkbox("Auto-detect exercise", value=False)
     show_debug = st.checkbox("Show debug overlay", value=False)
+    st.caption("ℹ️ Adjust exercise selection and overlay settings during live tracking.")
 
 with col_video:
     ctx = webrtc_streamer(
@@ -128,6 +102,32 @@ with col_video:
         },
         async_processing=True,
     )
+
+    # ── Populate Previously Vacant Screen Space Under Live Video ──────────────
+    st.markdown("---")
+    st.subheader(f"🎯 Exercise Form & Guidance: {cfg['display_name']}")
+    
+    CAMERA_INSTRUCTIONS = {
+        "squats": "📸 **Camera Angle:** Place the camera at hip height, facing you from the side (profile view). Ensure your entire body from head to toe is visible.",
+        "pushups": "📸 **Camera Angle:** Place the camera on the floor, facing you from the side. Ensure your entire body from head to toe is visible.",
+        "curls": "📸 **Camera Angle:** Place the camera at chest height, facing you from the side (profile view). Ensure your upper body and arms are clearly visible.",
+        "lunges": "📸 **Camera Angle:** Place the camera at waist height, facing you from the side (profile view). Ensure your entire body is visible.",
+        "shoulder_press": "📸 **Camera Angle:** Place the camera at chest height, facing you from the front or slight angle. Ensure your upper body and arms extended overhead are fully visible."
+    }
+
+    info_col1, info_col2 = st.columns([1, 2])
+    with info_col1:
+        display_reference_image(cfg)
+    with info_col2:
+        if "description" in cfg:
+            st.markdown(f"**About:** {cfg['description']}")
+        if "kcal_per_rep" in cfg:
+            st.markdown(f"**Est. Burn:** 🔥 `{cfg['kcal_per_rep']} kcal / rep`")
+        if "angle_range" in cfg:
+            lo, hi = cfg['angle_range']
+            st.markdown(f"**Target Range of Motion:** 📐 `{lo}° – {hi}°`")
+        if selected_key in CAMERA_INSTRUCTIONS:
+            st.info(CAMERA_INSTRUCTIONS[selected_key])
 
 # Push control updates into the pipeline processor state
 if ctx.video_processor:

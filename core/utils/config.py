@@ -118,8 +118,8 @@ EXERCISE_CONFIG = {
 
     # ── Squats ──────────────────────────────────────────────────
     "squats": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/8/82/Squats.svg",
-        "image_source"        : "Wikimedia Commons (Public Domain)",
+        "image_url"           : "app/static/images/squats.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "A compound, full-body exercise that trains primarily the muscles of the thighs, hips and buttocks.",
         "display_name"        : "Squats",
         "key"                 : ord('s'),
@@ -160,8 +160,8 @@ EXERCISE_CONFIG = {
 
     # ── Push-Ups ────────────────────────────────────────────────
     "pushups": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/c/c5/Pushup_-_1.png",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 3.0)",
+        "image_url"           : "app/static/images/pushups.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "A common calisthenics exercise beginning from the prone position, exercising the pectoral muscles, triceps, and anterior deltoids.",
         "display_name"        : "Push-Ups",
         "key"                 : ord('p'),
@@ -199,8 +199,8 @@ EXERCISE_CONFIG = {
 
     # ── Bicep Curls ─────────────────────────────────────────────
     "curls": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/4/44/Biceps_curl.png",
-        "image_source"        : "Wikimedia Commons (Public Domain)",
+        "image_url"           : "app/static/images/curls.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "A weight-training exercise that targets the biceps brachii muscle.",
         "display_name"        : "Bicep Curls",
         "key"                 : ord('c'),
@@ -237,8 +237,8 @@ EXERCISE_CONFIG = {
 
     # ── Lunges ──────────────────────────────────────────────────
     "lunges": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/8/8c/Lunge_exercise.svg",
-        "image_source"        : "Wikimedia Commons (Public Domain)",
+        "image_url"           : "app/static/images/lunges.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "A single-leg bodyweight exercise that works the hips, glutes, quads, hamstrings, and core.",
         "display_name"        : "Lunges",
         "key"                 : ord('l'),
@@ -273,8 +273,8 @@ EXERCISE_CONFIG = {
 
     # ── Shoulder Press ───────────────────────────────────────────
     "shoulder_press": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/6/62/Seated-military-shoulder-press-1.png",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 3.0)",
+        "image_url"           : "app/static/images/shoulder_press.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "An exercise in which a weight is pressed straight upwards from the shoulders until the arms are locked out overhead.",
         "display_name"        : "Shoulder Press",
         "key"                 : ord('h'),   # 'h' for o'H'P (overhead press)
@@ -321,8 +321,8 @@ EXERCISE_CONFIG = {
 YOGA_POSE_CONFIG: dict = {
 
     "mountain_pose": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/e/e5/Yoga_Tadasana.jpg",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 3.0)",
+        "image_url"           : "app/static/images/mountain_pose.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "Tadasana (Mountain Pose) is a basic standing asana in modern yoga as exercise.",
         "display_name": "Mountain Pose", "sanskrit": "Tadasana",
         "min_hold_secs": 15, "alignment_threshold": 75,
@@ -340,8 +340,8 @@ YOGA_POSE_CONFIG: dict = {
     },
 
     "tree_pose": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/3/3c/Vrksasana_Yoga-Asana_Nina-Mel.jpg",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 4.0)",
+        "image_url"           : "app/static/images/tree_pose.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "Vrksasana (Tree Pose) is a balancing asana. It is one of the very few standing poses in medieval hatha yoga.",
         "display_name": "Tree Pose", "sanskrit": "Vrikshasana",
         "min_hold_secs": 20, "alignment_threshold": 75,
@@ -356,8 +356,8 @@ YOGA_POSE_CONFIG: dict = {
     },
 
     "warrior_ii": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/8/84/Virabhadrasana_II_Yoga-Asana_Nina-Mel.jpg",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 4.0)",
+        "image_url"           : "app/static/images/warrior_2.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "Virabhadrasana II (Warrior II Pose) is a standing yoga pose that enhances strength, stability, and endurance.",
         "display_name": "Warrior II", "sanskrit": "Virabhadrasana II",
         "min_hold_secs": 30, "alignment_threshold": 75,
@@ -375,8 +375,8 @@ YOGA_POSE_CONFIG: dict = {
     },
 
     "chair_pose": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/5/59/Utkatasana_Yoga-Asana_Nina-Mel.jpg",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 4.0)",
+        "image_url"           : "app/static/images/chair_pose.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "Utkatasana (Chair Pose) is a standing asana that stretches the shoulders and chest and strengthens the thighs and ankles.",
         "display_name": "Chair Pose", "sanskrit": "Utkatasana",
         "min_hold_secs": 45, "alignment_threshold": 75,
@@ -396,8 +396,8 @@ YOGA_POSE_CONFIG: dict = {
     },
 
     "triangle_pose": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/9/9d/Trikonasana_Yoga-Asana_Nina-Mel.jpg",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 4.0)",
+        "image_url"           : "app/static/images/triangle_pose.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "Trikonasana (Triangle Pose) is a standing asana that stretches the legs and torso, mobilizes the hips, and promotes deep breathing.",
         "display_name": "Triangle Pose", "sanskrit": "Trikonasana",
         "min_hold_secs": 20, "alignment_threshold": 75,
@@ -414,8 +414,8 @@ YOGA_POSE_CONFIG: dict = {
     },
 
     "warrior_i": {
-        "image_url"           : "https://upload.wikimedia.org/wikipedia/commons/a/a2/Virabhadrasana_I_Yoga-Asana_Nina-Mel.jpg",
-        "image_source"        : "Wikimedia Commons (CC BY-SA 4.0)",
+        "image_url"           : "app/static/images/warrior_1.jpg",
+        "image_source"        : "SmartTrainer AI Vector Reference",
         "description"         : "Virabhadrasana I (Warrior I Pose) is a lunge with the back foot planted and arms reaching overhead, stretching the front body.",
         "display_name": "Warrior I", "sanskrit": "Virabhadrasana I",
         "min_hold_secs": 30, "alignment_threshold": 75,
@@ -432,3 +432,30 @@ YOGA_POSE_CONFIG: dict = {
                  "complete": "Warrior I complete!"},
     },
 }
+
+
+def display_reference_image(cfg: dict, title_prefix: str = "") -> None:
+    import os
+    import streamlit as st
+    if "image_url" not in cfg:
+        return
+    img_path = cfg["image_url"]
+    # Handle working directory variations cleanly
+    if not os.path.exists(img_path) and os.path.exists(os.path.join("..", img_path)):
+        img_path = os.path.join("..", img_path)
+    elif not os.path.exists(img_path) and os.path.exists(os.path.join("d:/SmartTrainer", img_path)):
+        img_path = os.path.join("d:/SmartTrainer", img_path)
+    
+    display_name = cfg.get("display_name", cfg.get("name", ""))
+    source_text = cfg.get("image_source", "SmartTrainer AI Vector Reference")
+    caption = f"{title_prefix}{display_name} — {source_text}".strip()
+    
+    if os.path.exists(img_path):
+        st.image(img_path, use_container_width=True, caption=caption)
+    else:
+        # Fallback if an external URL or missing file path is encountered
+        try:
+            st.image(img_path, use_container_width=True, caption=caption)
+        except Exception:
+            st.error(f"Image reference not accessible: {img_path}")
+

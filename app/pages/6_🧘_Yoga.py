@@ -15,7 +15,7 @@ import streamlit as st
 from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfiguration
 
 from core.utils.auth import require_login
-from core.utils.config import YOGA_POSE_CONFIG
+from core.utils.config import YOGA_POSE_CONFIG, display_reference_image
 from core.tracking.frame_pipeline import FramePipeline
 from core.tracking.yoga_tracker import YogaPoseTracker
 from core.tracking.surya_namaskar_tracker import SuryaNamaskarTracker, SURYA_NAMASKAR_STEPS
@@ -175,12 +175,7 @@ with st.sidebar:
         st.session_state["yoga_pose_key"] = selected_key
 
         cfg = YOGA_POSE_CONFIG[selected_key]
-        if "image_url" in cfg:
-            st.markdown(
-                f'<img src="{cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; border-radius:8px;" alt="{cfg["display_name"]}">'
-                f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{cfg.get("image_source", "")}</p>',
-                unsafe_allow_html=True,
-            )
+        display_reference_image(cfg)
         if "description" in cfg:
             st.markdown(f"**About:** {cfg['description']}")
             
@@ -194,12 +189,7 @@ with st.sidebar:
         step_idx = st.session_state.get("surya_step_idx", 0)
         step_cfg = SURYA_NAMASKAR_STEPS[step_idx]
         st.subheader(f"Current: {step_cfg['name']}")
-        if "image_url" in step_cfg:
-            st.markdown(
-                f'<img src="{step_cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; border-radius:8px;" alt="{step_cfg["name"]}">'
-                f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{step_cfg.get("image_source", "")}</p>',
-                unsafe_allow_html=True,
-            )
+        display_reference_image(step_cfg)
         st.markdown(f"**Sanskrit:** *{step_cfg.get('sanskrit', '')}*")
         st.markdown(f"**Mode:** `{step_cfg['mode'].upper()}`")
         st.markdown(f"**Step Duration:** {step_cfg['duration']} seconds")
@@ -232,6 +222,37 @@ with col_cam:
         async_processing=True,
     )
 
+    # ── Populate Previously Vacant Screen Space Under Live Video ──────────────
+    st.markdown("---")
+    if mode_key == "single_pose":
+        active_key = st.session_state.get("yoga_pose_key", "mountain_pose")
+        if ctx.video_processor and ctx.video_processor.mode == "single_pose":
+            active_key = ctx.video_processor._yoga_key
+        ref_cfg = YOGA_POSE_CONFIG[active_key]
+        st.subheader(f"🧘 Target Pose Guide: {ref_cfg['display_name']} ({ref_cfg['sanskrit']})")
+        info_col1, info_col2 = st.columns([1, 2])
+        with info_col1:
+            display_reference_image(ref_cfg, title_prefix="Target: ")
+        with info_col2:
+            if "description" in ref_cfg:
+                st.markdown(f"**About:** {ref_cfg['description']}")
+            st.markdown(f"**Target Hold Time:** ⏱️ `{ref_cfg['min_hold_secs']} seconds` | **Required Alignment:** 🎯 `{ref_cfg['alignment_threshold']}%`")
+            if "cues" in ref_cfg:
+                st.info(f"💡 **Form Cue:** {ref_cfg['cues'].get('start', '')}")
+    else:
+        step_idx = ctx.video_processor.current_step_idx if ctx.video_processor and ctx.video_processor.mode == "surya_namaskar" else st.session_state.get("surya_step_idx", 0)
+        step_cfg = SURYA_NAMASKAR_STEPS[step_idx]
+        st.subheader(f"🌞 Step {step_idx+1}: {step_cfg['name']} ({step_cfg.get('sanskrit', '')})")
+        info_col1, info_col2 = st.columns([1, 2])
+        with info_col1:
+            display_reference_image(step_cfg, title_prefix=f"Step {step_idx+1}: ")
+        with info_col2:
+            st.markdown(f"**Mode:** `{step_cfg['mode'].upper()}` | **Step Duration:** ⏱️ `{step_cfg['duration']}s`")
+            if "description" in step_cfg:
+                st.markdown(f"**About:** {step_cfg['description']}")
+            if "cue" in step_cfg:
+                st.info(f"💡 **Guidance:** {step_cfg['cue']}")
+
 if ctx.video_processor:
     if ctx.video_processor.mode != mode_key:
         ctx.video_processor.pending_mode = mode_key
@@ -242,31 +263,7 @@ if ctx.video_processor:
 
 with col_stats:
     st.subheader("Live Stats")
-
-    # Display reference pose image directly in the main workout layout next to camera feed
-    if mode_key == "single_pose":
-        active_key = st.session_state.get("yoga_pose_key", "mountain_pose")
-        if ctx.video_processor and ctx.video_processor.mode == "single_pose":
-            active_key = ctx.video_processor._yoga_key
-        ref_cfg = YOGA_POSE_CONFIG[active_key]
-        if "image_url" in ref_cfg:
-            st.markdown(
-                f'<p style="font-weight:600; margin-bottom:2px;">Target Reference:</p>'
-                f'<img src="{ref_cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; max-height:240px; object-fit:contain; border-radius:8px; border: 1px solid #555;" alt="{ref_cfg.get("display_name", "")}">'
-                f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{ref_cfg.get("display_name", "")}</p>',
-                unsafe_allow_html=True,
-            )
-    else:
-        step_idx = ctx.video_processor.current_step_idx if ctx.video_processor and ctx.video_processor.mode == "surya_namaskar" else st.session_state.get("surya_step_idx", 0)
-        step_cfg = SURYA_NAMASKAR_STEPS[step_idx]
-        if "image_url" in step_cfg:
-            st.markdown(
-                f'<p style="font-weight:600; margin-bottom:2px;">Target Reference (Step {step_idx+1}):</p>'
-                f'<img src="{step_cfg["image_url"]}" referrerpolicy="no-referrer" style="width:100%; max-height:240px; object-fit:contain; border-radius:8px; border: 1px solid #555;" alt="{step_cfg.get("name", "")}">'
-                f'<p style="font-size:0.8em; color:gray; margin-top:2px;">{step_cfg.get("name", "")}</p>',
-                unsafe_allow_html=True,
-            )
-    st.divider()
+    st.caption("Real-time alignment metrics and hold progression.")
 
     if ctx.video_processor:
         proc = ctx.video_processor
