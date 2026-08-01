@@ -433,29 +433,3 @@ YOGA_POSE_CONFIG: dict = {
     },
 }
 
-
-def display_reference_image(cfg: dict, title_prefix: str = "") -> None:
-    import os
-    import streamlit as st
-    if "image_url" not in cfg:
-        return
-    img_path = cfg["image_url"]
-    # Handle working directory variations cleanly
-    if not os.path.exists(img_path) and os.path.exists(os.path.join("..", img_path)):
-        img_path = os.path.join("..", img_path)
-    elif not os.path.exists(img_path) and os.path.exists(os.path.join("d:/SmartTrainer", img_path)):
-        img_path = os.path.join("d:/SmartTrainer", img_path)
-    
-    display_name = cfg.get("display_name", cfg.get("name", ""))
-    source_text = cfg.get("image_source", "SmartTrainer AI Vector Reference")
-    caption = f"{title_prefix}{display_name} — {source_text}".strip()
-    
-    if os.path.exists(img_path):
-        st.image(img_path, use_container_width=True, caption=caption)
-    else:
-        # Fallback if an external URL or missing file path is encountered
-        try:
-            st.image(img_path, use_container_width=True, caption=caption)
-        except Exception:
-            st.error(f"Image reference not accessible: {img_path}")
-
