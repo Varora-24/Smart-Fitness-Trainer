@@ -103,7 +103,11 @@ def _render_auth_forms() -> None:
                         else:
                             st.info("Account created! Please verify your email to log in.")
                     except Exception as e:
-                        st.error(f"Error creating account: {e}")
+                        err_msg = str(e).lower()
+                        if "already registered" in err_msg or "already exists" in err_msg or "duplicate" in err_msg:
+                            st.warning("⚠️ An account with this email address already exists. To avoid duplicates, please switch to 'Log In with Email' or click '🌐 Continue with Google' above.")
+                        else:
+                            st.error(f"Error creating account: {e}")
 
 def require_login() -> None:
     """
