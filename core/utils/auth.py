@@ -34,9 +34,30 @@ def get_authenticated_client() -> Client:
 
 def _render_auth_forms() -> None:
     st.markdown("### 🔐 Please log in or create an account to continue")
-    tab_login, tab_signup = st.tabs(["Log In", "Sign Up"])
-
     client = get_supabase_client()
+
+    # Google OAuth Sign-In Button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("🌐 Continue with Google", use_container_width=True):
+            try:
+                redirect_url = get_secret("OAUTH_REDIRECT_URL") or "https://smart-fitness-trainer.streamlit.app"
+                res = client.auth.sign_in_with_oauth({
+                    "provider": "google",
+                    "options": {"redirect_to": redirect_url}
+                })
+                url = getattr(res, "url", None)
+                if not url and isinstance(res, dict):
+                    url = res.get("url")
+                if url:
+                    st.markdown(f'<meta http-equiv="refresh" content="0;url={url}">', unsafe_allow_html=True)
+                else:
+                    st.error("Could not obtain Google login redirect URL from Supabase.")
+            except Exception as e:
+                st.error(f"Error initializing Google Auth: {e}")
+
+    st.markdown("---")
+    tab_login, tab_signup = st.tabs(["Log In with Email", "Sign Up with Email"])
 
     with tab_login:
         with st.form("login_form"):
@@ -88,6 +109,24 @@ def require_login() -> None:
     """
     Call at the top of any Streamlit page that requires authentication.
     """
+    # Check if returning from a Google OAuth callback redirect
+    query_params = getattr(st, "query_params", None)
+    if query_params and "code" in query_params and "supabase_session" not in st.session_state:
+        try:
+            client = get_supabase_client()
+            code_val = query_params.get("code")
+            if isinstance(code_val, list):
+                code_val = code_val[0]
+            response = client.auth.exchange_code_for_session(code_val)
+            if response.session and response.user:
+                st.session_state["supabase_session"] = response.session
+                st.session_state["user_id"] = response.user.id
+                st.session_state["email"] = response.user.email
+                query_params.clear()  # Remove code parameter from browser address bar
+                st.rerun()
+        except Exception as e:
+            st.error(f"Google OAuth sign-in failed during callback token exchange: {e}")
+
     if "supabase_session" not in st.session_state:
         _render_auth_forms()
         st.stop()
