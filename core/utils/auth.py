@@ -39,22 +39,21 @@ def _render_auth_forms() -> None:
     # Google OAuth Sign-In Button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🌐 Continue with Google", use_container_width=True):
-            try:
-                redirect_url = get_secret("OAUTH_REDIRECT_URL") or "https://smart-fitness-trainer.streamlit.app"
-                res = client.auth.sign_in_with_oauth({
-                    "provider": "google",
-                    "options": {"redirect_to": redirect_url}
-                })
-                url = getattr(res, "url", None)
-                if not url and isinstance(res, dict):
-                    url = res.get("url")
-                if url:
-                    st.markdown(f'<meta http-equiv="refresh" content="0;url={url}">', unsafe_allow_html=True)
-                else:
-                    st.error("Could not obtain Google login redirect URL from Supabase.")
-            except Exception as e:
-                st.error(f"Error initializing Google Auth: {e}")
+        try:
+            redirect_url = get_secret("OAUTH_REDIRECT_URL") or "https://smart-fitness-trainer.streamlit.app"
+            res = client.auth.sign_in_with_oauth({
+                "provider": "google",
+                "options": {"redirect_to": redirect_url}
+            })
+            url = getattr(res, "url", None)
+            if not url and isinstance(res, dict):
+                url = res.get("url")
+            if url:
+                st.link_button("🌐 Continue with Google", url=url, use_container_width=True)
+            else:
+                st.error("Could not obtain Google login redirect URL from Supabase.")
+        except Exception as e:
+            st.error(f"Error initializing Google Auth: {e}")
 
     st.markdown("---")
     tab_login, tab_signup = st.tabs(["Log In with Email", "Sign Up with Email"])
