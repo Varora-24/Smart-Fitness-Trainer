@@ -6,9 +6,9 @@ st.set_page_config(page_title="AI Fitness Trainer — Home", page_icon="🏋️"
 require_login()
 
 st.info(
-    "🚧 **Active Development** — Core features (live trainer, video analysis, "
-    "nutrition, supplements, accounts) are functional. More coming soon!",
-    icon="🚧",
+    "✨ **Pro Trainer Ready** — Core features (Live Trainer, Video Analysis, "
+    "Nutrition, Supplements, Google OAuth accounts) are fully functional and ready!",
+    icon="✨",
 )
 
 # ── Header ───────────────────────────────────────────────────────
