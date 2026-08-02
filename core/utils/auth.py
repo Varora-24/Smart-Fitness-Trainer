@@ -128,7 +128,7 @@ def require_login() -> None:
             exchange_params = {"auth_code": code_val}
             if "pkce_verifier" in st.session_state:
                 exchange_params["code_verifier"] = st.session_state["pkce_verifier"]
-            response = client.auth.exchange_code_for_session(exchange_params)
+            response = client.auth.exchange_code_for_session(exchange_params)  # type: ignore[arg-type]
             if response.session and response.user:
                 st.session_state["supabase_session"] = response.session
                 st.session_state["user_id"] = response.user.id
