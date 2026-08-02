@@ -3,8 +3,11 @@
 # ================================================================
 
 import os
+import urllib.parse
 import streamlit as st
 from supabase import create_client, Client
+
+_OAUTH_VERIFIERS: dict[str, str] = {}
 
 def get_secret(key: str) -> str | None:
     try:
@@ -50,9 +53,23 @@ def _render_auth_forms() -> None:
                 verifier = client.auth._storage.get_item(verifier_key)
                 if verifier:
                     st.session_state["pkce_verifier"] = verifier
+                    _OAUTH_VERIFIERS["latest"] = str(verifier)
             url = getattr(res, "url", None)
             if not url and isinstance(res, dict):
                 url = res.get("url")
+            if url and _OAUTH_VERIFIERS.get("latest"):
+                try:
+                    v = _OAUTH_VERIFIERS["latest"]
+                    parsed = urllib.parse.urlparse(str(url))
+                    q = urllib.parse.parse_qs(parsed.query)
+                    if "redirect_to" in q and len(q["redirect_to"]) > 0:
+                        r = q["redirect_to"][0]
+                        separator = "&" if "?" in r else "?"
+                        q["redirect_to"] = [f"{r}{separator}verifier={v}"]
+                        new_query = urllib.parse.urlencode(q, doseq=True)
+                        url = urllib.parse.urlunparse(parsed._replace(query=new_query))
+                except Exception:
+                    pass
             if url:
                 st.link_button("🌐 Continue with Google", url=url, use_container_width=True)
             else:
@@ -126,8 +143,15 @@ def require_login() -> None:
             if isinstance(code_val, list):
                 code_val = code_val[0]
             exchange_params = {"auth_code": code_val}
-            if "pkce_verifier" in st.session_state:
-                exchange_params["code_verifier"] = st.session_state["pkce_verifier"]
+            verifier_val = (
+                query_params.get("verifier")
+                or st.session_state.get("pkce_verifier")
+                or _OAUTH_VERIFIERS.get("latest")
+            )
+            if isinstance(verifier_val, list):
+                verifier_val = verifier_val[0]
+            if verifier_val:
+                exchange_params["code_verifier"] = verifier_val
             response = client.auth.exchange_code_for_session(exchange_params)  # type: ignore[arg-type]
             if response.session and response.user:
                 st.session_state["supabase_session"] = response.session
