@@ -45,6 +45,11 @@ def _render_auth_forms() -> None:
                 "provider": "google",
                 "options": {"redirect_to": redirect_url}
             })
+            verifier_key = f"{getattr(client.auth, '_storage_key', 'supabase.auth.token')}-code-verifier"
+            if hasattr(client.auth, "_storage") and hasattr(client.auth._storage, "get_item"):
+                verifier = client.auth._storage.get_item(verifier_key)
+                if verifier:
+                    st.session_state["pkce_verifier"] = verifier
             url = getattr(res, "url", None)
             if not url and isinstance(res, dict):
                 url = res.get("url")
@@ -120,7 +125,10 @@ def require_login() -> None:
             code_val = query_params.get("code")
             if isinstance(code_val, list):
                 code_val = code_val[0]
-            response = client.auth.exchange_code_for_session(code_val)
+            exchange_params = {"auth_code": code_val}
+            if "pkce_verifier" in st.session_state:
+                exchange_params["code_verifier"] = st.session_state["pkce_verifier"]
+            response = client.auth.exchange_code_for_session(exchange_params)
             if response.session and response.user:
                 st.session_state["supabase_session"] = response.session
                 st.session_state["user_id"] = response.user.id
