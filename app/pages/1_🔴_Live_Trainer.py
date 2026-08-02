@@ -2,6 +2,10 @@ import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import streamlit.components.v1 as components
 import av
+import threading
+import time
+import cv2
+import numpy as np
 import core.data.db as db
 from core.utils.auth import require_login
 
@@ -26,14 +30,16 @@ class LiveVideoProcessor(VideoProcessorBase):
         self.pipeline.voice_muted = False
         self.pipeline.is_browser = True
         
-        # Frame-skip: run MediaPipe inference every N frames for stability.
-        # recv() still returns a rendered frame every call (full ~30 fps video)
-        # by holding the last annotated output between inference frames.
-        # Before: inference on every frame  → ~30 fps inference load
-        # After:  inference every 4th frame → ~4 fps inference (at 15fps source), 15 fps render
-        self._skip_n     = 4      # run inference on frame 0, 4, 8, …
-        self._frame_idx  = 0      # rolling counter (reset mod _skip_n)
-        self._last_out   = None   # last annotated ndarray to hold & return
+        # Asynchronous Drop-Oldest Queue Architecture:
+        # Instead of synchronously blocking recv() with CPU inference inside a FIFO queue
+        # (which causes recurring stutter-then-catch-up-jump backlog cycles), we maintain a
+        # single-slot latest frame reference and run inference on a decoupled background thread.
+        self._lock = threading.Lock()
+        self._latest_input: np.ndarray | None = None
+        self._latest_output: np.ndarray | None = None
+        self._worker_running = True
+        self._inference_thread = threading.Thread(target=self._run_inference_worker, daemon=True)
+        self._inference_thread.start()
         
         # Init DB session
         try:
@@ -46,23 +52,43 @@ class LiveVideoProcessor(VideoProcessorBase):
         except Exception:
             pass
 
+    def _run_inference_worker(self) -> None:
+        """Decoupled daemon background loop that continuously processes only the newest available frame."""
+        while self._worker_running:
+            frame_to_process = None
+            with self._lock:
+                if self._latest_input is not None:
+                    frame_to_process = self._latest_input
+                    self._latest_input = None  # Consume frame, clear slot (drop older queued history)
+
+            if frame_to_process is None:
+                time.sleep(0.01)  # Brief sleep when waiting for new frame arrival
+                continue
+
+            try:
+                annotated = self.pipeline.process_frame(frame_to_process)
+                with self._lock:
+                    self._latest_output = annotated
+            except Exception:
+                pass
+
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
         orig_h, orig_w = img.shape[:2]
 
-        # Run MediaPipe inference only on every _skip_n-th frame.
-        # On skipped frames return the previous annotated output so the
-        # browser stream stays smooth at full camera FPS (~30 fps) while
-        # inference load drops to ~10 fps — the accuracy-for-stability
-        # tradeoff requested for Live Trainer only.
-        if self._frame_idx % self._skip_n == 0 or self._last_out is None:
-            self._last_out = self.pipeline.process_frame(img)
+        # 1. Immediately drop older queued frames by overwriting the input slot with the newest frame
+        with self._lock:
+            self._latest_input = img
+            latest_out = self._latest_output
 
-        self._frame_idx = (self._frame_idx + 1) % self._skip_n
-        out = self._last_out.copy()
-        if out.shape[:2] != (orig_h, orig_w):
-            import cv2
-            out = cv2.resize(out, (orig_w, orig_h))
+        # 2. Return the most recent annotated output instantaneously without blocking the WebRTC stream
+        if latest_out is not None:
+            out = latest_out.copy()
+            if out.shape[:2] != (orig_h, orig_w):
+                out = cv2.resize(out, (orig_w, orig_h), interpolation=cv2.INTER_LINEAR)
+        else:
+            out = img  # Pass through real-time camera video until first inference worker pass completes
+
         return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
@@ -102,6 +128,7 @@ with col_video:
             "audio": False
         },
         async_processing=True,
+        video_receiver_size=1,  # Force maxsize=1 drop-oldest buffer behavior at WebRTC track layer
     )
 
     # ── Populate Previously Vacant Screen Space Under Live Video ──────────────

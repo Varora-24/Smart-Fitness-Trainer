@@ -11,6 +11,9 @@ from __future__ import annotations
 
 import av
 import numpy as np
+import threading
+import time
+import cv2
 import streamlit as st
 from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfiguration
 
@@ -67,11 +70,13 @@ class YogaVideoProcessor(VideoProcessorBase):
         self.pending_mode: str | None = None
         self.current_step_idx: int = 0
 
-        # Frame-skip: run MediaPipe inference every 4th frame for stability,
-        # hold last annotated frame for the skipped frames.
-        self._skip_n   = 4
-        self._frame_idx = 0
-        self._last_out: "np.ndarray | None" = None
+        # Asynchronous Drop-Oldest Queue Architecture:
+        self._lock = threading.Lock()
+        self._latest_input: np.ndarray | None = None
+        self._latest_output: np.ndarray | None = None
+        self._worker_running = True
+        self._inference_thread = threading.Thread(target=self._run_inference_worker, daemon=True)
+        self._inference_thread.start()
 
         # Shared state (read by the main thread for UI display)
         self.alignment_score:     float = 0.0
@@ -80,63 +85,81 @@ class YogaVideoProcessor(VideoProcessorBase):
         self.active_feedback:     str   = ""
         self.pose_completed:      bool  = False
 
+    def _run_inference_worker(self) -> None:
+        while self._worker_running:
+            frame_to_process = None
+            with self._lock:
+                if self.pending_mode is not None:
+                    if self.pending_mode != self.mode:
+                        self.mode = self.pending_mode
+                        if self.mode == "surya_namaskar":
+                            self._surya_tracker.reset_sequence()
+                    self.pending_mode = None
+
+                if self.pending_yoga_key is not None:
+                    if self.pending_yoga_key != self._yoga_key:
+                        self._yoga_key     = self.pending_yoga_key
+                        self._yoga_tracker = YogaPoseTracker(self.pending_yoga_key)
+                    self.pending_yoga_key = None
+
+                if self._latest_input is not None:
+                    frame_to_process = self._latest_input
+                    self._latest_input = None  # Consume newest frame, drop older queued history
+
+            if frame_to_process is None:
+                time.sleep(0.01)
+                continue
+
+            try:
+                img = self._pipeline.detector.find_pose(frame_to_process, draw=False)
+                lm_list = self._pipeline.detector.find_position(img, draw=False)
+
+                if self.mode == "surya_namaskar":
+                    self._surya_tracker.update(
+                        detector=self._pipeline.detector,
+                        img=img,
+                        lm_list=lm_list,
+                        draw=True,
+                    )
+                    self.alignment_score    = self._surya_tracker.alignment_score
+                    self.hold_duration_secs = self._surya_tracker.hold_duration_secs
+                    self.is_holding         = self._surya_tracker.is_holding_correctly
+                    self.active_feedback    = self._surya_tracker.active_feedback
+                    self.pose_completed     = self._surya_tracker.sequence_completed
+                    self.current_step_idx   = self._surya_tracker.step_idx
+                else:
+                    self._yoga_tracker.update(
+                        detector=self._pipeline.detector,
+                        img=img,
+                        lm_list=lm_list,
+                        draw=True,
+                    )
+                    self.alignment_score    = self._yoga_tracker.alignment_score
+                    self.hold_duration_secs = self._yoga_tracker.hold_duration_secs
+                    self.is_holding         = self._yoga_tracker.is_holding_correctly
+                    self.active_feedback    = self._yoga_tracker.active_feedback
+                    self.pose_completed     = self._yoga_tracker.pose_completed
+
+                with self._lock:
+                    self._latest_output = img.copy()
+            except Exception:
+                pass
+
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
         orig_h, orig_w = img.shape[:2]
 
-        # Swap mode or pose if the main thread set pending updates
-        if self.pending_mode is not None:
-            if self.pending_mode != self.mode:
-                self.mode = self.pending_mode
-                if self.mode == "surya_namaskar":
-                    self._surya_tracker.reset_sequence()
-            self.pending_mode = None
+        with self._lock:
+            self._latest_input = img
+            latest_out = self._latest_output
 
-        if self.pending_yoga_key is not None:
-            if self.pending_yoga_key != self._yoga_key:
-                self._yoga_key     = self.pending_yoga_key
-                self._yoga_tracker = YogaPoseTracker(self.pending_yoga_key)
-            self.pending_yoga_key = None
+        if latest_out is not None:
+            out = latest_out.copy()
+            if out.shape[:2] != (orig_h, orig_w):
+                out = cv2.resize(out, (orig_w, orig_h), interpolation=cv2.INTER_LINEAR)
+        else:
+            out = img
 
-        # Inference every 4th frame, render every frame
-        if self._frame_idx % self._skip_n == 0 or self._last_out is None:
-            # Use FramePipeline's pose detector to get lm_list
-            img = self._pipeline.detector.find_pose(img, draw=False)
-            lm_list = self._pipeline.detector.find_position(img, draw=False)
-
-            if self.mode == "surya_namaskar":
-                self._surya_tracker.update(
-                    detector=self._pipeline.detector,
-                    img=img,
-                    lm_list=lm_list,
-                    draw=True,
-                )
-                self.alignment_score    = self._surya_tracker.alignment_score
-                self.hold_duration_secs = self._surya_tracker.hold_duration_secs
-                self.is_holding         = self._surya_tracker.is_holding_correctly
-                self.active_feedback    = self._surya_tracker.active_feedback
-                self.pose_completed     = self._surya_tracker.sequence_completed
-                self.current_step_idx   = self._surya_tracker.step_idx
-            else:
-                self._yoga_tracker.update(
-                    detector=self._pipeline.detector,
-                    img=img,
-                    lm_list=lm_list,
-                    draw=True,
-                )
-                self.alignment_score    = self._yoga_tracker.alignment_score
-                self.hold_duration_secs = self._yoga_tracker.hold_duration_secs
-                self.is_holding         = self._yoga_tracker.is_holding_correctly
-                self.active_feedback    = self._yoga_tracker.active_feedback
-                self.pose_completed     = self._yoga_tracker.pose_completed
-
-            self._last_out = img.copy()
-
-        self._frame_idx = (self._frame_idx + 1) % self._skip_n
-        out = self._last_out.copy()
-        if out.shape[:2] != (orig_h, orig_w):
-            import cv2
-            out = cv2.resize(out, (orig_w, orig_h))
         return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
@@ -221,6 +244,7 @@ with col_cam:
             "audio": False,
         },
         async_processing=True,
+        video_receiver_size=1,  # Force maxsize=1 drop-oldest buffer behavior at WebRTC track layer
     )
 
     # ── Populate Previously Vacant Screen Space Under Live Video ──────────────
