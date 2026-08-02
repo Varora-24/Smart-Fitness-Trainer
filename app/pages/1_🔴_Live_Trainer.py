@@ -7,7 +7,7 @@ from core.utils.auth import require_login
 
 from core.tracking.frame_pipeline import FramePipeline
 from core.utils.config import EXERCISE_CONFIG
-from app.ui_utils import display_reference_image
+from core.utils.ui_utils import display_reference_image
 
 st.set_page_config(page_title="AI Fitness Trainer — Live", page_icon="🏋️", layout="wide")
 

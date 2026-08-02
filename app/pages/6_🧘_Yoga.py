@@ -16,7 +16,7 @@ from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfigurati
 
 from core.utils.auth import require_login
 from core.utils.config import YOGA_POSE_CONFIG
-from app.ui_utils import display_reference_image
+from core.utils.ui_utils import display_reference_image
 from core.tracking.frame_pipeline import FramePipeline
 from core.tracking.yoga_tracker import YogaPoseTracker
 from core.tracking.surya_namaskar_tracker import SuryaNamaskarTracker, SURYA_NAMASKAR_STEPS
