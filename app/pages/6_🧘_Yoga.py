@@ -19,7 +19,7 @@ from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfigurati
 
 from core.utils.auth import require_login
 from core.utils.config import YOGA_POSE_CONFIG
-from core.utils.ui_utils import display_reference_image, render_tts_bridge
+from core.utils.ui_utils import display_reference_image, start_voice_polling
 from core.tracking.frame_pipeline import FramePipeline
 from core.tracking.yoga_tracker import YogaPoseTracker
 from core.tracking.surya_namaskar_tracker import SuryaNamaskarTracker, SURYA_NAMASKAR_STEPS
@@ -367,5 +367,4 @@ for i, (key, pose_cfg) in enumerate(YOGA_POSE_CONFIG.items()):
 
 # ── Web Speech API Voice Coaching Bridge ──────────────────────────────────────
 if ctx.video_processor:
-    phrase, ts = ctx.video_processor._pipeline.voice.get_browser_phrase()
-    render_tts_bridge(phrase, ts, key_prefix="yoga")
+    start_voice_polling(ctx.video_processor, key_prefix="yoga", is_yoga=True)

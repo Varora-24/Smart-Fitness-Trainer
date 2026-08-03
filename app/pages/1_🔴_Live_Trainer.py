@@ -10,7 +10,7 @@ from core.utils.auth import require_login
 
 from core.tracking.frame_pipeline import FramePipeline
 from core.utils.config import EXERCISE_CONFIG
-from core.utils.ui_utils import display_reference_image, render_tts_bridge
+from core.utils.ui_utils import display_reference_image, start_voice_polling
 
 st.set_page_config(page_title="AI Fitness Trainer — Live", page_icon="🏋️", layout="wide")
 
@@ -209,5 +209,4 @@ if ctx.video_processor:
 
 # ── Web Speech API Voice Coaching Bridge ──────────────────────────────────────
 if ctx.video_processor:
-    phrase, ts = ctx.video_processor.pipeline.voice.get_browser_phrase()
-    render_tts_bridge(phrase, ts, key_prefix="live_trainer")
+    start_voice_polling(ctx.video_processor, key_prefix="live_trainer", is_yoga=False)

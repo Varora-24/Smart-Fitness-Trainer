@@ -90,6 +90,48 @@ def render_tts_bridge(phrase: str, ts: float, key_prefix: str = "tts") -> None:
     )
 
 
+def start_voice_polling(processor: object | None, key_prefix: str = "tts", is_yoga: bool = False) -> None:
+    """
+    Decoupled asynchronous voice coaching poller.
+    Because streamlit-webrtc with async_processing=True does not trigger Streamlit page reruns
+    while streaming video, voice coaching cues generated on the background inference thread
+    must be polled via a lightweight Streamlit UI fragment every 1 second without reloading the page.
+    """
+    if not processor:
+        return
+
+    # Use native Streamlit fragment auto-refresh if supported (Streamlit >= 1.37)
+    if hasattr(st, "fragment"):
+        @st.fragment(run_every=1)
+        def _poll_fragment() -> None:
+            try:
+                if is_yoga:
+                    if hasattr(processor, "_pipeline") and getattr(processor, "_pipeline", None):
+                        phrase, ts = getattr(processor, "_pipeline").voice.get_browser_phrase()
+                        render_tts_bridge(phrase, ts, key_prefix=key_prefix)
+                else:
+                    if hasattr(processor, "pipeline") and getattr(processor, "pipeline", None):
+                        phrase, ts = getattr(processor, "pipeline").voice.get_browser_phrase()
+                        render_tts_bridge(phrase, ts, key_prefix=key_prefix)
+            except Exception:
+                pass
+
+        _poll_fragment()
+    else:
+        # Fallback for older Streamlit environments without st.fragment
+        try:
+            if is_yoga:
+                if hasattr(processor, "_pipeline") and getattr(processor, "_pipeline", None):
+                    phrase, ts = getattr(processor, "_pipeline").voice.get_browser_phrase()
+                    render_tts_bridge(phrase, ts, key_prefix=key_prefix)
+            else:
+                if hasattr(processor, "pipeline") and getattr(processor, "pipeline", None):
+                    phrase, ts = getattr(processor, "pipeline").voice.get_browser_phrase()
+                    render_tts_bridge(phrase, ts, key_prefix=key_prefix)
+        except Exception:
+            pass
+
+
 def display_reference_image(cfg: dict, title_prefix: str = "") -> None:
     """Safely render target exercise or pose reference images across different operating systems and working directories."""
     if "image_url" not in cfg:
