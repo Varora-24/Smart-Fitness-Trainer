@@ -19,7 +19,7 @@ from streamlit_webrtc import VideoProcessorBase, webrtc_streamer, RTCConfigurati
 
 from core.utils.auth import require_login
 from core.utils.config import YOGA_POSE_CONFIG
-from core.utils.ui_utils import display_reference_image
+from core.utils.ui_utils import display_reference_image, render_tts_bridge
 from core.tracking.frame_pipeline import FramePipeline
 from core.tracking.yoga_tracker import YogaPoseTracker
 from core.tracking.surya_namaskar_tracker import SuryaNamaskarTracker, SURYA_NAMASKAR_STEPS
@@ -139,6 +139,9 @@ class YogaVideoProcessor(VideoProcessorBase):
                     self.is_holding         = self._yoga_tracker.is_holding_correctly
                     self.active_feedback    = self._yoga_tracker.active_feedback
                     self.pose_completed     = self._yoga_tracker.pose_completed
+
+                if self.active_feedback and self.active_feedback not in ("Position yourself in front of the camera", "Step into frame so entire body is visible"):
+                    self._pipeline.voice.say(self.active_feedback, is_browser=True)
 
                 with self._lock:
                     self._latest_output = img.copy()
@@ -361,3 +364,8 @@ for i, (key, pose_cfg) in enumerate(YOGA_POSE_CONFIG.items()):
             st.markdown(f"- Min alignment: **{pose_cfg['alignment_threshold']}%**")
             st.markdown(f"- Checks: **{len(pose_cfg['landmark_checks'])} joint angles**")
             st.caption(pose_cfg["cues"]["start"])
+
+# ── Web Speech API Voice Coaching Bridge ──────────────────────────────────────
+if ctx.video_processor:
+    phrase, ts = ctx.video_processor._pipeline.voice.get_browser_phrase()
+    render_tts_bridge(phrase, ts, key_prefix="yoga")

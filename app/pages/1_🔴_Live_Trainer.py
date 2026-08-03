@@ -1,6 +1,5 @@
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
-import streamlit.components.v1 as components
 import av
 import threading
 import time
@@ -11,7 +10,7 @@ from core.utils.auth import require_login
 
 from core.tracking.frame_pipeline import FramePipeline
 from core.utils.config import EXERCISE_CONFIG
-from core.utils.ui_utils import display_reference_image
+from core.utils.ui_utils import display_reference_image, render_tts_bridge
 
 st.set_page_config(page_title="AI Fitness Trainer — Live", page_icon="🏋️", layout="wide")
 
@@ -208,81 +207,7 @@ if ctx.video_processor:
         st.subheader("📊 Session Summary")
         st.json(s)
 
-# ── Web Speech API TTS (JS polling bridge) ──────────────────
-# Architecture:
-#   1. A persistent JS poller is injected once on page load (hidden iframe).
-#      It polls window.sessionStorage["tts_phrase"] + "tts_ts" every 500ms.
-#      When a new (phrase, ts) pair appears it speaks via Web Speech API.
-#   2. When VoiceCoach queues a new phrase (from the WebRTC thread),
-#      the Python side writes it to sessionStorage via a zero-height component.
-#      This fires on the next Streamlit rerun which happens naturally due to
-#      WebRTC state updates.
-#   This fires without requiring explicit user interaction.
-
-if "_tts_bridge_injected" not in st.session_state:
-    st.session_state["_tts_bridge_injected"] = True
-    components.html(
-        """
-        <script>
-        (function() {
-            // Persistent TTS poller — survives Streamlit partial rerenders
-            if (window._ttsBridgeRunning) return;
-            window._ttsBridgeRunning = true;
-            window._lastTtsTs = 0;
-
-            function speak(phrase) {
-                if (!('speechSynthesis' in window)) return;
-                // Cancel any ongoing speech first
-                window.speechSynthesis.cancel();
-                var utterance = new SpeechSynthesisUtterance(phrase);
-                utterance.rate = 1.05;
-                utterance.volume = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-
-            setInterval(function() {
-                try {
-                    var phrase = window.sessionStorage.getItem('tts_phrase');
-                    var ts     = parseFloat(window.sessionStorage.getItem('tts_ts') || '0');
-                    if (phrase && ts > window._lastTtsTs) {
-                        window._lastTtsTs = ts;
-                        speak(phrase);
-                    }
-                } catch(e) {}
-            }, 500);
-        })();
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
-
-if "last_spoken_ts" not in st.session_state:
-    st.session_state["last_spoken_ts"] = 0.0
-
+# ── Web Speech API Voice Coaching Bridge ──────────────────────────────────────
 if ctx.video_processor:
     phrase, ts = ctx.video_processor.pipeline.voice.get_browser_phrase()
-    if phrase and ts > st.session_state["last_spoken_ts"]:
-        st.session_state["last_spoken_ts"] = ts
-        # Escape phrase for JS string safety
-        safe_phrase = phrase.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
-        # Write to sessionStorage so the persistent poller above picks it up
-        components.html(
-            f"""
-            <script>
-            try {{
-                window.parent.sessionStorage.setItem('tts_phrase', "{safe_phrase}");
-                window.parent.sessionStorage.setItem('tts_ts', '{ts}');
-            }} catch(e) {{
-                // Fallback: speak directly in this iframe context
-                if ('speechSynthesis' in window.parent) {{
-                    var u = new window.parent.SpeechSynthesisUtterance("{safe_phrase}");
-                    u.rate = 1.05;
-                    window.parent.speechSynthesis.speak(u);
-                }}
-            }}
-            </script>
-            """,
-            height=0,
-            width=0,
-        )
+    render_tts_bridge(phrase, ts, key_prefix="live_trainer")
