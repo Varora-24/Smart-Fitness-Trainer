@@ -46,13 +46,39 @@ def render_tts_bridge(phrase: str, ts: float, key_prefix: str = "tts") -> None:
                     return;
                 }}
 
+                // 1. Defeat Chromium/Edge V8 garbage collection bug by anchoring utterances to global array
+                win._ttsUtterances = win._ttsUtterances || [];
+
+                // 2. Clear out any paused or frozen speech queues before setting up the next phrase
+                if (win.speechSynthesis.paused) {{
+                    win.speechSynthesis.resume();
+                }}
                 win.speechSynthesis.cancel();
-                var u = new win.SpeechSynthesisUtterance("{safe_phrase}");
-                u.rate = 1.05;
-                u.volume = 1.0;
-                u.onstart = function() {{ console.log("[SmartTrainer TTS] Speaking audio: '{safe_phrase}'"); }};
-                u.onerror = function(err) {{ console.error("[SmartTrainer TTS] Audio playback error:", err.error, err); }};
-                win.speechSynthesis.speak(u);
+
+                // 3. Asynchronously yield event loop after cancel() so audio hardware cleanly resets
+                setTimeout(function() {{
+                    var u = new win.SpeechSynthesisUtterance("{safe_phrase}");
+                    u.rate = 1.05;
+                    u.volume = 1.0;
+
+                    win._ttsUtterances.push(u);
+
+                    u.onstart = function() {{
+                        console.log("[SmartTrainer TTS] Speaking audio: '{safe_phrase}'");
+                    }};
+                    u.onend = function() {{
+                        console.log("[SmartTrainer TTS] Speech completed cleanly.");
+                        var idx = win._ttsUtterances.indexOf(u);
+                        if (idx !== -1) win._ttsUtterances.splice(idx, 1);
+                    }};
+                    u.onerror = function(err) {{
+                        console.error("[SmartTrainer TTS] Audio playback error:", err.error, err);
+                        var idx = win._ttsUtterances.indexOf(u);
+                        if (idx !== -1) win._ttsUtterances.splice(idx, 1);
+                    }};
+
+                    win.speechSynthesis.speak(u);
+                }}, 60);
             }} catch (e) {{
                 console.error("[SmartTrainer TTS] Fatal speech synthesis exception:", e);
             }}
