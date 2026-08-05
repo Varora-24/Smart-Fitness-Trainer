@@ -3,6 +3,7 @@
 # ================================================================
 
 from unittest.mock import MagicMock
+import time
 from core.tracking.exercises import ExerciseTracker
 
 class MockPoseDetector:
@@ -48,6 +49,8 @@ def test_last_rep_attributes_saved():
     tracker._posture_samples = [100.0]
     tracker._velocity_samples = [100.0]
     tracker._rep_min_angle = 90.0
+    tracker._rep_max_angle = 170.0
+    tracker._rep_start_time = time.time() - 2.0
     
     tracker._finish_rep()
     

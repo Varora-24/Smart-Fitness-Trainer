@@ -155,6 +155,11 @@ EXERCISE_CONFIG = {
         "feedback_good"       : "Good Squat!",
         "feedback_posture"    : "Keep Back Straight!",
 
+        # ── Quality Gate Overrides (Independent Layer) ──────────────
+        "min_duration_secs"   : 1.2,
+        "min_rom_travel_deg"  : 45.0,
+        "max_posture_deviation_deg": 18.0,
+
         "autodetect_signals"  : ["knee_flex", "hip_upright"],
     },
 
@@ -194,6 +199,11 @@ EXERCISE_CONFIG = {
         "feedback_good"       : "Perfect!",
         "feedback_posture"    : "Keep Body Straight!",
 
+        # ── Quality Gate Overrides (Independent Layer) ──────────────
+        "min_duration_secs"   : 1.0,
+        "min_rom_travel_deg"  : 45.0,
+        "max_posture_deviation_deg": 15.0,
+
         "autodetect_signals"  : ["elbow_flex", "torso_horizontal"],
     },
 
@@ -232,6 +242,11 @@ EXERCISE_CONFIG = {
         "feedback_good"       : "Great Range!",
         "feedback_posture"    : "Keep Elbows Still!",
 
+        # ── Quality Gate Overrides (Independent Layer) ──────────────
+        "min_duration_secs"   : 1.0,
+        "min_rom_travel_deg"  : 50.0,
+        "max_posture_deviation_deg": 10.0,  # dedicated quality gate check (does not affect 20deg base posture score)
+
         "autodetect_signals"  : ["elbow_flex", "torso_upright"],
     },
 
@@ -267,6 +282,11 @@ EXERCISE_CONFIG = {
         "feedback_low"        : "Lunge Deeper!",
         "feedback_good"       : "Great Lunge!",
         "feedback_posture"    : "Keep Torso Upright!",
+
+        # ── Quality Gate Overrides (Independent Layer) ──────────────
+        "min_duration_secs"   : 1.3,
+        "min_rom_travel_deg"  : 40.0,
+        "max_posture_deviation_deg": 15.0,
 
         "autodetect_signals"  : ["knee_flex", "split_stance"],
     },
@@ -305,6 +325,11 @@ EXERCISE_CONFIG = {
         "feedback_low"        : "Press Higher!",
         "feedback_good"       : "Full Extension!",
         "feedback_posture"    : "Don't Arch Your Back!",
+
+        # ── Quality Gate Overrides (Independent Layer) ──────────────
+        "min_duration_secs"   : 1.1,
+        "min_rom_travel_deg"  : 40.0,
+        "max_posture_deviation_deg": 15.0,
 
         "autodetect_signals"  : ["elbow_flex", "arms_overhead"],
     },

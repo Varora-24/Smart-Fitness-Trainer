@@ -80,6 +80,7 @@ class ExerciseTracker:
         self._velocity_samples: deque = deque(maxlen=300)
         self._prev_avg_angle  : float = 0.0
         self._rep_start_time  : float = time.time()
+        self._max_posture_delta: float = 0.0
 
         # ── Session accumulators ─────────────────────────────
         self._all_rep_scores  : list  = []
@@ -108,10 +109,16 @@ class ExerciseTracker:
 
         # ── Last rep stats ───────────────────────────────────
         self.last_rep_min_angle      : float = 360.0
+        self.last_rep_max_angle      : float = 0.0
         self.last_rep_velocity_samples: list  = []
         self.last_rep_rom_score      : float = 0.0
         self.last_rep_control_score  : float = 0.0
         self.last_rep_was_clean      : bool  = False
+        self.last_rep_duration       : float = 0.0
+        self.last_rep_travel_deg     : float = 0.0
+        self.last_rep_posture_delta  : float = 0.0
+        self.last_rep_gates_passed   : bool  = True
+        self.last_rep_failed_gates   : list[str] = []
         self.last_rep_time   : float = 0.0   # for inter-rep debounce
         self._posture_baseline       : float | None = None
 
@@ -217,11 +224,13 @@ class ExerciseTracker:
             pr = self._sm_post_r.update(pr_raw)
             self.posture_angle = (pl + pr) / 2.0
             
+            if self._posture_baseline is None:
+                self._posture_baseline = self.posture_angle
+            p_delta = abs(self.posture_angle - self._posture_baseline)
+            self._max_posture_delta = max(self._max_posture_delta, p_delta)
+
             if self.key == "curls":
-                if self._posture_baseline is None:
-                    self._posture_baseline = self.posture_angle
-                delta = abs(self.posture_angle - self._posture_baseline)
-                post_ok = delta <= cfg.get("posture_delta_threshold", 20.0)
+                post_ok = p_delta <= cfg.get("posture_delta_threshold", 20.0)
             else:
                 post_ok = (cfg["posture_min_angle"]
                            <= self.posture_angle
@@ -371,14 +380,55 @@ class ExerciseTracker:
         rep_control = float(np.mean(self._velocity_samples)) if self._velocity_samples else 100.0
         rep_rom     = self._compute_rom_score()
 
-        # Weighted quality score
-        rep_score = float(np.clip(
+        # Weighted base quality score
+        base_score = float(np.clip(
             FORM_WEIGHT_SYMMETRY * rep_sym
             + FORM_WEIGHT_ROM     * rep_rom
             + FORM_WEIGHT_POSTURE * rep_posture
             + FORM_WEIGHT_CONTROL * rep_control,
             0, 100,
         ))
+        rep_score = base_score
+
+        # ── Quality Gate Evaluations (Independent Layer) ───────────
+        rep_duration = time.time() - self._rep_start_time
+        travel_deg = abs(self._rep_max_angle - self._rep_min_angle)
+
+        min_duration = self.cfg.get("min_duration_secs", 0.0)
+        min_travel   = self.cfg.get("min_rom_travel_deg", 0.0)
+        max_dev      = self.cfg.get("max_posture_deviation_deg", 360.0)
+
+        # Gate 1: Tempo / Velocity
+        gate_tempo_pass = rep_duration >= min_duration
+
+        # Gate 2: ROM Completion (with explicit per-exercise comparison direction)
+        rom_target = self.cfg.get("rom_min_angle", 90.0)
+        direction  = self.cfg.get("depth_direction", "down")
+        if direction == "up":
+            # Extension exercises (e.g. shoulder_press): lockout at peak extension angle >= target
+            rom_target_reached = self._rep_max_angle >= rom_target
+        else:
+            # Flexion exercises (e.g. squats, pushups, curls, lunges): deep descent angle <= target
+            rom_target_reached = self._rep_min_angle <= rom_target
+        gate_rom_pass = rom_target_reached and (travel_deg >= min_travel)
+
+        # Gate 3: Stability / Compensation
+        gate_stability_pass = self._max_posture_delta <= max_dev
+
+        failed_gates: list[str] = []
+        if not gate_tempo_pass:
+            failed_gates.append("tempo")
+        if not gate_rom_pass:
+            failed_gates.append("rom_completion")
+        if not gate_stability_pass:
+            failed_gates.append("stability")
+
+        if len(failed_gates) == 1:
+            rep_score = float(min(45.0, base_score * 0.50))
+        elif len(failed_gates) == 2:
+            rep_score = float(min(35.0, base_score * 0.35))
+        elif len(failed_gates) >= 3:
+            rep_score = float(min(25.0, base_score * 0.20))
 
         self.rep_score = rep_score
         # NOTE: total_reps is incremented here (only here — NOT in update())
@@ -391,10 +441,16 @@ class ExerciseTracker:
             self.bad_reps += 1
 
         self.last_rep_min_angle = self._rep_min_angle
+        self.last_rep_max_angle = self._rep_max_angle
         self.last_rep_velocity_samples = list(self._velocity_samples)
         self.last_rep_rom_score = rep_rom
         self.last_rep_control_score = rep_control
         self.last_rep_was_clean = rep_score >= CLEAN_REP_SCORE_THRESHOLD
+        self.last_rep_duration = rep_duration
+        self.last_rep_travel_deg = travel_deg
+        self.last_rep_posture_delta = self._max_posture_delta
+        self.last_rep_gates_passed = len(failed_gates) == 0
+        self.last_rep_failed_gates = failed_gates
 
         self._all_rep_scores.append(rep_score)
         self._all_sym_scores.append(rep_sym)
@@ -422,6 +478,7 @@ class ExerciseTracker:
         self._posture_samples  = deque(maxlen=300)
         self._velocity_samples = deque(maxlen=300)
         self._posture_baseline = None
+        self._max_posture_delta = 0.0
         self._rep_start_time   = time.time()
 
     def get_feature_rows(self) -> list:
