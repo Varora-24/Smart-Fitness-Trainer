@@ -94,22 +94,19 @@ st.caption(
 with st.container(border=True):
     cols_cs = st.columns(3)
     with cols_cs[0]:
-        st.markdown("**👥 Google Sign-In**")
-        st.caption("One-click login via Google OAuth — no password required.")
-    with cols_cs[1]:
-        st.markdown("**📱 Multi-Person Tracking**")
+        st.markdown("**👥 Multi-Person Tracking**")
         st.caption("Independent pose instances for each detected person in the frame.")
-    with cols_cs[2]:
+    with cols_cs[1]:
         st.markdown("**📱 Mobile-Responsive Layout**")
         st.caption("Optimised UI for phones and tablets.")
-    cols_cs2 = st.columns(3)
-    with cols_cs2[0]:
+    with cols_cs[2]:
         st.markdown("**🏗️ Custom Exercise Builder**")
         st.caption("Record baseline poses to define entirely new exercises.")
-    with cols_cs2[1]:
+    cols_cs2 = st.columns(3)
+    with cols_cs2[0]:
         st.markdown("**⌚ Integration with Wearables**")
         st.caption("Sync heart rate and metabolic data from fitness devices.")
-    with cols_cs2[2]:
+    with cols_cs2[1]:
         st.markdown("**🤖 AI Workout Planner**")
         st.caption("Personalised weekly training plans generated from your history.")
 
