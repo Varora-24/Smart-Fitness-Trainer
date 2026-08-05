@@ -1,22 +1,19 @@
----
-title: AI Smart Fitness Trainer
-emoji: 🏋️
-colorFrom: red
-colorTo: blue
-sdk: streamlit
-sdk_version: 1.36.0
-app_file: app/Home.py
-pinned: false
-license: mit
----
-
 # AI Smart Fitness Trainer v4 Pro
 
 [![CI Verification](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml/badge.svg)](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml)
+[![Streamlit Cloud](https://img.shields.io/badge/Streamlit_Cloud-Live_App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://smart-fitness-trainer.streamlit.app)
 
 > 🚧 **Active Development** — This project is being actively expanded. Core
 > features (live trainer, video analysis, nutrition, accounts) are functional;
 > see [Roadmap](#-roadmap) below for what's in progress and what's planned.
+
+## 🚀 Live Production App
+
+Access the complete real-time WebRTC pose tracking application directly in your browser:
+**[👉 Launch Smart Fitness Trainer Live (Streamlit Cloud)](https://smart-fitness-trainer.streamlit.app)**
+*(No local installation or intermediate pages required)*
+
+---
 
 An advanced AI-powered fitness training application that uses computer vision and machine learning to provide real-time exercise tracking, form analysis, and personalized coaching feedback.
 
@@ -24,7 +21,6 @@ An advanced AI-powered fitness training application that uses computer vision an
 ![Python](https://img.shields.io/badge/Python-3.11+-green?style=for-the-badge)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red?style=for-the-badge)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10+-orange?style=for-the-badge)
-[![HF Space](https://img.shields.io/badge/🤗_Hugging_Face-Space_Demo-yellow?style=for-the-badge)](https://huggingface.co/spaces/VanshAro/Smart-Fitness-Trainer)
 
 
 - **Single-Person Tracking**: The current pipeline is optimized for tracking a single person in the frame.
