@@ -44,9 +44,9 @@ def test_rep_quality_gates_telemetry(exercise_key, clean_angles, bad_angles, pos
     and deliberately bad (fast, shallow, or swinging) repetitions drop below 50.
     Prints actual recorded telemetry for engineering review.
     """
-    print(f"\n=======================================================")
+    print("\n=======================================================")
     print(f"TELEMETRY REPORT FOR: {exercise_key.upper()}")
-    print(f"=======================================================")
+    print("=======================================================")
 
     img = MagicMock()
     lm_list = [[i, 50, 100] for i in range(33)]
@@ -76,7 +76,7 @@ def test_rep_quality_gates_telemetry(exercise_key, clean_angles, bad_angles, pos
     extreme_angle = tracker_clean.last_rep_max_angle if is_up_direction else tracker_clean.last_rep_min_angle
     op_str = ">=" if is_up_direction else "<="
 
-    print(f"--> [CLEAN REP TEST]:")
+    print("--> [CLEAN REP TEST]:")
     print(f"    Duration        : {tracker_clean.last_rep_duration:.2f}s (Min Req: >= {tracker_clean.cfg.get('min_duration_secs'):.1f}s)")
     print(f"    ROM Travel Span : {tracker_clean.last_rep_travel_deg:.1f} deg (Min Req: >= {tracker_clean.cfg.get('min_rom_travel_deg'):.1f} deg)")
     print(f"    Extreme Angle   : {extreme_angle:.1f} deg (Target: {op_str} {tracker_clean.cfg.get('rom_min_angle'):.1f} deg)")
@@ -112,7 +112,7 @@ def test_rep_quality_gates_telemetry(exercise_key, clean_angles, bad_angles, pos
 
     bad_extreme = tracker_bad.last_rep_max_angle if is_up_direction else tracker_bad.last_rep_min_angle
 
-    print(f"--> [BAD REP TEST (Fast/Shallow/Swinging)]:")
+    print("--> [BAD REP TEST (Fast/Shallow/Swinging)]:")
     print(f"    Duration        : {tracker_bad.last_rep_duration:.2f}s (Min Req: >= {tracker_bad.cfg.get('min_duration_secs'):.1f}s)")
     print(f"    ROM Travel Span : {tracker_bad.last_rep_travel_deg:.1f} deg (Min Req: >= {tracker_bad.cfg.get('min_rom_travel_deg'):.1f} deg)")
     print(f"    Extreme Angle   : {bad_extreme:.1f} deg (Target: {op_str} {tracker_bad.cfg.get('rom_min_angle'):.1f} deg)")
