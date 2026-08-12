@@ -1,8 +1,7 @@
 import os
 import tempfile
 import cv2
-import time
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -142,8 +141,7 @@ def analyze_video(file: UploadFile = File(...), exercise: str = Form(...)):
 
         src_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         total_frms = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 1
-        src_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        src_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
         duration_s = total_frms / src_fps
 
         # FramePipeline / Tracker setup exactly as Streamlit does
@@ -205,14 +203,15 @@ def analyze_video(file: UploadFile = File(...), exercise: str = Form(...)):
             return VideoAnalysisResponse(
                 is_yoga=True,
                 summary=summary,
-                yoga_scores=[YogaScore(**s) for s in yoga_scores]
+                yoga_scores=[YogaScore(**s) for s in yoga_scores]  # type: ignore
             )
         else:
+            assert pipeline is not None
             raw_summary = pipeline.get_summary()
             total_reps = raw_summary.get("total_reps", 0)
             
             # Exact calorie calculation from Streamlit implementation
-            kcal_per_rep = float(EXERCISE_CONFIG[exercise].get("kcal_per_rep", 0.25))
+            kcal_per_rep = float(EXERCISE_CONFIG[exercise].get("kcal_per_rep", 0.25))  # type: ignore
             calories = round(total_reps * kcal_per_rep, 2)
             
             summary = VideoSummary(
