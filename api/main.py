@@ -17,10 +17,13 @@ from core.tracking.yoga_tracker import YogaPoseTracker
 
 app = FastAPI(title="Arogya Vision API Adapter")
 
-# Configure CORS for Next.js development server
+# Configure CORS for Next.js development server and production
+cors_origins_env = os.environ.get("CORS_ORIGINS", "http://localhost:3000")
+cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -69,6 +72,10 @@ class VideoAnalysisResponse(BaseModel):
 
 # --- Endpoints ---
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 @app.get("/api/history")
 def get_history(exercise: Optional[str] = None, limit: int = 50):
     try:
@@ -99,7 +106,7 @@ def get_supplements():
     return SUPPLEMENT_INFO
 
 @app.post("/api/analyze-video", response_model=VideoAnalysisResponse)
-async def analyze_video(file: UploadFile = File(...), exercise: str = Form(...)):
+def analyze_video(file: UploadFile = File(...), exercise: str = Form(...)):
     # Verify file extension (basic validation)
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
@@ -119,7 +126,8 @@ async def analyze_video(file: UploadFile = File(...), exercise: str = Form(...))
     try:
         # Create temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}") as tmp:
-            content = await file.read()
+            # Use synchronous read since the endpoint is now running in FastAPI's threadpool
+            content = file.file.read()
             
             # Enforce max upload size (~100MB)
             if len(content) > 100 * 1024 * 1024:

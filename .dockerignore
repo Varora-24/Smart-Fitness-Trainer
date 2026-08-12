@@ -1,0 +1,15 @@
+node_modules/
+.next/
+frontend/
+.env
+.env.local
+.git/
+.github/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.vscode/
+.DS_Store
+stitch_assets/

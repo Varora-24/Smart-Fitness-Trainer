@@ -16,8 +16,8 @@ export default function History() {
       try {
         const history = await api.getHistory()
         setData(history)
-      } catch (err: any) {
-        setError(err.message || "Failed to load history")
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load history")
       } finally {
         setLoading(false)
       }
@@ -80,7 +80,7 @@ export default function History() {
                       <td className="px-6 py-4 text-text-primary">{session.total_reps}</td>
                       <td className="px-6 py-4 font-mono text-secondary">{session.avg_rep_score.toFixed(1)}/100</td>
                       <td className="px-6 py-4">
-                        <StatusBadge variant={label as any}>
+                        <StatusBadge variant={label as "good" | "neutral" | "bad"}>
                           {badgeText}
                         </StatusBadge>
                       </td>

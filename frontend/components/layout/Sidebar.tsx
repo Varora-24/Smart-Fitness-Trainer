@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -30,8 +31,8 @@ export function Sidebar() {
     <aside className="w-[260px] flex-shrink-0 border-r border-border-subtle bg-surface/50 backdrop-blur-xl flex flex-col h-screen sticky top-0">
       {/* Brand Header */}
       <div className="h-[72px] flex items-center px-6 border-b border-border-subtle shrink-0 gap-3">
-        <img src="/assets/AV_icon_512.png" alt="Arogya Vision Logo" className="w-8 h-8 object-contain" />
-        <img src="/assets/wordmark.png" alt="Arogya Vision Wordmark" className="h-5 object-contain" />
+        <Image src="/assets/AV_icon_512.png" alt="Arogya Vision Logo" width={32} height={32} className="object-contain" />
+        <Image src="/assets/wordmark.png" alt="Arogya Vision Wordmark" width={120} height={20} className="object-contain" />
       </div>
 
       {/* Navigation */}

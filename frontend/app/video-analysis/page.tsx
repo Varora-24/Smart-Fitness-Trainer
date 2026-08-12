@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
-import { Metric } from "@/components/ui/Metric"
 import { StatusBadge } from "@/components/ui/StatusBadge"
 import { api, VideoAnalysisResponse } from "@/lib/api"
 import { Video, UploadCloud, AlertCircle } from "lucide-react"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 const EXERCISE_OPTIONS = [
   { value: "squats", label: "Squats" },
@@ -28,6 +28,19 @@ export default function VideoAnalysis() {
 
   const handleUpload = async () => {
     if (!file) return
+
+    if (file.size > 100 * 1024 * 1024) {
+      setError("Video must be smaller than 100 MB.")
+      return
+    }
+
+    const validExtensions = ["mp4", "mov", "avi", "mkv"]
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    if (!ext || !validExtensions.includes(ext)) {
+      setError("Unsupported video format. Please upload MP4, MOV, AVI, or MKV.")
+      return
+    }
+
     setProcessing(true)
     setError(null)
     setResult(null)
@@ -35,8 +48,8 @@ export default function VideoAnalysis() {
     try {
       const res = await api.analyzeVideo(file, exercise)
       setResult(res)
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred during processing.")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred during processing.")
     } finally {
       setProcessing(false)
     }
@@ -215,13 +228,46 @@ export default function VideoAnalysis() {
           )}
 
           {result.is_yoga && result.yoga_scores && result.yoga_scores.length > 0 && (
-            <Card className="mt-4">
+            <Card className="mt-4 p-6">
               <h3 className="font-semibold text-text-primary mb-4">Alignment Over Time</h3>
               <p className="text-sm text-text-secondary mb-4">
                 The AI tracked your pose alignment across {result.yoga_scores.length} specific keyframes.
               </p>
-              <div className="flex items-center gap-4 text-sm font-mono text-primary bg-[rgba(242,202,80,0.05)] p-4 rounded-lg">
-                 [Chart rendering omitted for MVP - Data is captured securely]
+              <div className="h-[300px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={result.yoga_scores} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                    <XAxis 
+                      dataKey="time_s" 
+                      stroke="#A1A1AA" 
+                      tick={{ fill: '#A1A1AA', fontSize: 12 }} 
+                      tickFormatter={(val: number) => `${val.toFixed(1)}s`}
+                    />
+                    <YAxis 
+                      domain={[0, 100]} 
+                      stroke="#A1A1AA" 
+                      tick={{ fill: '#A1A1AA', fontSize: 12 }}
+                      tickFormatter={(val: number) => `${val}%`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#201f21', borderColor: 'rgba(255,255,255,0.08)', borderRadius: '8px' }}
+                      itemStyle={{ color: '#00d2fd' }}
+                      labelStyle={{ color: '#A1A1AA', marginBottom: '4px' }}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      formatter={(value: any) => [`${typeof value === 'number' ? value.toFixed(1) : value}%`, 'Score']}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      labelFormatter={(label: any) => `Time: ${typeof label === 'number' ? label.toFixed(2) : label}s`}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="score" 
+                      stroke="#00d2fd" 
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 6, fill: '#00d2fd', stroke: '#131315', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </Card>
           )}

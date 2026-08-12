@@ -17,8 +17,8 @@ export default function Supplements() {
       try {
         const result = await api.getSupplements()
         setData(result)
-      } catch (err: any) {
-        setError(err.message || "Failed to load supplements data")
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load supplements")
       } finally {
         setLoading(false)
       }
