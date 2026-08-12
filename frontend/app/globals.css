@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "ui-sans-serif", "system-ui", "sans-serif";
+  --color-background: #0b0b0d;
+  --color-surface: #0f172a;
+  --color-primary: #f2ca50;
+  --color-primary-hover: #ffe088;
+  --color-secondary: #00d2fd;
+  --color-secondary-dim: #005669;
+  --color-success: #2ecc64;
+  --color-error: #ef4444;
+  
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-glass-surface: rgba(255, 255, 255, 0.04);
+  --color-glass-elevated: rgba(255, 255, 255, 0.07);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    background-color: var(--color-glass-surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 1.125rem; /* 18px */
+  }
+  
+  .glass-input {
+    background-color: var(--color-glass-elevated);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 0.75rem; /* 12px */
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .glass-input:focus {
+    border-color: var(--color-secondary);
+    outline: none;
+    box-shadow: 0 0 0 1px var(--color-secondary);
+  }
+  
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: #131315;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    box-shadow: 0 0 15px rgba(242, 202, 80, 0.4);
+  }
+  
+  .btn-secondary {
+    background-color: var(--color-secondary);
+    color: #0b0b0d;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .btn-secondary:hover {
+    box-shadow: 0 0 15px rgba(0, 210, 253, 0.4);
+  }
+
+  .text-gradient {
+    background: linear-gradient(to right, var(--color-text-primary), var(--color-text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
