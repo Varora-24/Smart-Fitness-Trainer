@@ -34,5 +34,3 @@ fastapi==0.141.1
 uvicorn==0.49.0
 python-multipart==0.0.32
 pydantic==2.13.4
-
--e .
