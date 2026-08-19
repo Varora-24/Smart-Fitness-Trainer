@@ -25,6 +25,25 @@ export default function VideoAnalysis() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<VideoAnalysisResponse | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setFile(e.dataTransfer.files[0])
+    }
+  }
 
   const handleUpload = async () => {
     if (!file) return
@@ -73,17 +92,22 @@ export default function VideoAnalysis() {
                 onChange={(e) => setExercise(e.target.value)}
               >
                 {EXERCISE_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value} className="bg-surface text-text-primary">{opt.label}</option>
                 ))}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">Video File</label>
-              <div className="border-2 border-dashed border-border-subtle rounded-xl p-8 text-center bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(255,255,255,0.03)] transition-colors">
+              <div 
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${isDragging ? 'border-primary bg-[rgba(255,255,255,0.05)]' : 'border-border-subtle bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(255,255,255,0.03)]'}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <input 
                   type="file" 
-                  accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska"
+                  accept=".mp4,.mov,.avi,.mkv,video/mp4,video/quicktime,video/x-msvideo,video/x-matroska"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
                   className="hidden" 
                   id="video-upload"
@@ -93,7 +117,8 @@ export default function VideoAnalysis() {
                   <div className="text-sm">
                     <span className="font-semibold text-primary">Click to upload</span> or drag and drop
                   </div>
-                  <p className="text-xs text-text-muted">MP4, MOV, AVI, MKV (Max 100MB, up to 90s)</p>
+                  <p className="text-xs text-text-muted">Choose a video from a local folder (Videos, Downloads, etc.)</p>
+                  <p className="text-xs text-text-muted mt-1">MP4, MOV, AVI, MKV (Max 100MB, up to 90s)</p>
                 </label>
                 {file && (
                   <div className="mt-4 p-3 bg-surface-container rounded-lg border border-border-subtle flex justify-between items-center">
