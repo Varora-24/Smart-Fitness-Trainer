@@ -4,20 +4,22 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install system dependencies required by OpenCV and MediaPipe
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
     libgl1 \
     libglib2.0-0 \
-    libsm6 \
-    libxrender1 \
-    libxext6 \
-    libgles2-mesa \
+    libgles2 \
     libegl1 \
-    mesa-utils \
+    libglvnd-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip uninstall -y opencv-python opencv-contrib-python && \
+    pip install --no-cache-dir opencv-python-headless opencv-contrib-python-headless
 
 # Copy the rest of the application
 COPY . .
