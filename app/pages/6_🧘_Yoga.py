@@ -1,16 +1,15 @@
-﻿import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 """
-6_ðŸ§˜_Yoga.py â€” Yoga Hold-Tracking Page
+6_🧘_Yoga.py — Yoga Hold-Tracking Page
 =======================================
 Uses the same WebRTC / FramePipeline infrastructure as the Live Trainer
 but routes pose-detection output to YogaPoseTracker instead of ExerciseTracker.
-No rep-counting â€” tracks alignment score and hold duration per pose.
+No rep-counting — tracks alignment score and hold duration per pose.
 """
 
 from __future__ import annotations
-
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import av
 import numpy as np
