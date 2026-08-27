@@ -219,7 +219,8 @@ class FramePipeline:
 
         # ── Run exercise tracker ──────────────────────────────
         if lm_list:
-            self.tracker.update(self.detector, img, lm_list, draw=True)
+            current_time = timestamp_ms / 1000.0 if self.video_mode else None
+            self.tracker.update(self.detector, img, lm_list, draw=True, current_time=current_time)
         else:
             self.tracker.feedback      = "No pose detected"
             self.tracker.low_visibility = True

@@ -79,6 +79,7 @@ class ExerciseTracker:
         self._posture_samples : deque = deque(maxlen=300)
         self._velocity_samples: deque = deque(maxlen=300)
         self._prev_avg_angle  : float = 0.0
+        self._clock_mode      : str   = 'live'
         self._rep_start_time  : float = time.time()
         self._max_posture_delta: float = 0.0
 
@@ -150,11 +151,24 @@ class ExerciseTracker:
         img,                # current BGR frame (for drawing)
         lm_list : list,     # landmark list from detector.find_position()
         draw    : bool = True,
+        current_time: float | None = None,
     ) -> None:
         """
         Process one frame.  Reads angles directly from the detector
         so it can validate both primary and posture joint chains.
         """
+        if current_time is None:
+            current_time = time.time()
+            if getattr(self, '_clock_mode', None) != 'live':
+                self._clock_mode = 'live'
+                self._rep_start_time = current_time
+                self.last_rep_time = current_time
+        else:
+            if getattr(self, '_clock_mode', None) != 'video':
+                self._clock_mode = 'video'
+                self._rep_start_time = current_time
+                self.last_rep_time = current_time
+
         self.rep_just_finished = False
         self.bad_posture = False
         cfg = self.cfg
@@ -308,10 +322,9 @@ class ExerciseTracker:
                 # Debounce: minimum time between reps to avoid double-counting
                 # oscillation or jitter at the threshold.
                 # 0.3s is correct for recorded video; 0.8s was over-filtering.
-                current_time = time.time()
                 if current_time - self.last_rep_time > 0.3:
                     self.last_rep_time = current_time
-                    self._finish_rep()   # _finish_rep() handles total_reps += 1
+                    self._finish_rep(current_time)   # _finish_rep() handles total_reps += 1
 
     # ── Private helpers ───────────────────────────────────────
 
@@ -373,8 +386,11 @@ class ExerciseTracker:
         gap = self._rep_min_angle - rom_threshold
         return float(np.clip(100.0 - gap * 2.0, 0, 100))
 
-    def _finish_rep(self) -> None:
+    def _finish_rep(self, current_time: float | None = None) -> None:
         """Called once per completed rep (stage down→up transition)."""
+        if current_time is None:
+            current_time = time.time()
+
         rep_sym     = float(np.mean(self._sym_samples))   if self._sym_samples   else 100.0
         rep_posture = float(np.mean(self._posture_samples)) if self._posture_samples else 100.0
         rep_control = float(np.mean(self._velocity_samples)) if self._velocity_samples else 100.0
@@ -391,7 +407,7 @@ class ExerciseTracker:
         rep_score = base_score
 
         # ── Quality Gate Evaluations (Independent Layer) ───────────
-        rep_duration = time.time() - self._rep_start_time
+        rep_duration = current_time - self._rep_start_time
         travel_deg = abs(self._rep_max_angle - self._rep_min_angle)
 
         min_duration = self.cfg.get("min_duration_secs", 0.0)
@@ -479,7 +495,7 @@ class ExerciseTracker:
         self._velocity_samples = deque(maxlen=300)
         self._posture_baseline = None
         self._max_posture_delta = 0.0
-        self._rep_start_time   = time.time()
+        self._rep_start_time   = current_time
 
     def get_feature_rows(self) -> list:
         """Return collected feature rows for CSV export."""
