@@ -1,5 +1,8 @@
+﻿import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # ================================================================
-#  pages/2_📊_History.py  –  Streamlit workout analytics dashboard
+#  pages/2_ðŸ“Š_History.py  â€“  Streamlit workout analytics dashboard
 # ================================================================
 
 import streamlit as st
@@ -9,10 +12,10 @@ import json
 import core.data.db as db
 from core.utils.auth import require_login
 
-# ── Page Configuration ──────────────────────────────────────────
+# â”€â”€ Page Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 st.set_page_config(
     page_title="AI Smart Fitness Trainer Dashboard",
-    page_icon="💪",
+    page_icon="ðŸ’ª",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -47,7 +50,7 @@ st.markdown("""
 
 DB_PATH = "workout_history.db"
 
-# ── Data Loading Helpers ────────────────────────────────────────
+# â”€â”€ Data Loading Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def load_db_data(user_id: str):
     """Load sessions and reps for the currently logged-in user."""
     try:
@@ -61,17 +64,17 @@ def load_db_data(user_id: str):
         st.error(f"Error loading database: {e}")
         return pd.DataFrame(), pd.DataFrame()
 
-# ── Title Header ────────────────────────────────────────────────
-st.title("💪 AI Smart Fitness Trainer - Workout Dashboard")
+# â”€â”€ Title Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+st.title("ðŸ’ª AI Smart Fitness Trainer - Workout Dashboard")
 st.write("Track your exercise progress, form quality, and training history in real-time.")
 st.markdown("---")
 
-# ── Load Data (filtered by current user) ────────────────────────
+# â”€â”€ Load Data (filtered by current user) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 current_user_id = st.session_state["user_id"]
 df_sessions, df_reps = load_db_data(current_user_id)
 
-# ── Live Session View / Last Session tab ────────────────────────
-tab_live, tab_history = st.tabs(["🔴 Live Session Summary", "📊 Historical Trends"])
+# â”€â”€ Live Session View / Last Session tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+tab_live, tab_history = st.tabs(["ðŸ”´ Live Session Summary", "ðŸ“Š Historical Trends"])
 
 with tab_live:
     st.subheader("Last Session Overview")
@@ -153,12 +156,12 @@ with tab_history:
         col_chart1, col_chart2 = st.columns(2)
 
         with col_chart1:
-            st.write("📊 **Reps Per Session Over Time**")
+            st.write("ðŸ“Š **Reps Per Session Over Time**")
             chart_reps = df_sessions.set_index('date_str')[['total_reps', 'clean_reps']]
             st.bar_chart(chart_reps)
 
         with col_chart2:
-            st.write("🔥 **Calories Burned Per Session**")
+            st.write("ðŸ”¥ **Calories Burned Per Session**")
             chart_calories = df_sessions.set_index('date_str')[['calories']]
             st.line_chart(chart_calories)
 
@@ -166,18 +169,18 @@ with tab_history:
         col_chart3, col_chart4 = st.columns(2)
 
         with col_chart3:
-            st.write("🎯 **Form Quality Score by Session**")
+            st.write("ðŸŽ¯ **Form Quality Score by Session**")
             chart_scores = df_sessions.set_index('date_str')[['avg_rep_score']]
             st.line_chart(chart_scores)
 
         with col_chart4:
-            st.write("🏋️ **Activity Breakdown by Exercise Type**")
+            st.write("ðŸ‹ï¸ **Activity Breakdown by Exercise Type**")
             ex_breakdown = df_sessions.groupby('exercise')['total_reps'].sum().reset_index()
             st.bar_chart(ex_breakdown.set_index('exercise'))
 
         # Show raw database tables
         st.write("")
-        st.write("📋 **Recent Workout Logs**")
+        st.write("ðŸ“‹ **Recent Workout Logs**")
         st.dataframe(
             df_sessions.drop(columns=['date_str']).sort_values('date', ascending=False),
             use_container_width=True,

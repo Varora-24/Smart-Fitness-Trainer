@@ -1,5 +1,8 @@
+﻿import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # ================================================================
-#  pages/4_🥗_Nutrition.py  –  Macro / nutrition calculator page
+#  pages/4_ðŸ¥—_Nutrition.py  â€“  Macro / nutrition calculator page
 # ================================================================
 
 import streamlit as st
@@ -8,32 +11,32 @@ import core.data.db as db
 from core.utils.auth import require_login
 from core.data.nutrition import calculate_bmr, calculate_tdee, calculate_macros
 
-st.set_page_config(page_title="AI Fitness Trainer — Nutrition", page_icon="🥗", layout="wide")
+st.set_page_config(page_title="AI Fitness Trainer â€” Nutrition", page_icon="ðŸ¥—", layout="wide")
 
 require_login()
 
-st.title("🥗 Nutrition & Macro Calculator")
+st.title("ðŸ¥— Nutrition & Macro Calculator")
 st.caption(
     "Get personalised daily calorie and macronutrient targets based on your "
     "body stats, activity level, and fitness goal."
 )
 
-# ── Disclaimer (always visible, non-dismissible) ────────────────
+# â”€â”€ Disclaimer (always visible, non-dismissible) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 st.warning(
-    "⚠️ **Disclaimer**: These are general estimates based on standard formulas "
+    "âš ï¸ **Disclaimer**: These are general estimates based on standard formulas "
     "(Mifflin-St Jeor equation), not personalised medical or dietary advice. "
     "Consult a registered dietitian or doctor for guidance specific to any "
     "medical condition.",
-    icon="⚠️",
+    icon="âš ï¸",
 )
 
 st.markdown("---")
 
-# ── Load user profile ───────────────────────────────────────────
+# â”€â”€ Load user profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 user_id = st.session_state.get("user_id", "")
 user = db.get_user_profile(user_id) or {}
 
-# ── Profile form ────────────────────────────────────────────────
+# â”€â”€ Profile form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 st.subheader("Your Profile")
 
 with st.form("profile_form"):
@@ -97,7 +100,7 @@ if submitted:
     macros = calculate_macros(tdee, fitness_goal, weight)
 
     st.markdown("---")
-    st.subheader("📊 Your Daily Targets")
+    st.subheader("ðŸ“Š Your Daily Targets")
 
     # Summary metrics
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
@@ -106,9 +109,9 @@ if submitted:
     col_m3.metric("Carbs", f"{macros['carbs_g']}g")
     col_m4.metric("Fat", f"{macros['fat_g']}g")
 
-    st.caption(f"BMR: {bmr:.0f} kcal/day · TDEE: {tdee:.0f} kcal/day")
+    st.caption(f"BMR: {bmr:.0f} kcal/day Â· TDEE: {tdee:.0f} kcal/day")
 
-    # Macro breakdown chart (Streamlit native — no matplotlib)
+    # Macro breakdown chart (Streamlit native â€” no matplotlib)
     macro_df = pd.DataFrame({
         "Macro": ["Protein", "Carbs", "Fat"],
         "Grams": [macros["protein_g"], macros["carbs_g"], macros["fat_g"]],
@@ -125,7 +128,7 @@ elif user and user.get("weight_kg") and user.get("fitness_goal"):
     macros = calculate_macros(tdee, user["fitness_goal"], user["weight_kg"])
 
     st.markdown("---")
-    st.subheader("📊 Your Current Daily Targets")
+    st.subheader("ðŸ“Š Your Current Daily Targets")
 
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     col_m1.metric("Daily Calories", f"{macros['calories']} kcal")
@@ -133,7 +136,7 @@ elif user and user.get("weight_kg") and user.get("fitness_goal"):
     col_m3.metric("Carbs", f"{macros['carbs_g']}g")
     col_m4.metric("Fat", f"{macros['fat_g']}g")
 
-    st.caption(f"BMR: {bmr:.0f} kcal/day · TDEE: {tdee:.0f} kcal/day")
+    st.caption(f"BMR: {bmr:.0f} kcal/day Â· TDEE: {tdee:.0f} kcal/day")
 
     macro_df = pd.DataFrame({
         "Macro": ["Protein", "Carbs", "Fat"],

@@ -1,9 +1,12 @@
+﻿import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 """
-6_🧘_Yoga.py — Yoga Hold-Tracking Page
+6_ðŸ§˜_Yoga.py â€” Yoga Hold-Tracking Page
 =======================================
 Uses the same WebRTC / FramePipeline infrastructure as the Live Trainer
 but routes pose-detection output to YogaPoseTracker instead of ExerciseTracker.
-No rep-counting — tracks alignment score and hold duration per pose.
+No rep-counting â€” tracks alignment score and hold duration per pose.
 """
 
 from __future__ import annotations
@@ -24,10 +27,10 @@ from core.tracking.frame_pipeline import FramePipeline
 from core.tracking.yoga_tracker import YogaPoseTracker
 from core.tracking.surya_namaskar_tracker import SuryaNamaskarTracker, SURYA_NAMASKAR_STEPS
 
-# ── Page config ───────────────────────────────────────────────────────────────
+# â”€â”€ Page config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 st.set_page_config(
-    page_title="AI Fitness Trainer — Yoga",
-    page_icon="🧘",
+    page_title="AI Fitness Trainer â€” Yoga",
+    page_icon="ðŸ§˜",
     layout="wide",
 )
 
@@ -37,14 +40,14 @@ RTC_CONFIGURATION = RTCConfiguration(
     {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
 )
 
-# ── Session state defaults ────────────────────────────────────────────────────
+# â”€â”€ Session state defaults â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if "yoga_pose_key" not in st.session_state:
     st.session_state["yoga_pose_key"] = "mountain_pose"
 if "yoga_completed" not in st.session_state:
     st.session_state["yoga_completed"] = []
 
 
-# ── WebRTC Video Processor ────────────────────────────────────────────────────
+# â”€â”€ WebRTC Video Processor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class YogaVideoProcessor(VideoProcessorBase):
     """
     Processes WebRTC frames for yoga hold detection.
@@ -56,7 +59,7 @@ class YogaVideoProcessor(VideoProcessorBase):
     def __init__(self) -> None:
         # Use FramePipeline only for pose detection + drawing infrastructure.
         # ExerciseTracker is still initialised inside FramePipeline but is
-        # never called from this processor — we call yoga_tracker.update() only.
+        # never called from this processor â€” we call yoga_tracker.update() only.
         self._pipeline = FramePipeline(exercise_key="squats", in_setup=False,
                                        video_mode=False)
         self._pipeline.voice_muted = False
@@ -166,15 +169,15 @@ class YogaVideoProcessor(VideoProcessorBase):
         return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
-# ── UI ────────────────────────────────────────────────────────────────────────
-st.title("🧘 AI Yoga Coach — Hold & Align")
+# â”€â”€ UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+st.title("ðŸ§˜ AI Yoga Coach â€” Hold & Align")
 st.caption(
     "Select a pose, position yourself in front of the camera, and hold it "
     "correctly for the required duration. Your alignment is scored in real-time "
     "using the same MediaPipe skeleton used by the Live Trainer."
 )
 
-# ── Sidebar: mode and pose selector ───────────────────────────────────────────
+# â”€â”€ Sidebar: mode and pose selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 with st.sidebar:
     st.header("Practice Mode")
     practice_mode = st.radio(
@@ -230,7 +233,7 @@ with st.sidebar:
         st.session_state["yoga_completed"] = []
         st.rerun()
 
-# ── Main: WebRTC stream + metrics ─────────────────────────────────────────────
+# â”€â”€ Main: WebRTC stream + metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 col_cam, col_stats = st.columns([3, 1])
 
 with col_cam:
@@ -250,36 +253,36 @@ with col_cam:
         video_receiver_size=1,  # Force maxsize=1 drop-oldest buffer behavior at WebRTC track layer
     )
 
-    # ── Populate Previously Vacant Screen Space Under Live Video ──────────────
+    # â”€â”€ Populate Previously Vacant Screen Space Under Live Video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     st.markdown("---")
     if mode_key == "single_pose":
         active_key = st.session_state.get("yoga_pose_key", "mountain_pose")
         if ctx.video_processor and ctx.video_processor.mode == "single_pose":
             active_key = ctx.video_processor._yoga_key
         ref_cfg = YOGA_POSE_CONFIG[active_key]
-        st.subheader(f"🧘 Target Pose Guide: {ref_cfg['display_name']} ({ref_cfg['sanskrit']})")
+        st.subheader(f"ðŸ§˜ Target Pose Guide: {ref_cfg['display_name']} ({ref_cfg['sanskrit']})")
         info_col1, info_col2 = st.columns([1, 2])
         with info_col1:
             display_reference_image(ref_cfg, title_prefix="Target: ")
         with info_col2:
             if "description" in ref_cfg:
                 st.markdown(f"**About:** {ref_cfg['description']}")
-            st.markdown(f"**Target Hold Time:** ⏱️ `{ref_cfg['min_hold_secs']} seconds` | **Required Alignment:** 🎯 `{ref_cfg['alignment_threshold']}%`")
+            st.markdown(f"**Target Hold Time:** â±ï¸ `{ref_cfg['min_hold_secs']} seconds` | **Required Alignment:** ðŸŽ¯ `{ref_cfg['alignment_threshold']}%`")
             if "cues" in ref_cfg:
-                st.info(f"💡 **Form Cue:** {ref_cfg['cues'].get('start', '')}")
+                st.info(f"ðŸ’¡ **Form Cue:** {ref_cfg['cues'].get('start', '')}")
     else:
         step_idx = ctx.video_processor.current_step_idx if ctx.video_processor and ctx.video_processor.mode == "surya_namaskar" else st.session_state.get("surya_step_idx", 0)
         step_cfg = SURYA_NAMASKAR_STEPS[step_idx]
-        st.subheader(f"🌞 Step {step_idx+1}: {step_cfg['name']} ({step_cfg.get('sanskrit', '')})")
+        st.subheader(f"ðŸŒž Step {step_idx+1}: {step_cfg['name']} ({step_cfg.get('sanskrit', '')})")
         info_col1, info_col2 = st.columns([1, 2])
         with info_col1:
             display_reference_image(step_cfg, title_prefix=f"Step {step_idx+1}: ")
         with info_col2:
-            st.markdown(f"**Mode:** `{step_cfg['mode'].upper()}` | **Step Duration:** ⏱️ `{step_cfg['duration']}s`")
+            st.markdown(f"**Mode:** `{step_cfg['mode'].upper()}` | **Step Duration:** â±ï¸ `{step_cfg['duration']}s`")
             if "description" in step_cfg:
                 st.markdown(f"**About:** {step_cfg['description']}")
             if "cue" in step_cfg:
-                st.info(f"💡 **Guidance:** {step_cfg['cue']}")
+                st.info(f"ðŸ’¡ **Guidance:** {step_cfg['cue']}")
 
 if ctx.video_processor:
     if ctx.video_processor.mode != mode_key:
@@ -308,7 +311,7 @@ with col_stats:
                         text=f"Hold: {hold_s:.1f}s / {min_hold}s")
 
             if proc.active_feedback:
-                st.warning(f"🔧 {proc.active_feedback}")
+                st.warning(f"ðŸ”§ {proc.active_feedback}")
             elif proc.is_holding:
                 st.success(cfg["cues"]["hold"])
 
@@ -317,7 +320,7 @@ with col_stats:
                 pose_name = cfg["display_name"]
                 if pose_name not in st.session_state["yoga_completed"]:
                     st.session_state["yoga_completed"].append(pose_name)
-                st.success(f"✅ {cfg['cues']['complete']}")
+                st.success(f"âœ… {cfg['cues']['complete']}")
         else:
             step_cfg = SURYA_NAMASKAR_STEPS[proc.current_step_idx]
             st.metric("Sequence Progress", f"Step {proc.current_step_idx + 1} / 12")
@@ -329,11 +332,11 @@ with col_stats:
             st.progress(float(progress), text=f"Step Time: {hold_s:.1f}s / {target_dur}s")
 
             if proc.active_feedback:
-                st.info(f"🧘 {proc.active_feedback}")
+                st.info(f"ðŸ§˜ {proc.active_feedback}")
 
             if proc.pose_completed:
                 st.balloons()
-                st.success("🌞 Surya Namaskar Round Complete!")
+                st.success("ðŸŒž Surya Namaskar Round Complete!")
                 if st.button("Start New Round"):
                     proc._surya_tracker.reset_sequence()
                     st.rerun()
@@ -343,21 +346,21 @@ with col_stats:
         completed = st.session_state["yoga_completed"]
         if completed:
             for name in completed:
-                st.markdown(f"- ✅ {name}")
+                st.markdown(f"- âœ… {name}")
         else:
             st.caption("No poses completed yet this session.")
 
     else:
         st.info("Start the camera to see live alignment stats.")
 
-# ── Pose reference cards ──────────────────────────────────────────────────────
+# â”€â”€ Pose reference cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 st.markdown("---")
 st.subheader("Pose Library")
 cols = st.columns(3)
 for i, (key, pose_cfg) in enumerate(YOGA_POSE_CONFIG.items()):
     with cols[i % 3]:
         is_done = pose_cfg["display_name"] in st.session_state["yoga_completed"]
-        title   = f"{'✅ ' if is_done else ''}{pose_cfg['display_name']}"
+        title   = f"{'âœ… ' if is_done else ''}{pose_cfg['display_name']}"
         with st.expander(title):
             st.markdown(f"*{pose_cfg['sanskrit']}*")
             st.markdown(f"- Hold: **{pose_cfg['min_hold_secs']}s**")
@@ -365,6 +368,6 @@ for i, (key, pose_cfg) in enumerate(YOGA_POSE_CONFIG.items()):
             st.markdown(f"- Checks: **{len(pose_cfg['landmark_checks'])} joint angles**")
             st.caption(pose_cfg["cues"]["start"])
 
-# ── Web Speech API Voice Coaching Bridge ──────────────────────────────────────
+# â”€â”€ Web Speech API Voice Coaching Bridge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if ctx.video_processor:
     start_voice_polling(ctx.video_processor, key_prefix="yoga", is_yoga=True)
