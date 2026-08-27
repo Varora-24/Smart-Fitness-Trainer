@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -16,7 +16,7 @@ from core.tracking.frame_pipeline import FramePipeline
 from core.utils.config import EXERCISE_CONFIG
 from core.utils.ui_utils import display_reference_image, start_voice_polling
 
-st.set_page_config(page_title="AI Fitness Trainer â€” Live", page_icon="ðŸ‹ï¸", layout="wide")
+st.set_page_config(page_title="AI Fitness Trainer — Live", page_icon="🏋️", layout="wide")
 
 require_login()
 
@@ -95,7 +95,7 @@ class LiveVideoProcessor(VideoProcessorBase):
         return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
-st.title("ðŸ‹ï¸ AI Smart Fitness Trainer â€” Live")
+st.title("🏋️ AI Smart Fitness Trainer — Live")
 st.caption(
     "Runs entirely in your browser session via WebRTC. Grant camera access "
     "below, then use the sidebar to pick an exercise. Voice coaching uses "
@@ -115,7 +115,7 @@ with col_controls:
     st.markdown("---")
     auto_mode = st.checkbox("Auto-detect exercise", value=False)
     show_debug = st.checkbox("Show debug overlay", value=False)
-    st.caption("â„¹ï¸ Adjust exercise selection and overlay settings during live tracking.")
+    st.caption("ℹ️ Adjust exercise selection and overlay settings during live tracking.")
 
 with col_video:
     ctx = webrtc_streamer(
@@ -134,16 +134,16 @@ with col_video:
         video_receiver_size=1,  # Force maxsize=1 drop-oldest buffer behavior at WebRTC track layer
     )
 
-    # â”€â”€ Populate Previously Vacant Screen Space Under Live Video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Populate Previously Vacant Screen Space Under Live Video ──────────────
     st.markdown("---")
-    st.subheader(f"ðŸŽ¯ Exercise Form & Guidance: {cfg['display_name']}")
+    st.subheader(f"🎯 Exercise Form & Guidance: {cfg['display_name']}")
     
     CAMERA_INSTRUCTIONS = {
-        "squats": "ðŸ“¸ **Camera Angle:** Place the camera at hip height, facing you from the side (profile view). Ensure your entire body from head to toe is visible.",
-        "pushups": "ðŸ“¸ **Camera Angle:** Place the camera on the floor, facing you from the side. Ensure your entire body from head to toe is visible.",
-        "curls": "ðŸ“¸ **Camera Angle:** Place the camera at chest height, facing you from the side (profile view). Ensure your upper body and arms are clearly visible.",
-        "lunges": "ðŸ“¸ **Camera Angle:** Place the camera at waist height, facing you from the side (profile view). Ensure your entire body is visible.",
-        "shoulder_press": "ðŸ“¸ **Camera Angle:** Place the camera at chest height, facing you from the front or slight angle. Ensure your upper body and arms extended overhead are fully visible."
+        "squats": "📸 **Camera Angle:** Place the camera at hip height, facing you from the side (profile view). Ensure your entire body from head to toe is visible.",
+        "pushups": "📸 **Camera Angle:** Place the camera on the floor, facing you from the side. Ensure your entire body from head to toe is visible.",
+        "curls": "📸 **Camera Angle:** Place the camera at chest height, facing you from the side (profile view). Ensure your upper body and arms are clearly visible.",
+        "lunges": "📸 **Camera Angle:** Place the camera at waist height, facing you from the side (profile view). Ensure your entire body is visible.",
+        "shoulder_press": "📸 **Camera Angle:** Place the camera at chest height, facing you from the front or slight angle. Ensure your upper body and arms extended overhead are fully visible."
     }
 
     info_col1, info_col2 = st.columns([1, 2])
@@ -153,10 +153,10 @@ with col_video:
         if "description" in cfg:
             st.markdown(f"**About:** {cfg['description']}")
         if "kcal_per_rep" in cfg:
-            st.markdown(f"**Est. Burn:** ðŸ”¥ `{cfg['kcal_per_rep']} kcal / rep`")
+            st.markdown(f"**Est. Burn:** 🔥 `{cfg['kcal_per_rep']} kcal / rep`")
         if "angle_range" in cfg:
             lo, hi = cfg['angle_range']
-            st.markdown(f"**Target Range of Motion:** ðŸ“ `{lo}Â° â€“ {hi}Â°`")
+            st.markdown(f"**Target Range of Motion:** 📐 `{lo}° – {hi}°`")
         if selected_key in CAMERA_INSTRUCTIONS:
             st.info(CAMERA_INSTRUCTIONS[selected_key])
 
@@ -208,9 +208,9 @@ if ctx.video_processor:
         except Exception as e:
             st.error(f"Failed to write last_session.json: {e}")
 
-        st.subheader("ðŸ“Š Session Summary")
+        st.subheader("📊 Session Summary")
         st.json(s)
 
-# â”€â”€ Web Speech API Voice Coaching Bridge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Web Speech API Voice Coaching Bridge ──────────────────────────────────────
 if ctx.video_processor:
     start_voice_polling(ctx.video_processor, key_prefix="live_trainer", is_yoga=False)
