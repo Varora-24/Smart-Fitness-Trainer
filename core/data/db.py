@@ -198,3 +198,32 @@ def get_user_by_email(email: str) -> dict | None:
         return None
     return get_user_profile(user_id)
 
+
+
+def check_upload_limit(user_id: str, limit: int = 5) -> bool:
+    """
+    Returns True if the user has < `limit` uploads in the last hour.
+    """
+    import datetime
+    client = _get_client()
+    one_hour_ago = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)).isoformat()
+    try:
+        res = client.table("upload_logs").select("id", count="exact").eq("user_id", user_id).gte("created_at", one_hour_ago).execute()
+        count = res.count if res.count is not None else 0
+        return count < limit
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to check upload limit: {e}")
+        # If the query fails, fail safe (reject) or fail open? Let's fail safe.
+        return False
+
+def log_upload(user_id: str) -> None:
+    """
+    Logs a video upload event for rate limiting.
+    """
+    client = _get_client()
+    try:
+        client.table("upload_logs").insert({"user_id": user_id}).execute()
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to log upload: {e}")

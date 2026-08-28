@@ -151,6 +151,15 @@ output_path = None
 pipeline    = None
 
 try:
+    # ── Check Upload Rate Limit ───────────────────────────────
+    user_id = st.session_state.get("user_id")
+    if user_id:
+        if not db.check_upload_limit(user_id, limit=5):
+            st.error("❌ You've reached the hourly upload limit (5/hour). Please try again later.")
+            st.stop()
+        # Log this attempt immediately so it counts towards the limit
+        db.log_upload(user_id)
+
     # ── Write temp input file ─────────────────────────────────
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
         tmp.write(uploaded.read())
