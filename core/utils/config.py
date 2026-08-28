@@ -158,7 +158,7 @@ EXERCISE_CONFIG = {
         # ── Quality Gate Overrides (Independent Layer) ──────────────
         "min_duration_secs"   : 1.2,
         "min_rom_travel_deg"  : 45.0,
-        "max_posture_deviation_deg": 18.0,
+        "max_posture_deviation_deg": 360.0, # disabled for squats: hip angle must change drastically
 
         "autodetect_signals"  : ["knee_flex", "hip_upright"],
     },
@@ -286,7 +286,7 @@ EXERCISE_CONFIG = {
         # ── Quality Gate Overrides (Independent Layer) ──────────────
         "min_duration_secs"   : 1.3,
         "min_rom_travel_deg"  : 40.0,
-        "max_posture_deviation_deg": 15.0,
+        "max_posture_deviation_deg": 360.0, # disabled for lunges: hip angle must change drastically
 
         "autodetect_signals"  : ["knee_flex", "split_stance"],
     },
@@ -329,7 +329,7 @@ EXERCISE_CONFIG = {
         # ── Quality Gate Overrides (Independent Layer) ──────────────
         "min_duration_secs"   : 1.1,
         "min_rom_travel_deg"  : 40.0,
-        "max_posture_deviation_deg": 15.0,
+        "max_posture_deviation_deg": 360.0, # disabled for shoulder press: arm angle must change drastically
 
         "autodetect_signals"  : ["elbow_flex", "arms_overhead"],
     },
