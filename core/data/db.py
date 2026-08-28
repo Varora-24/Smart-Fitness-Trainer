@@ -200,9 +200,11 @@ def get_user_by_email(email: str) -> dict | None:
 
 
 
-def check_upload_limit(user_id: str, limit: int = 5) -> bool:
+def check_upload_limit(user_id: str, limit: int = 5) -> tuple[bool, str]:
     """
-    Returns True if the user has < `limit` uploads in the last hour.
+    Returns (is_allowed, error_message).
+    is_allowed is True if the user has < `limit` uploads in the last hour.
+    If a database error occurs, it returns (False, "error") to fail-safe.
     """
     import datetime
     client = _get_client()
@@ -210,12 +212,14 @@ def check_upload_limit(user_id: str, limit: int = 5) -> bool:
     try:
         res = client.table("upload_logs").select("id", count="exact").eq("user_id", user_id).gte("created_at", one_hour_ago).execute()
         count = res.count if res.count is not None else 0
-        return count < limit
+        if count < limit:
+            return True, ""
+        return False, "limit_exceeded"
     except Exception as e:
         import logging
         logging.warning(f"Failed to check upload limit: {e}")
-        # If the query fails, fail safe (reject) or fail open? Let's fail safe.
-        return False
+        # Fail safe (reject) on error, but tell caller it was an error
+        return False, "db_error"
 
 def log_upload(user_id: str) -> None:
     """
