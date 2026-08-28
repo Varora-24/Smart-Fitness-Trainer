@@ -6,10 +6,6 @@ import os
 import urllib.parse
 import streamlit as st
 from supabase import create_client, Client
-
-_OAUTH_VERIFIERS: dict[str, str] = {}
-
-def get_secret(key: str) -> str | None:
     try:
         return st.secrets[key]
     except (KeyError, FileNotFoundError):
@@ -49,17 +45,17 @@ def _render_auth_forms() -> None:
                 "options": {"redirect_to": redirect_url}
             })
             verifier_key = f"{getattr(client.auth, '_storage_key', 'supabase.auth.token')}-code-verifier"
+            verifier = None
             if hasattr(client.auth, "_storage") and hasattr(client.auth._storage, "get_item"):
                 verifier = client.auth._storage.get_item(verifier_key)
                 if verifier:
                     st.session_state["pkce_verifier"] = verifier
-                    _OAUTH_VERIFIERS["latest"] = str(verifier)
             url = getattr(res, "url", None)
             if not url and isinstance(res, dict):
                 url = res.get("url")
-            if url and _OAUTH_VERIFIERS.get("latest"):
+            if url and verifier:
                 try:
-                    v = _OAUTH_VERIFIERS["latest"]
+                    v = str(verifier)
                     parsed = urllib.parse.urlparse(str(url))
                     q = urllib.parse.parse_qs(parsed.query)
                     if "redirect_to" in q and len(q["redirect_to"]) > 0:
@@ -146,7 +142,6 @@ def require_login() -> None:
             verifier_val = (
                 query_params.get("verifier")
                 or st.session_state.get("pkce_verifier")
-                or _OAUTH_VERIFIERS.get("latest")
             )
             if isinstance(verifier_val, list):
                 verifier_val = verifier_val[0]
