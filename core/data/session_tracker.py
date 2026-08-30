@@ -81,8 +81,9 @@ class WorkoutSession:
             try:
                 import core.data.db as db
                 db.save_rep(self.session_id, row)
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+                logging.warning(f'Ignored exception in session_tracker.py: {e}')
 
     # ── Analytics ────────────────────────────────────────────
     @property

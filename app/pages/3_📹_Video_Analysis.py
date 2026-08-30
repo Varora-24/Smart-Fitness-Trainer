@@ -518,8 +518,9 @@ try:
             if session_id:
                 db.update_session(session_id, {**summary, "calories": calories})
             st.caption("✅ Session saved to your workout history.")
-        except Exception:
-            pass   # Non-fatal
+        except Exception as e:
+            import logging
+            logging.warning(f"Non-fatal error saving session: {e}")
 
 except Exception as exc:
     st.error(f"❌ An error occurred during analysis: {exc}")
@@ -534,6 +535,7 @@ finally:
     if output_path and os.path.exists(output_path):
         try:
             os.unlink(output_path)
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.warning(f'Ignored exception in 3_📹_Video_Analysis.py: {e}')
     gc.collect()

@@ -52,8 +52,9 @@ class LiveVideoProcessor(VideoProcessorBase):
             user_id = st.session_state.get("user_id")
             session_id = db.save_session({}, "squats", user_id=user_id)
             self.pipeline.session.session_id = session_id
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.warning(f'Ignored exception in 1_🔴_Live_Trainer.py: {e}')
 
     def _run_inference_worker(self) -> None:
         """Decoupled daemon background loop that continuously processes only the newest available frame."""
@@ -72,8 +73,9 @@ class LiveVideoProcessor(VideoProcessorBase):
                 annotated = self.pipeline.process_frame(frame_to_process)
                 with self._lock:
                     self._latest_output = annotated
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+                logging.warning(f'Ignored exception in 1_🔴_Live_Trainer.py: {e}')
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
@@ -171,8 +173,9 @@ if ctx.video_processor:
             user_id = st.session_state.get("user_id")
             session_id = db.save_session({}, chosen_label, user_id=user_id)
             ctx.video_processor.pipeline.session.session_id = session_id
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.warning(f'Ignored exception in 1_🔴_Live_Trainer.py: {e}')
     ctx.video_processor.pipeline.auto_mode = auto_mode
     ctx.video_processor.pipeline.show_debug = show_debug
 

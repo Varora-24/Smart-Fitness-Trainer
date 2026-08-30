@@ -16,7 +16,9 @@ logger = logging.getLogger("voice_coach")
 try:
     import pyttsx3
     _ENGINE_AVAILABLE = True
-except Exception:
+except Exception as e:
+    import logging
+    logging.info(f"pyttsx3 engine not available: {e}")
     pyttsx3 = None  # type: ignore[assignment]
     _ENGINE_AVAILABLE = False
 
@@ -180,8 +182,9 @@ try:
     engine.setProperty("rate", 155)
     engine.say({repr(phrase)})
     engine.runAndWait()
-except Exception:
-    pass
+except Exception as e:
+    import logging
+    logging.warning(f"Ignored exception in voice_coach.py: {{e}}")
 '''
             subprocess.Popen([sys.executable, "-c", script], 
                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0)

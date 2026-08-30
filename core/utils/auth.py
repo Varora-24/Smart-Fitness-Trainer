@@ -55,25 +55,16 @@ def _render_auth_forms() -> None:
             url = getattr(res, "url", None)
             if not url and isinstance(res, dict):
                 url = res.get("url")
-            if url and verifier:
-                try:
-                    v = str(verifier)
-                    parsed = urllib.parse.urlparse(str(url))
-                    q = urllib.parse.parse_qs(parsed.query)
-                    if "redirect_to" in q and len(q["redirect_to"]) > 0:
-                        r = q["redirect_to"][0]
-                        separator = "&" if "?" in r else "?"
-                        q["redirect_to"] = [f"{r}{separator}verifier={v}"]
-                        new_query = urllib.parse.urlencode(q, doseq=True)
-                        url = urllib.parse.urlunparse(parsed._replace(query=new_query))
-                except Exception:
-                    pass
+            # The PKCE verifier is safely stored in st.session_state.
+            # We do NOT append it to the URL to prevent leakage via browser history or referer headers.
             if url:
                 st.link_button("🌐 Continue with Google", url=url, use_container_width=True)
             else:
                 st.error("Could not obtain Google login redirect URL from Supabase.")
         except Exception as e:
-            st.error(f"Error initializing Google Auth: {e}")
+            import logging
+            logging.error(f"Error initializing Google Auth: {e}")
+            st.error("Error initializing Google Auth. Please try again.")
 
     st.markdown("---")
     tab_login, tab_signup = st.tabs(["Log In with Email", "Sign Up with Email"])
@@ -95,7 +86,9 @@ def _render_auth_forms() -> None:
                             st.session_state["email"] = response.user.email
                             st.rerun()
                     except Exception as e:
-                        st.error(f"Invalid email or password. Details: {e}")
+                        import logging
+                        logging.warning(f"Login failed: {e}")
+                        st.error("Invalid email or password.")
 
     with tab_signup:
         with st.form("signup_form"):
@@ -122,11 +115,13 @@ def _render_auth_forms() -> None:
                         else:
                             st.info("Account created! Please verify your email to log in.")
                     except Exception as e:
+                        import logging
+                        logging.warning(f"Signup failed: {e}")
                         err_msg = str(e).lower()
                         if "already registered" in err_msg or "already exists" in err_msg or "duplicate" in err_msg:
                             st.warning("⚠️ An account with this email address already exists. To avoid duplicates, please switch to 'Log In with Email' or click '🌐 Continue with Google' above.")
                         else:
-                            st.error(f"Error creating account: {e}")
+                            st.error("Error creating account. Please try again later.")
 
 def require_login() -> None:
     """
@@ -157,7 +152,9 @@ def require_login() -> None:
                 query_params.clear()  # Remove code parameter from browser address bar
                 st.rerun()
         except Exception as e:
-            st.error(f"Google OAuth sign-in failed during callback token exchange: {e}")
+            import logging
+            logging.error(f"OAuth exchange failed: {e}")
+            st.error("Google OAuth sign-in failed during callback token exchange.")
 
     if "supabase_session" not in st.session_state:
         _render_auth_forms()
@@ -171,7 +168,9 @@ def require_login() -> None:
         res = client.auth.set_session(session.access_token, session.refresh_token)
         if res.session:
             st.session_state["supabase_session"] = res.session
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.info(f"Session expired or invalid: {e}")
         # Session expired or invalid
         st.session_state.pop("supabase_session", None)
         st.session_state.pop("user_id", None)

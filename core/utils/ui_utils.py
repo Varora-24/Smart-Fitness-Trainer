@@ -113,8 +113,9 @@ def start_voice_polling(processor: object | None, key_prefix: str = "tts", is_yo
                     if hasattr(processor, "pipeline") and getattr(processor, "pipeline", None):
                         phrase, ts = getattr(processor, "pipeline").voice.get_browser_phrase()
                         render_tts_bridge(phrase, ts, key_prefix=key_prefix)
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+                logging.warning(f'Ignored exception in ui_utils.py: {e}')
 
         _poll_fragment()
     else:
@@ -128,8 +129,9 @@ def start_voice_polling(processor: object | None, key_prefix: str = "tts", is_yo
                 if hasattr(processor, "pipeline") and getattr(processor, "pipeline", None):
                     phrase, ts = getattr(processor, "pipeline").voice.get_browser_phrase()
                     render_tts_bridge(phrase, ts, key_prefix=key_prefix)
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.warning(f'Ignored exception in ui_utils.py: {e}')
 
 
 def display_reference_image(cfg: dict, title_prefix: str = "") -> None:
@@ -164,5 +166,7 @@ def display_reference_image(cfg: dict, title_prefix: str = "") -> None:
         # Fallback for HTTP URLs or unverified paths
         try:
             st.image(raw_path, use_container_width=True, caption=caption)
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to load image reference {raw_path}: {e}")
             st.error(f"Image reference unavailable: {raw_path}")

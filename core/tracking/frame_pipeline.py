@@ -62,7 +62,9 @@ def _ml_score(model, tracker: ExerciseTracker) -> float:
     try:
         prob = model.predict_proba(features)[0][1]   # P(good_rep)
         return float(prob * 100.0)
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.warning(f"ML model prediction failed: {e}")
         return -1.0
 
 

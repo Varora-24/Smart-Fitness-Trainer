@@ -2,7 +2,7 @@
 #  Security Workflow  –  GitHub Actions dependency security scan
 # ================================================================
 
-name: Dependency Security Scan
+name: Security Scans
 
 on:
   push:
@@ -13,10 +13,12 @@ on:
     - cron: '0 6 * * 1'   # weekly, Monday 06:00 UTC
 
 jobs:
-  pip-audit:
+  security-scans:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for gitleaks
       
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
@@ -27,8 +29,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt -r requirements-dev.txt
+          pip install pip-audit bandit
           
       - name: Run pip-audit
-        run: |
-          pip install pip-audit
-          pip-audit --local
+        run: pip-audit --local
+        
+      - name: Run Bandit (SAST)
+        run: bandit -r core/ app/
+        
+      - name: Run Gitleaks (Secrets Scan)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -149,8 +149,9 @@ class YogaVideoProcessor(VideoProcessorBase):
 
                 with self._lock:
                     self._latest_output = img.copy()
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+                logging.warning(f'Ignored exception in 6_🧘_Yoga.py: {e}')
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
