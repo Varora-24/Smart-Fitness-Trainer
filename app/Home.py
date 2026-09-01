@@ -96,7 +96,6 @@ def dashboard():
             st.caption("Personalised weekly training plans generated from your history.")
 
     st.markdown("---")
-    st.caption("Built with ❤️ using Python, Streamlit, MediaPipe, OpenCV and Supabase.")
 
 pg = st.navigation([
     st.Page(dashboard, title="Home", icon=":material/home:", default=True),
