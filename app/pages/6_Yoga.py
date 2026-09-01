@@ -173,7 +173,7 @@ class YogaVideoProcessor(VideoProcessorBase):
 
 
 # ── UI ────────────────────────────────────────────────────────────────────────
-st.markdown(f"<h1>{get_icon_html('person-standing', size=36)} AI Yoga Coach — Hold & Align</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{get_icon_html('feature_yoga', size=36)} AI Yoga Coach — Hold & Align</h1>", unsafe_allow_html=True)
 st.caption(
     "Select a pose, position yourself in front of the camera, and hold it "
     "correctly for the required duration. Your alignment is scored in real-time "

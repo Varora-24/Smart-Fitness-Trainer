@@ -67,7 +67,7 @@ def load_db_data(user_id: str):
         return pd.DataFrame(), pd.DataFrame()
 
 # ── Title Header ────────────────────────────────────────────────
-st.markdown(f"<h1>{get_icon_html('dumbbell', size=36)} AI Smart Fitness Trainer - Workout Dashboard</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{get_icon_html('feature_history', size=36)} AI Smart Fitness Trainer - Workout Dashboard</h1>", unsafe_allow_html=True)
 st.write("Track your exercise progress, form quality, and training history in real-time.")
 st.markdown("---")
 

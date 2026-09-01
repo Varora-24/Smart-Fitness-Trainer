@@ -20,7 +20,7 @@ from core.utils.icons import ui_alert, get_icon_html  # noqa: E402
 
 require_login()
 
-st.markdown(f"<h1>{get_icon_html('pill', size=36)} Supplement Information</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{get_icon_html('feature_supplements', size=36)} Supplement Information</h1>", unsafe_allow_html=True)
 st.caption(
     "Goal-based educational information about commonly discussed supplements. "
     "This is NOT personalised medical advice — see disclaimer below."

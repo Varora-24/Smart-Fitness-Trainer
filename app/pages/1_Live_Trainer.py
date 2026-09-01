@@ -98,7 +98,7 @@ class LiveVideoProcessor(VideoProcessorBase):
         return av.VideoFrame.from_ndarray(out, format="bgr24")
 
 
-st.markdown(f"<h1>{get_icon_html('activity', size=36)} AI Smart Fitness Trainer — Live</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{get_icon_html('feature_live_trainer', size=36)} AI Smart Fitness Trainer — Live</h1>", unsafe_allow_html=True)
 st.caption(
     "Runs entirely in your browser session via WebRTC. Grant camera access "
     "below, then use the sidebar to pick an exercise. Voice coaching uses "

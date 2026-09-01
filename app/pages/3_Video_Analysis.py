@@ -33,7 +33,7 @@ from core.utils.icons import ui_alert, get_icon_html  # noqa: E402
 require_login()
 
 # ── Page header ─────────────────────────────────────────────────
-st.markdown(f"<h1>{get_icon_html('video', size=36)} Video Posture Analysis</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{get_icon_html('feature_video', size=36)} Video Posture Analysis</h1>", unsafe_allow_html=True)
 st.caption(
     "Upload a workout clip and get a complete AI-powered breakdown — "
     "rep count, good/bad rep split, calories burned, per-rep form scores, "

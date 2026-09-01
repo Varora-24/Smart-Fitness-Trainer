@@ -430,6 +430,10 @@ LUCIDE_ICONS = {
 
 
 def get_icon_html(icon_name: str, color: str = "currentColor", size: int = 24) -> str:
+    from core.utils.custom_icons import CUSTOM_ICONS
+    if icon_name in CUSTOM_ICONS:
+        return f'<img src="{CUSTOM_ICONS[icon_name]}" width="{size}" height="{size}" style="vertical-align: middle; object-fit: contain;" />'
+    
     inner = LUCIDE_ICONS.get(icon_name, "")
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-{icon_name}" style="vertical-align: middle;">{inner}</svg>"""
 
@@ -439,10 +443,10 @@ def ui_alert(message: str, type: str = "info") -> None:
     using Lucide icons and matching the design system colors.
     """
     config = {
-        "success": {"icon": "circle-check", "color": "#22C55E", "bg": "rgba(34, 197, 94, 0.1)", "border": "rgba(34, 197, 94, 0.2)"},
-        "error": {"icon": "circle-x", "color": "#EF4444", "bg": "rgba(239, 68, 68, 0.1)", "border": "rgba(239, 68, 68, 0.2)"},
-        "warning": {"icon": "triangle-alert", "color": "#F59E0B", "bg": "rgba(245, 158, 11, 0.1)", "border": "rgba(245, 158, 11, 0.2)"},
-        "info": {"icon": "info", "color": "#3B82F6", "bg": "rgba(59, 130, 246, 0.1)", "border": "rgba(59, 130, 246, 0.2)"},
+        "success": {"icon": "action_success", "color": "#22C55E", "bg": "rgba(34, 197, 94, 0.1)", "border": "rgba(34, 197, 94, 0.2)"},
+        "error": {"icon": "action_error", "color": "#EF4444", "bg": "rgba(239, 68, 68, 0.1)", "border": "rgba(239, 68, 68, 0.2)"},
+        "warning": {"icon": "action_warning", "color": "#F59E0B", "bg": "rgba(245, 158, 11, 0.1)", "border": "rgba(245, 158, 11, 0.2)"},
+        "info": {"icon": "action_info", "color": "#3B82F6", "bg": "rgba(59, 130, 246, 0.1)", "border": "rgba(59, 130, 246, 0.2)"},
     }
     
     style = config.get(type, config["info"])
@@ -469,3 +473,47 @@ def ui_alert(message: str, type: str = "info") -> None:
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
+
+def inject_custom_sidebar_icons():
+    from core.utils.custom_icons import CUSTOM_ICONS
+    
+    css = """
+    <style>
+    /* Hide the default material icons in the sidebar navigation */
+    [data-testid="stSidebarNav"] span[data-testid="stIconMaterial"] {
+        display: none !important;
+    }
+    """
+    
+    routes = {
+        "": "sidebar_home", # Dashboard/Home
+        "1_Live_Trainer": "sidebar_live_trainer",
+        "2_History": "sidebar_history",
+        "3_Video_Analysis": "sidebar_video",
+        "4_Nutrition": "sidebar_nutrition",
+        "5_Supplements": "sidebar_supplements",
+        "6_Yoga": "sidebar_yoga"
+    }
+    
+    for href, icon in routes.items():
+        if href == "":
+            selector = '[data-testid="stSidebarNav"] a[href="/"], [data-testid="stSidebarNav"] a[href=""]'
+        else:
+            selector = f'[data-testid="stSidebarNav"] a[href$="{href}"]'
+            
+        css += f"""
+        {selector}::before {{
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-image: url('{CUSTOM_ICONS[icon]}');
+            background-size: contain;
+            background-repeat: no-repeat;
+            margin-right: 8px;
+            vertical-align: middle;
+        }}
+        """
+        
+    css += "</style>"
+    st.markdown(css, unsafe_allow_html=True)

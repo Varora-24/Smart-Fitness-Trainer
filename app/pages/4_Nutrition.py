@@ -18,7 +18,7 @@ require_login()
 
 from core.utils.icons import ui_alert, get_icon_html  # noqa: E402
 
-st.markdown(f"<h1>{get_icon_html('utensils', size=36)} Nutrition & Macro Calculator</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1>{get_icon_html('feature_nutrition', size=36)} Nutrition & Macro Calculator</h1>", unsafe_allow_html=True)
 st.caption(
     "Get personalised daily calorie and macronutrient targets based on your "
     "body stats, activity level, and fitness goal."
