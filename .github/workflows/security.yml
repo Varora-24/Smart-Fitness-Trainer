@@ -35,7 +35,7 @@ jobs:
         run: pip-audit --local
         
       - name: Run Bandit (SAST)
-        run: bandit -r core/ app/
+        run: bandit -r core/ app/ -ll
         
       - name: Run Gitleaks (Secrets Scan)
         uses: gitleaks/gitleaks-action@v2

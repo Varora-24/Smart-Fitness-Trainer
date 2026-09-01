@@ -1,0 +1,5 @@
+[allowlist]
+paths = [
+    '''stitch_assets/node_modules/.*''',
+    '''stitch_assets/package-lock\.json'''
+]
