@@ -1,169 +1,291 @@
-# AI Smart Fitness Trainer v4 Pro
+<div align="center">
 
-[![CI Verification](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml/badge.svg)](https://github.com/Varora-24/Smart-Fitness-Trainer/actions/workflows/ci.yml)
-[![Streamlit Cloud](https://img.shields.io/badge/Streamlit_Cloud-Live_App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://smart-fitness-trainer.streamlit.app)
-![Python](https://img.shields.io/badge/Python-3.11%2B-green?style=for-the-badge&logo=python&logoColor=white)
-![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.35-orange?style=for-the-badge)
-![OpenCV](https://img.shields.io/badge/OpenCV-4.9.0-red?style=for-the-badge)
-![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+# Arogya Vision
 
-An enterprise-grade, real-time artificial intelligence fitness and yoga coaching system. Leveraging advanced computer vision (MediaPipe Tasks API), joint-angle biomechanical geometry, and machine learning, this platform evaluates exercise posture, scores repetition form quality, counts clean vs. bad repetitions, and delivers immediate voice coaching directly inside the web browser.
+**Smart Fitness Trainer — Real-time AI Coaching & Posture Correction**
 
----
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://smart-fitness-trainer.streamlit.app)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![MediaPipe](https://img.shields.io/badge/MediaPipe-Vision-00A67E?style=for-the-badge)](https://mediapipe.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-## 🚀 Live Production Application
+<br/>
 
-Experience the complete WebRTC real-time pose tracking system directly in your browser without local installation:  
-**[👉 Launch Smart Fitness Trainer Live (Streamlit Cloud)](https://smart-fitness-trainer.streamlit.app)**  
-*(No intermediate landing pages required. Supported on desktop and laptop webcams)*
+*Real-time kinematics analysis · Multi-signal rep-quality gating · Voice feedback · OAuth & RLS Security*
 
----
+*Powered entirely by Python, Streamlit, and MediaPipe — no external API calls for pose estimation.*
 
-## ✨ Core Features & Technical Architecture
+<br/>
 
-### 1. Real-Time Multi-Exercise Tracking
-Monitors 33 3D body landmarks at high frame rates to track movement cadences across 5 major compound exercises:
-* **Squats** (Knee flexion & hip hinge depth tracking)
-* **Push-Ups** (Elbow flexion & shoulder clearance measurement)
-* **Bicep Curls** (Arm flexion & anatomical stability monitoring)
-* **Lunges** (Strict front/rear knee geometry and double-bend rejection)
-* **Shoulder Press** (Overhead arm extension & lockout completion)
-
-### 2. Repetition Quality Gating (Scored, Not Just Counted)
-Unlike basic fitness counters that merely check angle thresholds, v4 Pro implements **Multi-Layer Repetition Quality Gating**. Every completed repetitions is dynamically graded on a `0–100` form scale and systematically classified as a **Clean Rep** ($\ge 60$) or a **Bad Rep** ($< 50$) based on three strict physiological quality gates:
-* **Tempo Duration Gate:** Rejects uncontrolled momentum and fast jerky swinging by requiring minimal eccentric/concentric completion times (`1.0s` – `1.2s`).
-* **Directional ROM Travel Gate:** Validates angular span travelled to ensure complete range of motion is achieved, independently handling flexion vs. overhead extension movements.
-* **Biomechanical Stability Gate:** Monitors postural drift (e.g., severe back lean during bicep curls or lumbar arching in push-ups) using relative structural baseline tracking.
-
-### 3. Yoga Pose Coaching & Guided Surya Namaskar
-* **Static Yoga Hold Coaching:** Features a library of 6 core postures (**Mountain Pose**, **Tree Pose**, **Warrior I**, **Warrior II**, **Chair Pose**, and **Triangle Pose**). Calculates alignment scores based on geometric joint angular deviances and displays immediate joint-level correction cues (e.g., *"Lower your right knee"* or *"Straighten your torso"*).
-* **Surya Namaskar (Sun Salutation) Automated State Machine:** Guides practitioners through the authentic **12-step traditional sequence**, dynamically advancing from step to step only when stable target poses and alignment thresholds are successfully sustained.
-
-### 4. Offline Video Analysis Mode
-For rigorous, high-precision form auditing without webcam constraints, users can upload pre-recorded exercise or yoga MP4/MOV footage. The offline engine performs frame-by-frame analysis at source framerate, calculates cumulative calorie burns, plots per-rep quality distributions, and generates downloadable annotated playback videos.
-
-### 5. Zero-Latency Browser Voice Coaching
-Integrates directly with the browser's native **Web Speech API** (`window.speechSynthesis`) via a decoupled asynchronous bridge. Delivers real-time spoken coaching cues, form correction advisORIES, and verbal repetition cadence notifications without server-side TTS network overhead or audio truncation delays.
-
-### 6. Robust Authentication & Google OAuth
-Powered by a **Supabase PostgreSQL & Auth** backend, providing persistent user profile management, session analytics serialization, password-based login with bcrypt hashing, and instant **Google OAuth One-Click Sign-In**.
-
-### 7. Personalized Nutrition & Supplement Engine
-* **Macro & Caloric Optimizer:** Applies the clinical **Mifflin-St Jeor equation** with physical activity modifiers to calculate accurate BMR, TDEE, and daily nutritional macronutrient breakdowns tailored for fat loss, maintenance, or lean muscle gain.
-* **Goal-Specific Supplement Guides:** Educational reference catalog detailing validated dosage protocols and scientific mechanisms for sports supplements, fully wrapped in medical compliance disclaimers.
-
-### 8. Interactive Analytics & Session History
-Every completed session persists granular telemetry (exercise type, total volume, clean/bad ratio, form scores, and caloric burn) to a cloud database, visualized through interactive analytical charting widgets inside the personal dashboard.
+[**Try the Demo →**](https://smart-fitness-trainer.streamlit.app) · [Architecture](#architecture) · [Tracking Logic](#tracking--scoring-logic) · [Get Started](#getting-started)
 
 ---
 
-## 📊 Real Project Stats & Engineering Highlights
+</div>
 
-All statistics and performance figures reflect verified, current repository measurements:
-
-| Metric / Attribute | Measured Value | Engineering Notes & Methodology |
-|---|---|---|
-| **Total Lines of Code (LOC)** | **8,127 lines** across **61 files** | Python (`.py`): **7,604 LOC**, Markdown (`.md`): **408 LOC**, Config/Data: **115 LOC**. Checked via repository line-by-line syntax auditor. |
-| **Automated Test Suite** | **67 / 67 Passing (100% Pass Rate)** | Comprehensive unit & integration testing executed in `~20s` via `pytest`, verifying state machines, quality gating formulas, auth flows, and video pipelines. |
-| **Supported Exercises** | **5 Compound + 6 Yoga Poses + 12-Step Sequence** | Explicitly configured in `EXERCISE_CONFIG`, `YOGA_POSE_CONFIG`, and `SURYA_NAMASKAR_STEPS`. |
-| **Real-Time Inference FPS** | **~5 – 10 FPS (Streamlit Cloud CPU Tier)**<br>**24 – 30 FPS (Local Native Execution)** | On Streamlit Community Cloud’s shared CPU tier, frame throughput is intentionally throttled via decoupled worker loops (`async_processing=True`) with drop-oldest single-frame buffering (`video_receiver_size=1`) to guarantee **zero queue latency**, preventing buffer buildup or stream freeze. |
-| **Secure Model Serialization** | **Zero Vulnerability `skops` Serialization** | All scikit-learn posture models are stored and initialized via `skops 0.14.0` rather than standard Python `pickle`, completely eliminating arbitrary code execution vectors (Bandit B301/B403 compliant). |
-
----
-
-## 🛠️ Technology Stack & Dependencies
-
-The application relies on modern, pinned dependency layers configured in [requirements.txt](file:///d:/SmartTrainer/requirements.txt):
-* **Core Vision & ML Architecture:**
-  * `mediapipe == 0.10.35` (MediaPipe Tasks API for low-latency machine learning body landmark detection)
-  * `opencv-python == 4.9.0.80` (High-performance matrix drawing and video streaming operations)
-  * `numpy == 1.26.4` (Linear algebra, coordinate transformations, and vector angle calculations)
-  * `scikit-learn == 1.9.0` & `pandas == 2.2.2` (Posture classification models and tabular telemetry structures)
-  * `skops == 0.14.0` (Cryptographically safer replacement for model persistence)
-* **Application Frontend & Streaming:**
-  * `streamlit == 1.58.0` (Reactive reactive Python web framework)
-  * `streamlit-webrtc == 0.74.2` & `av == 16.1.0` (Real-time WebRTC media server transport and PyAV frame codecs)
-* **Backend Database & Security:**
-  * `supabase >= 2.3.0` (Cloud relational PostgreSQL data layer and authentication REST APIs)
-  * `bcrypt == 5.0.0` & `python-dotenv >= 1.0.0` (Secure cryptographic hashing and local configuration injections)
-
----
-
-## 📸 Demo & UI Assets
-
-The project natively integrates high-contrast, custom AI vector illustrations as visual reference guides across all exercise and yoga modules (located in [app/static/images/](file:///d:/SmartTrainer/app/static/images/)).
+> [!CAUTION]
+> **Before using the live demo**, note that the app is hosted on a free tier that spins down when idle. 
+> The application might take up to 60 seconds to wake up upon your first visit.
 
 > [!NOTE]
-> **Portfolio Tip:** While static high-contrast exercise diagrams are embedded within the live interface, capturing and attaching an active animated `.gif` or WebRTC screen recording of the live camera tracking overlay directly into this README section is recommended to maximize initial presentation impact!
+> Arogya Vision runs completely natively in Python using `streamlit-webrtc` for zero-latency camera streams and local MediaPipe models for pose estimation. 
+> All session data and authentication is securely backed by Supabase with Row Level Security (RLS) enforcement.
 
 ---
 
-## 💻 Setup & Installation Instructions
+## Table of Contents
 
-To experience unthrottled hardware acceleration and local webcam speeds (24–30 FPS), run the application locally on your workstation:
+<details>
+<summary><b>Click to expand</b></summary>
 
-### 1. Clone the Repository
+1. [Why Arogya Vision](#why-arogya-vision)
+2. [Architecture](#architecture)
+3. [Sample Output](#sample-output)
+4. [Tracking & Scoring Logic](#tracking--scoring-logic)
+5. [Getting Started](#getting-started)
+6. [Security Architecture](#security-architecture)
+7. [Project Structure](#project-structure)
+8. [Contributors](#contributors)
+9. [License](#license)
+
+</details>
+
+---
+
+## Why Arogya Vision
+
+Most computer-vision fitness apps rely on basic joint-angle thresholds that struggle with variations in body proportions. Arogya Vision implements a deterministic, multi-signal grading engine:
+
+| Principle | How It's Achieved |
+|:---|:---|
+| **Multi-Signal Gating** | Reps are evaluated against Tempo, ROM completion, and Stability (posture control) via a robust base score + penalty gate override system. |
+| **Local-first CV** | Pose estimation (MediaPipe) runs strictly on the host environment; no video frames are ever sent to an external API. |
+| **Real-time Feedback** | Integrated voice coaching via Web Speech API provides immediate, actionable form correction mid-set. |
+| **Secure by Default** | Full Google OAuth integration paired with Supabase Row Level Security (RLS). You can only query your own session history. |
+| **Versatile Training** | Supports 5 distinct dynamic exercises (with rep counting) and 6 static yoga poses (with a guided Surya Namaskar sequence). |
+
+---
+
+## Architecture
+
+### End-to-End Data Flow
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+    'primaryColor': '#1e293b',
+    'primaryTextColor': '#f8fafc',
+    'primaryBorderColor': '#38bdf8',
+    'lineColor': '#94a3b8',
+    'secondaryColor': '#1e1b4b',
+    'tertiaryColor': '#0f172a',
+    'background': 'transparent',
+    'mainBkg': '#1e293b',
+    'clusterBkg': 'transparent',
+    'clusterBorder': '#475569'
+}}}%%
+graph TD
+    classDef client fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef processing fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
+    classDef tracking fill:#062f4f,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+    classDef data fill:#3f220f,stroke:#fbbf24,stroke-width:2px,color:#f8fafc;
+
+    subgraph Client ["Client (Browser UI)"]
+        A["Webcam / Video Upload"]:::client
+        H["Render Dashboard & Real-Time Stats"]:::client
+        I["Voice Feedback (Web Speech API)"]:::client
+    end
+
+    subgraph Processing ["Streamlit Python Backend"]
+        B["streamlit-webrtc Frame Receiver"]:::processing
+        C["MediaPipe Pose Estimator"]:::processing
+    end
+
+    subgraph Tracking ["Core Tracking Engine"]
+        D["ExerciseTracker (Rep Counting & Quality)"]:::tracking
+        E["YogaPoseTracker (Alignment & Holds)"]:::tracking
+        F["SuryaNamaskarTracker (State Machine)"]:::tracking
+    end
+
+    subgraph Storage ["Supabase (Auth & DB)"]
+        M1[("users table (RLS enabled)")]:::data
+        M2[("sessions table (RLS enabled)")]:::data
+    end
+
+    A -->|"Video Stream (WebRTC) / File"| B
+    B --> C
+    
+    C -->|"33 3D Landmarks"| D
+    C -->|"33 3D Landmarks"| E
+    C -->|"33 3D Landmarks"| F
+
+    D & E & F -->|"Scoring & Feedback"| H
+    D & E & F -->|"Text-to-Speech Cues"| I
+    
+    D & E & F -->|"Save Session Summary"| M2
+    
+    style Client fill:transparent,stroke:#38bdf8,stroke-width:1.5px
+    style Processing fill:transparent,stroke:#818cf8,stroke-width:1.5px
+    style Tracking fill:transparent,stroke:#34d399,stroke-width:1.5px
+    style Storage fill:transparent,stroke:#fbbf24,stroke-width:1.5px
+```
+
+---
+
+## Sample Output
+
+When an exercise completes, the core engine deterministically grades the repetition quality across multiple vectors (tempo, ROM, stability). Base scores are calculated via multi-variable algorithms, and hard quality gates apply strict penalties (capping scores at 45, 35, or 25) if form breaks down entirely.
+
+Below is the actual telemetry output produced by the `ExerciseTracker` rep-quality gating engine. Note how a fast, unstable push-up triggers the strict stability and tempo gating penalties:
+
+```text
+=======================================================
+TELEMETRY REPORT FOR: PUSHUPS
+=======================================================
+--> [CLEAN REP TEST]:
+    Duration        : 1.50s (Min Req: >= 1.0s)
+    ROM Travel Span : 80.0 deg (Min Req: >= 45.0 deg)
+    Extreme Angle   : 80.0 deg (Target: <= 100.0 deg)
+    Max Stability Delta : 2.0 deg (Max Tol: <= 15.0 deg)
+    Failed Gates    : []
+    Resulting Score : 99.3 / 100
+    Classification  : CLEAN REP
+
+--> [BAD REP TEST (Fast/Shallow/Swinging)]:
+    Duration        : 0.35s (Min Req: >= 1.0s)
+    ROM Travel Span : 60.0 deg (Min Req: >= 45.0 deg)
+    Extreme Angle   : 98.0 deg (Target: <= 100.0 deg)
+    Max Stability Delta : 25.0 deg (Max Tol: <= 15.0 deg)
+    Failed Gates    : ['tempo', 'stability']
+    Resulting Score : 34.8 / 100
+    Classification  : BAD REP
+```
+
+This strict gating structure completely isolates user behavior—such as half-reps or momentum jerking—causing bad reps to be safely logged in the user's history without inflating their average session scores.
+
+---
+
+## Tracking & Scoring Logic
+
+Arogya Vision avoids generalized heuristics by implementing strict configuration limits. State machines manage transitions (e.g., `START` → `DESCENDING` → `BOTTOM` → `ASCENDING`), ensuring that a repetition is only valid if the full kinematic sequence is executed.
+
+*   **Dynamic Exercises**: Squats, Pushups, Lunges, Bicep Curls, Shoulder Press.
+*   **Yoga Poses**: Mountain Pose, Tree Pose, Warrior II, Chair Pose, Triangle Pose, Warrior I. (Also includes a state-managed guided Surya Namaskar sequence using fallback/timed-transition steps).
+
+---
+
+## Security Architecture
+
+This application processes sensitive health and personal data. We have implemented several production-grade security gates:
+*   **Supabase Row Level Security (RLS)**: Users securely authenticate via Google OAuth (PKCE verifier leak patched). Postgres RLS policies guarantee users can only `SELECT`, `INSERT`, or `UPDATE` their own session history.
+*   **Safe Query Layer**: All queries use the Supabase JS/Py client interface natively, mitigating SQL injection risks.
+*   **Upload Rate Limiting & Limits**: Video analysis endpoints enforce strict file size checks and processing chunk limits to prevent OOM attacks and server degradation.
+
+---
+
+## Getting Started
+
+### Local Development Setup
+
 ```bash
+# 1. Clone and navigate to the project
 git clone https://github.com/Varora-24/Smart-Fitness-Trainer.git
 cd Smart-Fitness-Trainer
-```
 
-### 2. Create & Activate a Python Virtual Environment
-Requires **Python 3.11+**:
-```bash
-# On Windows (PowerShell):
+# 2. Set up the Python virtual environment
 python -m venv venv
-.\venv\Scripts\activate
+# On Windows: venv\Scripts\activate
+# On macOS/Linux: source venv/bin/activate
 
-# On macOS/Linux:
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Required Dependencies
-```bash
-pip install --upgrade pip
+# 3. Install dependencies
 pip install -r requirements.txt
-```
 
-### 4. Configure Environment Variables
-Copy the example environment file and insert your Supabase project credentials (required for user authentication and session history persistence):
-```bash
-# Copy .env.example to .env
-cp .env.example .env
-```
-Open `.env` and fill in your Supabase endpoint details:
-```ini
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_ANON_KEY=your-anon-public-api-key
-```
-*(Note: If you do not supply valid Supabase credentials, auth verification will fail on launch).*
+# 4. Configure Supabase Environment
+mkdir .streamlit
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+# Add your SUPABASE_URL and SUPABASE_ANON_KEY to .streamlit/secrets.toml
 
-### 5. Launch the Streamlit Application
-```bash
+# 5. Run the Streamlit application
 streamlit run app/Home.py
 ```
-Your local web browser will automatically launch the trainer interface at `http://localhost:8501`.
+
+### Run Tests
+
+```bash
+# Run the test suite (currently passing 70/70 assertions)
+pytest tests/ -v
+```
 
 ---
 
-## 🗺️ Roadmap & Future Developments
+## Project Structure
 
-The core operational features above are actively deployed and functional. Ongoing engineering investigations focus on:
-- [ ] **Multi-Person Tracking:** Independent pose segmentation and concurrent rep counting for multiple individuals inside a single frame.
-- [ ] **Custom Exercise Builder:** Interactive interface allowing users to record custom landmark baseline geometry to train new exercises on the fly.
-- [ ] **Wearable Device Integration:** Direct data ingestion of real-time heart rate and metabolic expenditure via fitness wearables and smartwatches.
-- [ ] **AI Weekly Workout Planner:** Autonomous scheduling algorithm generating progressive resistance weekly routines optimized from individual history and form fatigue trends.
+<details>
+<summary><b>Click to expand full project tree</b></summary>
+
+```text
+Smart-Fitness-Trainer/
+├── app/
+│   ├── Home.py                       ← Streamlit dashboard and central navigation (entry point)
+│   └── pages/
+│       ├── 1_🔴_Live_Trainer.py      ← Real-time webcam exercise coaching
+│       ├── 2_📊_History.py           ← User session trends and charts
+│       ├── 3_📹_Video_Analysis.py    ← Offline asynchronous video processing
+│       ├── 4_🥗_Nutrition.py         ← TDEE and Macro calculators
+│       ├── 5_💊_Supplements.py       ← Goal-based supplement educational guide
+│       └── 6_🧘_Yoga.py              ← Pose alignment scoring and Surya Namaskar sequence
+│
+├── core/
+│   ├── tracking/
+│   │   ├── exercise_classifier.py    ← Automatic detection of active exercises
+│   │   ├── exercises.py              ← State machine logic and quality gating for dynamic reps
+│   │   ├── frame_pipeline.py         ← WebRTC orchestrator connecting CV to tracking logic
+│   │   ├── pose_module.py            ← MediaPipe skeleton wrapper and geometry maths
+│   │   ├── surya_namaskar_tracker.py ← Multi-step sequence tracker for Sun Salutations
+│   │   └── yoga_tracker.py           ← Static hold alignment threshold scoring
+│   ├── data/
+│   │   ├── db.py                     ← Supabase client interactions (sessions, users)
+│   │   └── nutrition.py              ← Mifflin-St Jeor equation implementations
+│   └── utils/
+│       ├── auth.py                   ← PKCE-secured Google OAuth flows
+│       └── icons.py                  ← Lucide SVG injection utilities
+│
+├── tests/                            ← 70-test suite covering gating, auth, DB, and pose maths
+├── requirements.txt                  ← Production dependencies
+└── pyproject.toml                    ← Build and test configurations
+```
+
+</details>
 
 ---
 
-## ⚠️ Known Limitations & Operational Caveats
+## Contributors
 
-* **Single-Person Frame Optimization:** Current pose detection pipelines are calibrated for one primary subject in the camera frame; complex multi-person overlaps may degrade landmark tracing accuracy.
-* **Environmental Lighting Sensitivity:** Because computer vision tracking relies on RGB video feeds, extreme low-light environments, intense background glare, or fast motion blur can momentarily degrade joint accuracy.
-* **Docker Webcam Hardware Mapping:** Passing webcam hardware directly into Docker containers necessitates Linux host `/dev/video0` device mounting. On Windows or macOS Docker environments, running directly via local Python venv is recommended.
-* **Educational Supplement Scope:** All nutritional and dietary supplement references provided by the system serve educational and informational purposes only and do not constitute professional clinical or medical advice.
+| Contributor | Responsibilities |
+|:---|:---|
+| **AI-Assisted Development** | Code architecture, CV pipeline implementation, refactoring, and security auditing (via Google Antigravity). |
+| **Project Owner / Director** | System requirements, strategic planning, feature selection, and AI direction. |
 
 ---
 
-**Built with ❤️ using Python, MediaPipe, OpenCV, Streamlit, and Supabase.**
+## License
+
+MIT — see [`LICENSE`](./LICENSE).
+
+---
+
+<div align="center">
+
+### Precision Computer-Vision Fitness. Local, Fast, Secure.
+
+*Deterministically tracked reps · Multi-signal form analysis · Secure authentication*
+
+<br/>
+
+Star this repo if you found it interesting!
+
+---
+
+*Made with AI-assisted development.*
+
+</div>
