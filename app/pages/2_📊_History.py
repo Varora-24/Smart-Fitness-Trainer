@@ -16,12 +16,13 @@ from core.utils.auth import require_login
 # ── Page Configuration ──────────────────────────────────────────
 st.set_page_config(
     page_title="AI Smart Fitness Trainer Dashboard",
-    page_icon="💪",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 require_login()
+
+from core.utils.icons import ui_alert, get_icon_html  # noqa: E402
 
 # Custom CSS for premium aesthetics
 st.markdown("""
@@ -66,7 +67,7 @@ def load_db_data(user_id: str):
         return pd.DataFrame(), pd.DataFrame()
 
 # ── Title Header ────────────────────────────────────────────────
-st.title("💪 AI Smart Fitness Trainer - Workout Dashboard")
+st.markdown(f"<h1>{get_icon_html('dumbbell', size=36)} AI Smart Fitness Trainer - Workout Dashboard</h1>", unsafe_allow_html=True)
 st.write("Track your exercise progress, form quality, and training history in real-time.")
 st.markdown("---")
 
@@ -75,7 +76,7 @@ current_user_id = st.session_state["user_id"]
 df_sessions, df_reps = load_db_data(current_user_id)
 
 # ── Live Session View / Last Session tab ────────────────────────
-tab_live, tab_history = st.tabs(["🔴 Live Session Summary", "📊 Historical Trends"])
+tab_live, tab_history = st.tabs(["Live Session Summary", "Historical Trends"])
 
 with tab_live:
     st.subheader("Last Session Overview")
@@ -125,15 +126,15 @@ with tab_live:
             with col_l3:
                 st.metric("Reps Per Minute (RPM)", f"{last_session.get('reps_per_min', 0.0):.1f}")
         except Exception as e:
-            st.warning(f"Could not load last session details: {e}")
+            ui_alert(f"Could not load last session details: {e}", type="warning")
     else:
-        st.info("No live session data found. Complete a workout to see summary here!")
+        ui_alert("No live session data found. Complete a workout to see summary here!", type="info")
 
 with tab_history:
     st.subheader("Workout Performance History")
 
     if df_sessions.empty:
-        st.info("No historical sessions found. Run the trainer to start collecting data!")
+        ui_alert("No historical sessions found. Run the trainer to start collecting data!", type="info")
     else:
         # Prepare data fields
         df_sessions['date'] = pd.to_datetime(df_sessions['date'])
@@ -157,12 +158,12 @@ with tab_history:
         col_chart1, col_chart2 = st.columns(2)
 
         with col_chart1:
-            st.write("📊 **Reps Per Session Over Time**")
+            st.markdown(f"**{get_icon_html('chart-bar', size=18)} Reps Per Session Over Time**", unsafe_allow_html=True)
             chart_reps = df_sessions.set_index('date_str')[['total_reps', 'clean_reps']]
             st.bar_chart(chart_reps)
 
         with col_chart2:
-            st.write("🔥 **Calories Burned Per Session**")
+            st.markdown(f"**{get_icon_html('flame', size=18)} Calories Burned Per Session**", unsafe_allow_html=True)
             chart_calories = df_sessions.set_index('date_str')[['calories']]
             st.line_chart(chart_calories)
 
@@ -170,18 +171,18 @@ with tab_history:
         col_chart3, col_chart4 = st.columns(2)
 
         with col_chart3:
-            st.write("🎯 **Form Quality Score by Session**")
+            st.markdown(f"**{get_icon_html('target', size=18)} Form Quality Score by Session**", unsafe_allow_html=True)
             chart_scores = df_sessions.set_index('date_str')[['avg_rep_score']]
             st.line_chart(chart_scores)
 
         with col_chart4:
-            st.write("🏋️ **Activity Breakdown by Exercise Type**")
+            st.markdown(f"**{get_icon_html('activity', size=18)} Activity Breakdown by Exercise Type**", unsafe_allow_html=True)
             ex_breakdown = df_sessions.groupby('exercise')['total_reps'].sum().reset_index()
             st.bar_chart(ex_breakdown.set_index('exercise'))
 
         # Show raw database tables
         st.write("")
-        st.write("📋 **Recent Workout Logs**")
+        st.markdown(f"**{get_icon_html('history', size=18)} Recent Workout Logs**", unsafe_allow_html=True)
         st.dataframe(
             df_sessions.drop(columns=['date_str']).sort_values('date', ascending=False),
             use_container_width=True,

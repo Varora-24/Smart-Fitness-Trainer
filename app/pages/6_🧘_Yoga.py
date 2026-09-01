@@ -31,9 +31,10 @@ from core.tracking.surya_namaskar_tracker import SuryaNamaskarTracker, SURYA_NAM
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="AI Fitness Trainer — Yoga",
-    page_icon="🧘",
     layout="wide",
 )
+
+from core.utils.icons import ui_alert, get_icon_html  # noqa: E402
 
 require_login()
 
@@ -172,7 +173,7 @@ class YogaVideoProcessor(VideoProcessorBase):
 
 
 # ── UI ────────────────────────────────────────────────────────────────────────
-st.title("🧘 AI Yoga Coach — Hold & Align")
+st.markdown(f"<h1>{get_icon_html('person-standing', size=36)} AI Yoga Coach — Hold & Align</h1>", unsafe_allow_html=True)
 st.caption(
     "Select a pose, position yourself in front of the camera, and hold it "
     "correctly for the required duration. Your alignment is scored in real-time "
@@ -215,7 +216,7 @@ with st.sidebar:
         st.markdown(f"**Hold required:** {cfg['min_hold_secs']} seconds")
         st.markdown(f"**Alignment threshold:** {cfg['alignment_threshold']}%")
         st.markdown("---")
-        st.info(cfg["cues"]["start"])
+        ui_alert(cfg["cues"]["start"], type="info")
     else:
         st.header("Sun Salutation")
         step_idx = st.session_state.get("surya_step_idx", 0)
@@ -228,7 +229,7 @@ with st.sidebar:
         if "description" in step_cfg:
             st.markdown(f"**About:** {step_cfg['description']}")
         st.markdown("---")
-        st.info(step_cfg["cue"])
+        ui_alert(step_cfg["cue"], type="info")
 
     st.markdown("---")
     if st.button("Reset Completions"):
@@ -262,29 +263,29 @@ with col_cam:
         if ctx.video_processor and ctx.video_processor.mode == "single_pose":
             active_key = ctx.video_processor._yoga_key
         ref_cfg = YOGA_POSE_CONFIG[active_key]
-        st.subheader(f"🧘 Target Pose Guide: {ref_cfg['display_name']} ({ref_cfg['sanskrit']})")
+        st.markdown(f"<h3>{get_icon_html('target', size=24)} Target Pose Guide: {ref_cfg['display_name']} ({ref_cfg['sanskrit']})</h3>", unsafe_allow_html=True)
         info_col1, info_col2 = st.columns([1, 2])
         with info_col1:
             display_reference_image(ref_cfg, title_prefix="Target: ")
         with info_col2:
             if "description" in ref_cfg:
                 st.markdown(f"**About:** {ref_cfg['description']}")
-            st.markdown(f"**Target Hold Time:** ⏱️ `{ref_cfg['min_hold_secs']} seconds` | **Required Alignment:** 🎯 `{ref_cfg['alignment_threshold']}%`")
+            st.markdown(f"**Target Hold Time:** {get_icon_html('clock', size=16)} `{ref_cfg['min_hold_secs']} seconds` | **Required Alignment:** {get_icon_html('target', size=16)} `{ref_cfg['alignment_threshold']}%`", unsafe_allow_html=True)
             if "cues" in ref_cfg:
-                st.info(f"💡 **Form Cue:** {ref_cfg['cues'].get('start', '')}")
+                ui_alert(f"**Form Cue:** {ref_cfg['cues'].get('start', '')}", type="info")
     else:
         step_idx = ctx.video_processor.current_step_idx if ctx.video_processor and ctx.video_processor.mode == "surya_namaskar" else st.session_state.get("surya_step_idx", 0)
         step_cfg = SURYA_NAMASKAR_STEPS[step_idx]
-        st.subheader(f"🌞 Step {step_idx+1}: {step_cfg['name']} ({step_cfg.get('sanskrit', '')})")
+        st.markdown(f"<h3>{get_icon_html('activity', size=24)} Step {step_idx+1}: {step_cfg['name']} ({step_cfg.get('sanskrit', '')})</h3>", unsafe_allow_html=True)
         info_col1, info_col2 = st.columns([1, 2])
         with info_col1:
             display_reference_image(step_cfg, title_prefix=f"Step {step_idx+1}: ")
         with info_col2:
-            st.markdown(f"**Mode:** `{step_cfg['mode'].upper()}` | **Step Duration:** ⏱️ `{step_cfg['duration']}s`")
+            st.markdown(f"**Mode:** `{step_cfg['mode'].upper()}` | **Step Duration:** {get_icon_html('clock', size=16)} `{step_cfg['duration']}s`", unsafe_allow_html=True)
             if "description" in step_cfg:
                 st.markdown(f"**About:** {step_cfg['description']}")
             if "cue" in step_cfg:
-                st.info(f"💡 **Guidance:** {step_cfg['cue']}")
+                ui_alert(f"**Guidance:** {step_cfg['cue']}", type="info")
 
 if ctx.video_processor:
     if ctx.video_processor.mode != mode_key:
@@ -313,16 +314,16 @@ with col_stats:
                         text=f"Hold: {hold_s:.1f}s / {min_hold}s")
 
             if proc.active_feedback:
-                st.warning(f"🔧 {proc.active_feedback}")
+                ui_alert(proc.active_feedback, type="warning")
             elif proc.is_holding:
-                st.success(cfg["cues"]["hold"])
+                ui_alert(cfg["cues"]["hold"], type="success")
 
             if proc.pose_completed:
                 st.balloons()
                 pose_name = cfg["display_name"]
                 if pose_name not in st.session_state["yoga_completed"]:
                     st.session_state["yoga_completed"].append(pose_name)
-                st.success(f"✅ {cfg['cues']['complete']}")
+                ui_alert(cfg['cues']['complete'], type="success")
         else:
             step_cfg = SURYA_NAMASKAR_STEPS[proc.current_step_idx]
             st.metric("Sequence Progress", f"Step {proc.current_step_idx + 1} / 12")
@@ -334,11 +335,11 @@ with col_stats:
             st.progress(float(progress), text=f"Step Time: {hold_s:.1f}s / {target_dur}s")
 
             if proc.active_feedback:
-                st.info(f"🧘 {proc.active_feedback}")
+                ui_alert(proc.active_feedback, type="info")
 
             if proc.pose_completed:
                 st.balloons()
-                st.success("🌞 Surya Namaskar Round Complete!")
+                ui_alert("Surya Namaskar Round Complete!", type="success")
                 if st.button("Start New Round"):
                     proc._surya_tracker.reset_sequence()
                     st.rerun()
@@ -348,12 +349,12 @@ with col_stats:
         completed = st.session_state["yoga_completed"]
         if completed:
             for name in completed:
-                st.markdown(f"- ✅ {name}")
+                st.markdown(f"- {get_icon_html('circle-check', size=16)} {name}", unsafe_allow_html=True)
         else:
             st.caption("No poses completed yet this session.")
 
     else:
-        st.info("Start the camera to see live alignment stats.")
+        ui_alert("Start the camera to see live alignment stats.", type="info")
 
 # ── Pose reference cards ──────────────────────────────────────────────────────
 st.markdown("---")
@@ -362,7 +363,7 @@ cols = st.columns(3)
 for i, (key, pose_cfg) in enumerate(YOGA_POSE_CONFIG.items()):
     with cols[i % 3]:
         is_done = pose_cfg["display_name"] in st.session_state["yoga_completed"]
-        title   = f"{'✅ ' if is_done else ''}{pose_cfg['display_name']}"
+        title   = f"{'[Done] ' if is_done else ''}{pose_cfg['display_name']}"
         with st.expander(title):
             st.markdown(f"*{pose_cfg['sanskrit']}*")
             st.markdown(f"- Hold: **{pose_cfg['min_hold_secs']}s**")

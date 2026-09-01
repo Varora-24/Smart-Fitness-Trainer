@@ -12,23 +12,25 @@ import core.data.db as db
 from core.utils.auth import require_login
 from core.data.nutrition import calculate_bmr, calculate_tdee, calculate_macros
 
-st.set_page_config(page_title="AI Fitness Trainer — Nutrition", page_icon="🥗", layout="wide")
+st.set_page_config(page_title="AI Fitness Trainer — Nutrition", layout="wide")
 
 require_login()
 
-st.title("🥗 Nutrition & Macro Calculator")
+from core.utils.icons import ui_alert, get_icon_html  # noqa: E402
+
+st.markdown(f"<h1>{get_icon_html('utensils', size=36)} Nutrition & Macro Calculator</h1>", unsafe_allow_html=True)
 st.caption(
     "Get personalised daily calorie and macronutrient targets based on your "
     "body stats, activity level, and fitness goal."
 )
 
 # ── Disclaimer (always visible, non-dismissible) ────────────────
-st.warning(
-    "⚠️ **Disclaimer**: These are general estimates based on standard formulas "
+ui_alert(
+    "**Disclaimer**: These are general estimates based on standard formulas "
     "(Mifflin-St Jeor equation), not personalised medical or dietary advice. "
     "Consult a registered dietitian or doctor for guidance specific to any "
     "medical condition.",
-    icon="⚠️",
+    type="warning",
 )
 
 st.markdown("---")
@@ -93,7 +95,7 @@ if submitted:
         activity_level=activity_level,
         fitness_goal=fitness_goal,
     )
-    st.success("Profile saved!")
+    ui_alert("Profile saved!", type="success")
 
     # Calculate
     bmr = calculate_bmr(weight, height, age, sex if sex != "other" else "male")
@@ -101,7 +103,7 @@ if submitted:
     macros = calculate_macros(tdee, fitness_goal, weight)
 
     st.markdown("---")
-    st.subheader("📊 Your Daily Targets")
+    st.markdown(f"<h3>{get_icon_html('chart-bar', size=24)} Your Daily Targets</h3>", unsafe_allow_html=True)
 
     # Summary metrics
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
@@ -129,7 +131,7 @@ elif user and user.get("weight_kg") and user.get("fitness_goal"):
     macros = calculate_macros(tdee, user["fitness_goal"], user["weight_kg"])
 
     st.markdown("---")
-    st.subheader("📊 Your Current Daily Targets")
+    st.markdown(f"<h3>{get_icon_html('chart-bar', size=24)} Your Current Daily Targets</h3>", unsafe_allow_html=True)
 
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     col_m1.metric("Daily Calories", f"{macros['calories']} kcal")
@@ -145,4 +147,4 @@ elif user and user.get("weight_kg") and user.get("fitness_goal"):
     })
     st.bar_chart(macro_df.set_index("Macro"))
 else:
-    st.info("Fill in your profile above and click **Calculate & Save Profile** to see your targets.")
+    ui_alert("Fill in your profile above and click **Calculate & Save Profile** to see your targets.", type="info")

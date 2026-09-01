@@ -13,20 +13,21 @@ from core.data.supplement_data import SUPPLEMENT_INFO, MANDATORY_DISCLAIMER
 
 st.set_page_config(
     page_title="AI Fitness Trainer — Supplements",
-    page_icon="💊",
     layout="wide",
 )
 
+from core.utils.icons import ui_alert, get_icon_html  # noqa: E402
+
 require_login()
 
-st.title("💊 Supplement Information")
+st.markdown(f"<h1>{get_icon_html('pill', size=36)} Supplement Information</h1>", unsafe_allow_html=True)
 st.caption(
     "Goal-based educational information about commonly discussed supplements. "
     "This is NOT personalised medical advice — see disclaimer below."
 )
 
 # ── Mandatory disclaimer — always shown, prominently ─────────────
-st.error(f"⚠️ {MANDATORY_DISCLAIMER}", icon="⚠️")
+ui_alert(MANDATORY_DISCLAIMER, type="error")
 
 st.markdown("---")
 
@@ -37,11 +38,11 @@ user_goal = user.get("fitness_goal")
 
 # Map DB goal keys to display labels
 GOAL_LABELS = {
-    "lose_fat": "🔥 Lose Fat",
-    "maintain": "⚖️ Maintain",
-    "gain_muscle": "💪 Gain Muscle",
-    "endurance": "🏃 Endurance",
-    "general_health": "🌿 General Health",
+    "lose_fat": "Lose Fat",
+    "maintain": "Maintain",
+    "gain_muscle": "Gain Muscle",
+    "endurance": "Endurance",
+    "general_health": "General Health",
 }
 
 available_goals = list(SUPPLEMENT_INFO.keys())
@@ -61,7 +62,7 @@ st.subheader(f"Supplements for: {selected_label}")
 supplements = SUPPLEMENT_INFO.get(selected_goal, [])
 
 if not supplements:
-    st.info("No supplement information available for this goal yet.")
+    ui_alert("No supplement information available for this goal yet.", type="info")
 else:
     for i, supp in enumerate(supplements, 1):
         with st.container():
@@ -71,4 +72,4 @@ else:
 
 # ── Repeat disclaimer at bottom ─────────────────────────────────
 st.markdown("---")
-st.warning(f"📋 {MANDATORY_DISCLAIMER}", icon="📋")
+ui_alert(MANDATORY_DISCLAIMER, type="warning")
