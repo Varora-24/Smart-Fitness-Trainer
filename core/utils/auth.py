@@ -41,6 +41,11 @@ def _render_auth_forms() -> None:
     with col2:
         try:
             redirect_url = get_secret("OAUTH_REDIRECT_URL") or "https://smart-fitness-trainer.streamlit.app"
+            import uuid
+            vid = str(uuid.uuid4())
+            sep = "&" if "?" in redirect_url else "?"
+            redirect_url = f"{redirect_url}{sep}vid={vid}"
+            
             res = client.auth.sign_in_with_oauth({
                 "provider": "google",
                 "options": {"redirect_to": redirect_url}
@@ -51,6 +56,10 @@ def _render_auth_forms() -> None:
                 verifier = client.auth._storage.get_item(verifier_key)
                 if verifier:
                     st.session_state["pkce_verifier"] = verifier
+                    try:
+                        client.table("oauth_states").insert({"id": vid, "verifier": verifier}).execute()
+                    except Exception as db_e:
+                        logging.error(f"Failed to save oauth state to DB: {db_e}")
             url = getattr(res, "url", None)
             if not url and isinstance(res, dict):
                 url = res.get("url")
@@ -135,12 +144,23 @@ def require_login() -> None:
             if isinstance(code_val, list):
                 code_val = code_val[0]
             exchange_params = {"auth_code": code_val}
-            verifier_val = (
-                query_params.get("verifier")
-                or st.session_state.get("pkce_verifier")
-            )
+            verifier_val = query_params.get("verifier") or st.session_state.get("pkce_verifier")
             if isinstance(verifier_val, list):
                 verifier_val = verifier_val[0]
+                
+            if not verifier_val:
+                vid = query_params.get("vid")
+                if isinstance(vid, list):
+                    vid = vid[0]
+                if vid:
+                    try:
+                        rpc_res = client.rpc("consume_oauth_verifier", {"vid": vid}).execute()
+                        if rpc_res.data:
+                            verifier_val = rpc_res.data
+                    except Exception as e:
+                        import logging
+                        logging.error(f"Failed to fetch oauth verifier from DB: {e}")
+
             if verifier_val:
                 exchange_params["code_verifier"] = verifier_val
             response = client.auth.exchange_code_for_session(exchange_params)  # type: ignore[arg-type]
