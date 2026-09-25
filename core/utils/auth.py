@@ -58,7 +58,7 @@ def _render_auth_forms() -> None:
                 if verifier:
                     st.session_state["pkce_verifier"] = verifier
                     try:
-                        client.table("oauth_states").insert({"id": vid, "verifier": verifier}, returning='minimal').execute()
+                        client.table("oauth_states").insert({"id": vid, "verifier": verifier}, returning='minimal').execute()  # type: ignore[arg-type]
                     except Exception as db_e:
                         logging.error(f"Failed to save oauth state to DB: {db_e}")
             url = getattr(res, "url", None)
