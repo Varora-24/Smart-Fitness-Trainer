@@ -2,7 +2,7 @@
 
 # Arogya Vision
 
-**Smart Fitness Trainer — Real-time AI Coaching & Posture Correction**
+**Smart Fitness Trainer — Real-time Coaching & Posture Correction**
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://smart-fitness-trainer.streamlit.app)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
@@ -259,15 +259,6 @@ Smart-Fitness-Trainer/
 
 ---
 
-## Contributors
-
-| Contributor | Responsibilities |
-|:---|:---|
-| **AI-Assisted Development** | Code architecture, CV pipeline implementation, refactoring, and security auditing (via Google Antigravity). |
-| **Project Owner / Director** | System requirements, strategic planning, feature selection, and AI direction. |
-
----
-
 ## License
 
 MIT — see [`LICENSE`](./LICENSE).
@@ -283,9 +274,5 @@ MIT — see [`LICENSE`](./LICENSE).
 <br/>
 
 Star this repo if you found it interesting!
-
----
-
-*Made with AI-assisted development.*
 
 </div>
