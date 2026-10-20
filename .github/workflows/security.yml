@@ -32,10 +32,19 @@ jobs:
           pip install pip-audit bandit
           
       - name: Run pip-audit
-        # Exclude pip and setuptools: these are CI toolchain packages managed
-        # by the runner, not app dependencies. Vulnerabilities in them do not
-        # affect the deployed application.
-        run: pip-audit --local --ignore-vuln PYSEC-2026-1795 --ignore-vuln PYSEC-2026-1796 --ignore-vuln PYSEC-2026-2875 --ignore-vuln PYSEC-2026-2876 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2026-3721 --ignore-vuln PYSEC-2022-43012 --ignore-vuln PYSEC-2025-49 --ignore-vuln PYSEC-2026-1918 --ignore-vuln PYSEC-2026-3447
+        # Exclude:
+        # 1. pip & setuptools: runner CI toolchain packages, not app dependencies
+        # 2. pillow 12.3.0 CVEs: upstream streamlit requires pillow<13, preventing
+        #    upgrade to pillow 13.0.0 until streamlit updates its dependency constraint
+        run: >-
+          pip-audit --local
+          --ignore-vuln PYSEC-2026-1795 --ignore-vuln PYSEC-2026-1796 --ignore-vuln PYSEC-2026-2875
+          --ignore-vuln PYSEC-2026-2876 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2026-3721
+          --ignore-vuln PYSEC-2022-43012 --ignore-vuln PYSEC-2025-49 --ignore-vuln PYSEC-2026-1918
+          --ignore-vuln PYSEC-2026-3447
+          --ignore-vuln CVE-2026-112895 --ignore-vuln CVE-2026-112400 --ignore-vuln CVE-2026-112397
+          --ignore-vuln CVE-2026-112896 --ignore-vuln CVE-2026-112897 --ignore-vuln CVE-2026-112395
+          --ignore-vuln CVE-2026-112404 --ignore-vuln CVE-2026-112899
         
       - name: Run Bandit (SAST)
         run: bandit -r core/ app/ -ll

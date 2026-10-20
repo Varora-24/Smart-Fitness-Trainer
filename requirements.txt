@@ -1,4 +1,4 @@
-﻿# ================================================================
+# ================================================================
 #  requirements.txt  --  Smart Fitness Trainer
 # ================================================================
 # pip install -r requirements.txt
@@ -29,7 +29,7 @@ supabase>=2.3.0
 psycopg2-binary>=2.9.9
 
 # Security fixes (pinned to patched versions)
-pillow>=13.0.0
+pillow>=12.3.0,<13.0.0
 certifi>=2026.10.19
 multidict>=7.1.0
 urllib3>=2.8.0
