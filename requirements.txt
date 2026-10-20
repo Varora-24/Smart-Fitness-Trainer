@@ -1,5 +1,5 @@
-# ================================================================
-#  requirements.txt  –  AI Smart Fitness Trainer v3 Pro
+﻿# ================================================================
+#  requirements.txt  --  Smart Fitness Trainer
 # ================================================================
 # pip install -r requirements.txt
 
@@ -12,22 +12,27 @@ numpy==1.26.4
 # ML training (train_model.py)
 scikit-learn==1.9.0
 pandas==2.2.2
+skops==0.14.0
 
-# Voice coach (optional – install separately if TTS is needed)
-
-# Analytics dashboard
+# Streamlit + WebRTC
 streamlit==1.58.0
 streamlit-webrtc==0.74.2
 av==16.1.0
-skops==0.14.0
 
 # Authentication
 bcrypt==5.0.0
+PyJWT>=2.15.1
 
-# Supabase Migration
+# Supabase
 python-dotenv>=1.0.0
 supabase>=2.3.0
 psycopg2-binary>=2.9.9
+
+# Security fixes (pinned to patched versions)
+pillow>=13.0.0
+certifi>=2026.10.19
+multidict>=7.1.0
+urllib3>=2.8.0
 
 # API
 fastapi==0.141.1
